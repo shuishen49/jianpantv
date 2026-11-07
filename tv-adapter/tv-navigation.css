@@ -1,0 +1,311 @@
+/* TV presentation layer. Original application data and actions stay in place. */
+html.jp-local-tv {
+  font-size: 1.25vw !important;
+  --jp-page-padding: 1.65rem;
+  --jp-grid-gap: .85rem;
+  --jp-poster-cols: 6;
+  --jp-content-max: none;
+  --jp-safe-top: 0px;
+  --jp-safe-bottom: 0px;
+  --jp-font-size-body: 1rem;
+  --jp-font-size-caption: .92rem;
+  --jp-font-size-caption-sm: .8rem;
+  --jp-font-size-title: 1.45rem;
+  --jp-font-size-headline: 1.3rem;
+  --jp-hit-min: 2.7rem;
+  --jp-toolbar-height: 3.2rem;
+  --jp-surface-base: #0c1018;
+  --jp-surface-raised: #192130;
+  --jp-surface-overlay: #243147;
+  --jp-text-primary: #f4f6fa;
+  --jp-text-secondary: #b7c2d2;
+  --jp-text-tertiary: #8794a9;
+  background: #0c1018;
+}
+html.jp-local-tv body { font-size: 1rem; }
+html.jp-local-tv .app { display: block !important; }
+html.jp-local-tv .app__main {
+  height: 100% !important; min-height: 0; margin-left: 0 !important;
+}
+html.jp-local-tv .app:not(.app--immersive) .app__main {
+  margin-left: 9rem !important; width: calc(100% - 9rem) !important;
+}
+html.jp-local-tv .nav {
+  position: fixed !important; inset: 0 auto 0 0 !important;
+  width: 9rem !important; height: 100% !important; padding: 0 .75rem !important;
+  border: 0 !important; border-right: 1px solid #243047 !important;
+  background: #101722 !important; z-index: 35;
+}
+html.jp-local-tv .nav__brand { display: none !important; }
+html.jp-local-tv .jp-tv-brand {
+  display: flex; flex-direction: column; gap: .25rem;
+  padding: 2.1rem .75rem 1.8rem; font-size: 1.7rem; font-weight: 800;
+  color: #fff; letter-spacing: .12rem;
+}
+html.jp-local-tv .jp-tv-brand small {
+  font-size: .55rem; letter-spacing: .08rem; color: #91a8c4; font-weight: 500; white-space: nowrap;
+}
+html.jp-local-tv .nav__list {
+  height: auto !important; display: flex !important;
+  flex-direction: column !important; gap: .65rem !important;
+}
+html.jp-local-tv .nav__list > li { flex: none !important; }
+html.jp-local-tv .nav__item {
+  display: flex !important; flex-direction: row !important;
+  justify-content: flex-start !important; align-items: center !important; gap: .8rem !important;
+  width: 100% !important; height: 3.5rem !important; min-height: 3.5rem; padding: 0 .8rem !important;
+  border-radius: .6rem !important; color: #9eacc1 !important;
+}
+html.jp-local-tv .nav__label { font-size: 1.05rem !important; }
+html.jp-local-tv .nav__icon { width: 1.35rem !important; height: 1.35rem !important; }
+html.jp-local-tv .nav__item.is-active {
+  background: #24334a !important; color: #fff !important; box-shadow: inset .18rem 0 #66dbcd;
+}
+html.jp-local-tv .jp-tv-nav-symbol {
+  width: 1.35rem; font-size: 1.6rem; text-align: center; line-height: 1;
+}
+html.jp-local-tv .jp-tv-nav-help {
+  position: absolute; bottom: 1.6rem; left: 1.5rem; right: .6rem;
+  color: #71829b; line-height: 1.9; font-size: .68rem;
+}
+/* Keep categories and several posters visible together at a normal TV ratio. */
+html.jp-local-tv .home > .header {
+  padding: .7rem 0 .4rem !important; background: #0c1018 !important;
+  box-shadow: 0 .4rem 1.5rem #0c1018;
+}
+html.jp-local-tv .header__brand { display: none !important; }
+html.jp-local-tv .header__bar { height: 3rem !important; }
+html.jp-local-tv .header__search {
+  flex: 1 !important; height: 2.6rem !important; max-width: 30rem;
+  border-radius: .45rem !important; color: #aebbd0 !important; font-size: .95rem !important;
+  background: #192231 !important;
+}
+html.jp-local-tv .header__filter {
+  height: 2.6rem !important; border-radius: .45rem !important; font-size: .95rem !important;
+}
+html.jp-local-tv .header__tabs { padding: .25rem 0 .2rem !important; }
+html.jp-local-tv .header__tab-list { gap: .6rem !important; }
+html.jp-local-tv .header__tab {
+  padding: .55rem .8rem !important; font-size: 1.15rem !important;
+  opacity: 1 !important; transform: none !important;
+  border-radius: .4rem; text-shadow: none !important;
+}
+html.jp-local-tv .header__tab.is-visual-active { background: #223047; color: #fff !important; }
+html.jp-local-tv .header__indicator { display: none !important; }
+html.jp-local-tv .home__renderer { padding-top: 7.4rem !important; }
+html.jp-local-tv .hero.jp-nested-swipe {
+  height: 10rem !important; margin: .4rem 1.65rem 0;
+  border-radius: .75rem; overflow: hidden;
+}
+html.jp-local-tv .hero.jp-nested-swipe .hero__stage {
+  height: 10rem !important; padding: 0 !important;
+}
+html.jp-local-tv .hero.jp-nested-swipe .hero__body {
+  position: absolute !important; inset: auto auto 0 0;
+  width: 62% !important; padding: 1.3rem 1.6rem !important; gap: .45rem !important;
+}
+html.jp-local-tv .hero__title { font-size: 2rem !important; }
+html.jp-local-tv .hero__meta, html.jp-local-tv .hero__tags { font-size: .85rem !important; }
+html.jp-local-tv .hero__scrim-bottom {
+  height: 100% !important;
+  background: linear-gradient(90deg,rgba(6,12,22,.96),rgba(6,12,22,.5) 60%,transparent) !important;
+}
+html.jp-local-tv .hero__cinema, html.jp-local-tv .hero__dots { display: none !important; }
+html.jp-local-tv .jp-tv-hero-action {
+  display: inline-block; width: max-content; margin-top: .3rem;
+  padding: .45rem .9rem; border-radius: .35rem;
+  background: #e7f3f3; color: #14212b; font-size: .8rem; font-weight: 650;
+}
+html.jp-local-tv .block-renderer__block:not(.is-hero) { margin-top: 1.4rem !important; }
+html.jp-local-tv .home .quick { display: flex !important; flex-wrap: nowrap !important; gap: .55rem !important; }
+html.jp-local-tv .home .quick > li { flex: 1 1 0; min-width: 0; }
+html.jp-local-tv .home .quick__item {
+  flex-direction: row !important; justify-content: center;
+  gap: .4rem !important; background: #192231; border-radius: .4rem; min-height: 2.6rem !important;
+}
+html.jp-local-tv .home .quick__icon { width: 1.2rem !important; height: 1.2rem !important; background: transparent !important; }
+html.jp-local-tv .home .quick__icon svg { width: 1rem !important; height: 1rem !important; }
+html.jp-local-tv .home .quick__label { font-size: .78rem !important; }
+html.jp-local-tv .cms-shelf__item, html.jp-local-tv .cms-shelf__tail,
+html.jp-local-tv .shelf__item { flex: 0 0 calc((100% - 5 * .85rem) / 6) !important; }
+html.jp-local-tv .cms-shelf__item.is-landscape,
+html.jp-local-tv .cms-shelf__tail.is-landscape { flex-basis: calc((100% - 3 * .85rem) / 4) !important; }
+html.jp-local-tv .cms-grid { grid-template-columns: repeat(6,minmax(0,1fr)) !important; }
+html.jp-local-tv .cms-shelf__track, html.jp-local-tv .shelf__track {
+  padding-top: .3rem !important; padding-bottom: .4rem !important; scroll-padding: 1rem;
+}
+html.jp-local-tv .card { border-radius: .5rem; }
+html.jp-local-tv .card__media { border-radius: .5rem !important; }
+html.jp-local-tv .card__caption { padding: .55rem .1rem .2rem !important; }
+html.jp-local-tv .card__title { font-size: .95rem !important; }
+html.jp-local-tv .card__meta { font-size: .75rem !important; }
+html.jp-local-tv .header__title { font-size: 1.25rem !important; }
+html.jp-local-tv .header__subtitle { font-size: .8rem !important; }
+/* Search: a remote keyboard next to the results, with no touch-only dependency. */
+html.jp-local-tv .search { background: #0c1018 !important; }
+html.jp-local-tv .search__chrome {
+  min-height: 4.5rem !important; padding: .65rem 1.5rem !important; gap: .8rem !important;
+}
+html.jp-local-tv .search__field .jp-field__control { height: 2.8rem !important; font-size: 1.15rem; }
+html.jp-local-tv .search__go {
+  min-width: 5rem; background: #26394e; border-radius: .4rem; font-size: 1.05rem !important;
+}
+html.jp-local-tv .search__body { padding: 1rem 1.6rem 2rem 23rem !important; }
+html.jp-local-tv .jp-tv-keyboard {
+  position: absolute; top: 5.4rem; left: 1.6rem; width: 19.7rem;
+  padding: 1.2rem; border: 1px solid #2b3a50; border-radius: .75rem;
+  background: #141e2d; z-index: 4;
+}
+html.jp-local-tv .jp-tv-keyboard h2 { margin: 0 0 .4rem; font-size: 1.2rem; color: #f2f5fa; }
+html.jp-local-tv .jp-tv-keyboard p { margin: 0 0 1rem; font-size: .72rem; color: #91a3bd; }
+html.jp-local-tv .jp-tv-input-modes { display: flex; gap: .45rem; margin-bottom: .5rem; }
+html.jp-local-tv .jp-tv-input-modes button {
+  min-height: 2rem; padding: .3rem .8rem; border-radius: .3rem; font-size: .8rem; color: #a8b9cf;
+}
+html.jp-local-tv .jp-tv-input-modes button.is-active { color: #d8fff5; background: #2c4b54; }
+html.jp-local-tv .jp-tv-composition { height: 1.5rem; color: #bdeee5; font-size: .8rem; }
+html.jp-local-tv .jp-tv-candidates { display: grid; grid-template-columns: repeat(6,1fr); gap: .35rem; min-height: 2.3rem; }
+html.jp-local-tv .jp-tv-candidates button { height: 2.3rem; background: #314459; color: #fff; font-size: 1.1rem; border-radius: .3rem; }
+html.jp-local-tv .jp-tv-candidate-pages { display: flex; justify-content: space-between; margin: .2rem 0 .45rem; }
+html.jp-local-tv .jp-tv-candidate-pages button { padding: .25rem .4rem; color: #b8c9df; font-size: .7rem; min-height: 1.5rem; }
+html.jp-local-tv .jp-tv-candidate-pages button:disabled { opacity: .25; }
+html.jp-local-tv .jp-tv-keys { display: grid; grid-template-columns: repeat(6,1fr); gap: .4rem; }
+html.jp-local-tv .jp-tv-keys button {
+  height: 2.2rem; border-radius: .35rem; background: #233148;
+  color: #ecf3ff; font-size: 1.05rem; font-weight: 600;
+}
+html.jp-local-tv .jp-tv-key-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; margin-top: .8rem;
+}
+html.jp-local-tv .jp-tv-key-actions button {
+  min-height: 2.6rem; border-radius: .35rem; background: #29394e; font-size: .9rem; color: #e5eefb;
+}
+html.jp-local-tv .jp-tv-key-actions .jp-tv-submit {
+  grid-column: 1 / -1; background: #bdeee5; color: #12292c; font-weight: 700;
+}
+html.jp-local-tv .search .results, html.jp-local-tv .search .rank {
+  display: grid !important; grid-template-columns: repeat(4,minmax(0,1fr)) !important; gap: 1rem !important;
+}
+html.jp-local-tv .search .result, html.jp-local-tv .search .rank-row {
+  display: block !important; padding: .45rem !important;
+  border-radius: .55rem !important; background: #172232 !important; height: 100%;
+}
+html.jp-local-tv .search .result__poster, html.jp-local-tv .search .rank-row__poster {
+  width: 100% !important; display: block !important; border-radius: .35rem;
+}
+html.jp-local-tv .search .result__body, html.jp-local-tv .search .rank-row__body { padding: .6rem .15rem .25rem !important; }
+html.jp-local-tv .search .result__body h3, html.jp-local-tv .search .rank-row__body h3 { font-size: .9rem !important; }
+html.jp-local-tv .search .result__body > p, html.jp-local-tv .search .rank-row__body > p {
+  font-size: .7rem !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+html.jp-local-tv .search .result__desc, html.jp-local-tv .search .rank-row__desc { display: none !important; }
+html.jp-local-tv .search .tabs { gap: .5rem !important; margin-bottom: .7rem; }
+html.jp-local-tv .search .tab { font-size: .9rem !important; padding: .45rem .65rem !important; border-radius: .35rem; }
+html.jp-local-tv .search .tab[aria-selected="true"] { background: #273c50; }
+html.jp-local-tv .search .chip { font-size: .9rem !important; min-height: 2.5rem; }
+html.jp-local-tv .search .panel__head h2 { font-size: 1.1rem !important; }
+/* Landscape playback: video on the left, details and episode grid on the right. */
+html.jp-local-tv .detail[data-v-777332d1] {
+  display: grid !important; grid-template-columns: minmax(0,1.45fr) minmax(0,1fr);
+  grid-template-rows: auto 1fr; gap: 0 1.5rem; padding: 1.5rem;
+}
+html.jp-local-tv .detail__player-shell {
+  grid-column: 1; grid-row: 1; align-self: start; width: 100%; margin-top: 3rem;
+}
+html.jp-local-tv .jp-tv-playing-title {
+  grid-column: 1; grid-row: 1; align-self: start; margin: 0 0 1rem;
+  font-size: 1.65rem; color: #f0f6ff; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+html.jp-local-tv .detail__tabs { grid-column: 2; grid-row: 1; height: 3rem !important; align-self: start; }
+html.jp-local-tv .detail__pager { grid-column: 2; grid-row: 1 / 3; margin-top: 3.3rem; height: calc(100% - 3.3rem); }
+html.jp-local-tv .detail__body { padding: .8rem .5rem 2rem !important; gap: 1.2rem !important; }
+html.jp-local-tv .detail__title-row h1 { font-size: 1.6rem !important; }
+html.jp-local-tv .detail__synopsis { white-space: normal !important; display: -webkit-box !important; -webkit-line-clamp: 3; -webkit-box-orient: vertical; font-size: .85rem !important; }
+html.jp-local-tv .detail__section-head h2, html.jp-local-tv .detail__episode-head strong { font-size: 1.15rem !important; }
+html.jp-local-tv .detail__title-row { display: none !important; }
+html.jp-local-tv .detail__actions { grid-auto-flow: row !important; grid-template-columns: repeat(4,1fr); }
+html.jp-local-tv .detail__actions button { font-size: .8rem !important; }
+html.jp-local-tv .detail__source-list, html.jp-local-tv .detail__episode-list,
+html.jp-local-tv .detail__episode-ranges {
+  margin-left: 0 !important; margin-right: 0 !important; padding: .25rem !important;
+  display: flex !important; flex-wrap: wrap !important; overflow: visible !important; gap: .6rem !important;
+}
+html.jp-local-tv .detail__source-list:after, html.jp-local-tv .detail__episode-list:after,
+html.jp-local-tv .detail__episode-ranges:after { display: none !important; }
+html.jp-local-tv .detail__source-card { min-width: 6.5rem !important; max-width: 8rem !important; min-height: 3rem; }
+html.jp-local-tv .detail__source-top strong { font-size: .9rem !important; }
+html.jp-local-tv .detail__source-meta { font-size: .65rem !important; }
+html.jp-local-tv .detail__source-playstart { display: none !important; }
+html.jp-local-tv .detail__episode-list button {
+  width: 4.4rem !important; min-width: 4.4rem !important; max-width: none !important;
+  flex: 0 0 4.4rem !important; height: 3rem !important; min-height: 3rem !important;
+  padding: .2rem !important; font-size: .85rem !important;
+  white-space: nowrap !important; word-break: keep-all;
+}
+html.jp-local-tv .jp-tv-player-controls { grid-column: 1; grid-row: 2; align-self: start; padding-top: 1.2rem; }
+html.jp-local-tv .jp-tv-player-buttons { display: flex; gap: .7rem; }
+html.jp-local-tv .jp-tv-player-buttons button {
+  min-height: 3rem; padding: .6rem 1.15rem; font-size: 1rem; color: #edf4ff;
+  background: #25344b; border-radius: .45rem;
+}
+html.jp-local-tv .jp-tv-player-buttons button:first-child { background: #c8efe6; color: #152e30; font-weight: 700; }
+html.jp-local-tv .jp-tv-player-controls p { margin-top: .9rem; color: #8b9db7; font-size: .8rem; }
+html.jp-local-tv .jp-tv-cinema-bar { display: none; }
+html.jp-local-tv.jp-tv-cinema,
+html.jp-local-tv.jp-tv-cinema body,
+html.jp-local-tv.jp-tv-cinema #app,
+html.jp-local-tv.jp-tv-cinema .app,
+html.jp-local-tv.jp-tv-cinema .app__main,
+html.jp-local-tv.jp-tv-cinema .detail { background: transparent !important; }
+html.jp-local-tv.jp-tv-cinema .nav,
+html.jp-local-tv.jp-tv-cinema .detail > :not(.detail__player-shell):not(.jp-tv-cinema-bar),
+html.jp-local-tv.jp-tv-cinema .detail__player-header { visibility: hidden !important; }
+html.jp-local-tv.jp-tv-cinema .detail__player-shell {
+  position: fixed !important; inset: 0 !important; margin: 0 !important;
+  width: 100vw !important; height: 100vh !important; z-index: 80;
+}
+html.jp-local-tv.jp-tv-cinema .detail__player-shell .integrated-player,
+html.jp-local-tv.jp-tv-cinema .detail__player-shell .integrated-player__stage {
+  width: 100% !important; height: 100% !important; aspect-ratio: auto !important;
+}
+html.jp-local-tv.jp-tv-cinema .detail__player-shell:before { display: none !important; }
+html.jp-local-tv.jp-tv-cinema .jp-tv-cinema-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+  display: block; padding: 3rem 3rem 1.5rem; opacity: 0;
+  background: linear-gradient(transparent,rgba(5,10,18,.96) 35%);
+  pointer-events: none; transition: opacity .18s;
+}
+html.jp-local-tv.jp-tv-cinema.jp-tv-controls-visible .jp-tv-cinema-bar { opacity: 1; pointer-events: auto; }
+html.jp-local-tv .jp-tv-cinema-bar button {
+  min-height: 2.8rem; padding: .6rem 1rem; background: rgba(17,28,43,.88);
+  color: #fff; border-radius: .4rem; font-size: .9rem;
+}
+html.jp-local-tv .jp-tv-timeline-header { display: flex; justify-content: space-between; color: #f3f9ff; font-size: 1.05rem; margin-bottom: .5rem; }
+html.jp-local-tv .jp-tv-time { font-variant-numeric: tabular-nums; font-size: 1.25rem; }
+html.jp-local-tv input.jp-tv-timeline {
+  display: block; appearance: none; -webkit-appearance: none; width: 100%; height: .6rem;
+  border: 0; border-radius: .3rem; margin: .8rem 0 1.4rem; padding: 0;
+  background: linear-gradient(to right,#80e9d5 var(--jp-tv-progress,0%),#506077 var(--jp-tv-progress,0%));
+}
+html.jp-local-tv input.jp-tv-timeline::-webkit-slider-thumb {
+  appearance: none; -webkit-appearance: none; width: 1.35rem; height: 1.35rem;
+  border-radius: 50%; background: #e3fff9; border: .15rem solid #80e9d5;
+}
+html.jp-local-tv input.jp-tv-timeline:disabled { opacity: .45; }
+html.jp-local-tv .jp-tv-timeline-actions { display: flex; gap: .8rem; }
+html.jp-local-tv .jp-tv-cinema-bar p { margin: .7rem 0 0; color: #bacadd; font-size: .8rem; }
+/* Focus is distinct from the currently selected category or source. */
+html.jp-local-tv .jp-local-tv-focus {
+  outline: .14rem solid #e2fff9 !important; outline-offset: .12rem !important;
+  box-shadow: 0 0 0 .3rem rgba(94,220,201,.25) !important;
+}
+html.jp-local-tv .nav__item.jp-local-tv-focus, html.jp-local-tv .jp-tv-keys button.jp-local-tv-focus {
+  background: #c6f1e8 !important; color: #142e30 !important;
+}
+html.jp-local-tv .card.jp-local-tv-focus .card__media { box-shadow: 0 .5rem 1.5rem #0008; }
+html.jp-local-tv button, html.jp-local-tv [role="button"], html.jp-local-tv [role="tab"],
+html.jp-local-tv [role="link"] { scroll-margin: 1rem; }
+html.jp-local-tv .jp-scroll-y { scroll-padding-top: 1rem; }
+html.jp-local-tv .home__slide { scroll-padding-top: 8rem; scroll-padding-bottom: 1rem; }
+html.jp-local-tv .profile__body { font-size: 1rem; }
+html.jp-local-tv .profile__hero { min-height: 10rem !important; }

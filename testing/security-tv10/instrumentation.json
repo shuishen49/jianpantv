@@ -1,0 +1,4 @@
+{
+  "code": 0,
+  "output": "INSTRUMENTATION_RESULT: allow_content_access=false\r\nINSTRUMENTATION_RESULT: allow_file_access=false\r\nINSTRUMENTATION_RESULT: allow_file_from_file_urls=false\r\nINSTRUMENTATION_RESULT: allow_universal_from_file_urls=false\r\nINSTRUMENTATION_RESULT: builtin_runtime_selected=true\r\nINSTRUMENTATION_RESULT: diagnostics.export=true\r\nINSTRUMENTATION_RESULT: downloads.command=true\r\nINSTRUMENTATION_RESULT: downloads.enqueueIntents=true\r\nINSTRUMENTATION_RESULT: media.saveImage=true\r\nINSTRUMENTATION_RESULT: mixed_content_mode=1\r\nINSTRUMENTATION_RESULT: online_updater_absent=true\r\nINSTRUMENTATION_RESULT: probe_completed=true\r\nINSTRUMENTATION_RESULT: update.check=true\r\nINSTRUMENTATION_CODE: -1\r\n"
+}

@@ -1,0 +1,4 @@
+# Preserve audited file bytes and their SHA-256 values on every platform.
+* -text whitespace=cr-at-eol
+# The native snapshots retain the exact EOF whitespace from the tested build.
+patched/** whitespace=cr-at-eol,-blank-at-eof

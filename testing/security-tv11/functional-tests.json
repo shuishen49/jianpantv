@@ -1,0 +1,142 @@
+{
+  "version": "5.0.78-tv.11",
+  "apk_sha256": "3f7989602b996a5d11c9eefbdc7c3f7542479d25c549f5186e6cee7ba85e9438",
+  "real_tv_tested": false,
+  "tests": {
+    "back_exits_fullscreen": {
+      "passed": true,
+      "media": {
+        "state": "PLAYING",
+        "code": 3,
+        "positionMs": 44172
+      }
+    },
+    "native_video_visible": {
+      "passed": true,
+      "review": "Final APK frame and HUD visually verified at 1920x1080"
+    },
+    "timeline_visible": {
+      "passed": true,
+      "time": "1:00 / 46:30"
+    },
+    "right_seek": {
+      "passed": true,
+      "before": {
+        "state": "PAUSED",
+        "code": 2,
+        "positionMs": 60064
+      },
+      "after": {
+        "state": "PAUSED",
+        "code": 2,
+        "positionMs": 70090
+      },
+      "deltaMs": 10026
+    },
+    "left_seek": {
+      "passed": true,
+      "before": {
+        "state": "PAUSED",
+        "code": 2,
+        "positionMs": 70090
+      },
+      "after": {
+        "state": "PAUSED",
+        "code": 2,
+        "positionMs": 60090
+      },
+      "deltaMs": -10000
+    },
+    "repeated_seek": {
+      "passed": true,
+      "before": {
+        "state": "PAUSED",
+        "code": 2,
+        "positionMs": 60090
+      },
+      "after": {
+        "state": "PAUSED",
+        "code": 2,
+        "positionMs": 90090
+      },
+      "deltaMs": 30000
+    },
+    "longpress_seek": {
+      "passed": true,
+      "before": {
+        "state": "PAUSED",
+        "code": 2,
+        "positionMs": 90090
+      },
+      "after": {
+        "state": "PAUSED",
+        "code": 2,
+        "positionMs": 110090
+      }
+    },
+    "paused_seek_preserves_pause": {
+      "passed": true,
+      "state": {
+        "state": "PAUSED",
+        "code": 2,
+        "positionMs": 110090
+      }
+    },
+    "slider_drag": {
+      "passed": true,
+      "before": {
+        "state": "PAUSED",
+        "code": 2,
+        "positionMs": 110090
+      },
+      "after": {
+        "state": "PAUSED",
+        "code": 2,
+        "positionMs": 0
+      }
+    },
+    "zero_clamp": {
+      "passed": true,
+      "state": {
+        "state": "PAUSED",
+        "code": 2,
+        "positionMs": 0
+      }
+    },
+    "resume": {
+      "passed": true,
+      "state": {
+        "state": "PLAYING",
+        "code": 3,
+        "positionMs": 0
+      }
+    },
+    "hud_auto_hide": {
+      "passed": true,
+      "review": "Controls visually absent after 6.3 seconds of uninterrupted playback"
+    },
+    "hud_up_reveals": {
+      "passed": true,
+      "review": "Up key shows current/total time, slider and actions above native video"
+    },
+    "episode_progress_reset": {
+      "passed": true,
+      "time": "0:04 / 46:30",
+      "media": {
+        "state": "PLAYING",
+        "code": 3,
+        "positionMs": 2356
+      }
+    },
+    "back_stops_playback": {
+      "passed": true,
+      "media": {
+        "state": "NONE",
+        "code": 0,
+        "positionMs": 0
+      }
+    }
+  },
+  "same_authenticated_profile_after_upgrade": true,
+  "same_authenticated_profile_after_cold_start": true
+}

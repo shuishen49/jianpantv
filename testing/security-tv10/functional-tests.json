@@ -1,0 +1,41 @@
+{
+  "version": "5.0.78-tv.10",
+  "apk_sha256": "9812e7321c3521ff1fdac0f5dc00f5ebac0eb0837ddd5da250b0829eb17269cc",
+  "same_authenticated_profile_after_upgrade": true,
+  "remote_pinyin_ren_to_人": true,
+  "real_tv_tested": false,
+  "tests": {
+    "chinese_search": "passed_16_results",
+    "native_playback": {
+      "state": {
+        "state": "PLAYING",
+        "code": 3,
+        "positionMs": 128000
+      },
+      "frame_visible": true
+    },
+    "pause_resume": {
+      "paused": {
+        "state": "PAUSED",
+        "code": 2,
+        "positionMs": 191218
+      },
+      "resumed": {
+        "state": "PLAYING",
+        "code": 3,
+        "positionMs": 191227
+      }
+    },
+    "fullscreen": "passed_visual_1920x1080",
+    "back_from_fullscreen": {
+      "search_restored": true,
+      "media": {
+        "state": "NONE",
+        "code": 0,
+        "positionMs": 0
+      }
+    },
+    "episode_switch": "passed_episode_1_to_2_via_remote_and_native_playing",
+    "session_after_cold_start": "passed_same_profile_text_compared_in_memory"
+  }
+}

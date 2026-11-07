@@ -1,0 +1,8 @@
+{
+  "apk_sha256": "9812e7321c3521ff1fdac0f5dc00f5ebac0eb0837ddd5da250b0829eb17269cc",
+  "timestamp": "2026-11-07T16:05:28.249628+08:00",
+  "exit_code": 0,
+  "no_threats_reported": true,
+  "remediation_disabled": true,
+  "engine_output": "Scan starting...\r\nScan finished.\r\nScanning D:\\source_code\\jianpian\\output\\jianpian-mobile-tv-5.0.78-tv.10.apk found no threats."
+}

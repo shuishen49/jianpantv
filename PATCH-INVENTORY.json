@@ -1,0 +1,72 @@
+[
+  {
+    "path": "smali/com/jp/bootstrap/JpApplication.smali",
+    "patched_sha256": "f5b58c393623fc7bfee1f0514a7e22d8da8f5cda2fe59197b1a2a238133be63d",
+    "original_sha256": "d0723fab5f7a32d126b07e36716b7cfc13c00a958f85db084c86a95d913ec342"
+  },
+  {
+    "path": "smali/com/jp/bootstrap/RuntimeUpdateReceiver.smali",
+    "patched_sha256": "1329fb160fd2298430931def2e2444212a9a10675dc8213aafca91af23b18341",
+    "original_sha256": "314c38c516410e2778beeb9be13622b4b6a7b66f00f7b7ca1861f706805cd20a"
+  },
+  {
+    "path": "smali/com/jp/runtime/shell/EmbeddedFilmPlayerController.smali",
+    "patched_sha256": "93d3505338ed914e9bbce014041a87da31d20d5d0e29643d932107a469cb062b",
+    "original_sha256": "032df360c66c56b249d304351956cc185c2fbef44f995c71978e469905dd22f8"
+  },
+  {
+    "path": "smali/com/jp/runtime/shell/JpFilmPlaybackMediaSession.smali",
+    "patched_sha256": "1634a36179c5cfe84cf9631629f2d2effa59424c3ec21f7e4b09f432d9943db6",
+    "original_sha256": "176c8226c9a0eaebfa8de6c8366278645f64e72b74eb5d29093df691cc6ea6c5"
+  },
+  {
+    "path": "smali/com/jp/runtime/shell/ShellActivity.smali",
+    "patched_sha256": "bfead4273ea447065e60ad6cd4413fb8ec9227cf03c052d39e0361f4b3355975",
+    "original_sha256": "a287754c79e627d68aa8281b6b2e95e3d23af03ff744714af2834889dee79439"
+  },
+  {
+    "path": "smali/com/jp/runtime/shell/StreamingMediaRuntime.smali",
+    "patched_sha256": "910e474e53b02340ee42ecc2c616a2ae5057a02889ee5f816bdc8f89f2d2efd4",
+    "original_sha256": "9e44e1a120a76458873ea0178c9463ae73d80adb2c8d8b762960580d59ac9c29"
+  },
+  {
+    "path": "smali/com/jp/runtime/web/RuntimeWindowKt.smali",
+    "patched_sha256": "48793bfa15703ffb53df83d4fa7fb9cb2d95ed801e258b83796310dda3099a4f",
+    "original_sha256": "da4eb9dd6174117834d5935e6349a69b48dc002e4d04db8a93c50e1c970786fa"
+  },
+  {
+    "path": "smali/com/jp/runtime/web/TrustedLocalWebRuntime$createWebView$1$4.smali",
+    "patched_sha256": "3ef6e0b7a5fc3b033cd91ccea838d733763f5fc8c45f1a348d414b5cd1462f9c",
+    "original_sha256": "33532c923c58b8f7ad096c202eaa30b6f534f259ce4f0fe47c72d62e8ebe4eb6"
+  },
+  {
+    "path": "smali/com/jp/runtime/web/TrustedLocalWebRuntime.smali",
+    "patched_sha256": "bfd3c903f0043d4f4a42f58ad1eb2016c986cd511feb95a95f79c8afa92cfe03",
+    "original_sha256": "189a0b9baba0dd23f5050e55be2aec90ffe2ed7de1bb8a4f3b6fa9b8cb931b3f"
+  },
+  {
+    "path": "smali/com/jp/bootstrap/internal/fj.smali",
+    "patched_sha256": "2e414323fdd4540d9e597de2d320f86e6986c33cc3b30cd9343c1f601e56c61d",
+    "original_sha256": "759d56f33b30b7bb4f540c206b8357b3bb54f6363545e40308d293c41a9e3188"
+  },
+  {
+    "path": "smali/com/jp/bootstrap/internal/qo.smali",
+    "patched_sha256": "6f05d285eb1b5b0ed9a41b0ad4b8247662c2e053f01fa711f48ead940c3b1fad",
+    "original_sha256": "aae2bdeb5a763977250addfd1f8ed20c80d0fc590328599227af54456de080ea"
+  },
+  {
+    "path": "smali/com/jp/bootstrap/internal/t3.smali",
+    "patched_sha256": "b4065c37e28d51e532b18f56ee5e71a1bc6d69cb8768a99da60369c0caa78339",
+    "original_sha256": "b4a999dcf3c7dde475b404b1ae55a8c88b2b12a4255e09aa8dc8e908fe0da63c"
+  },
+  {
+    "path": "smali/com/jp/bootstrap/internal/vs0.smali",
+    "patched_sha256": "f0c2545863bd538229e89def57a4793e9c0312cc7ed52dfbb73ec1c788fc58a3",
+    "original_sha256": "427c31c01e47b06d619f14d9c35ecc11129e64727cc1aab534b84cfc8d2006af"
+  },
+  {
+    "path": "smali/com/jp/bootstrap/internal/vt0.smali",
+    "patched_sha256": "db04bbdc4b8a358b13a7111f5767c671521704e0e21493bd0677bc221014cb52",
+    "original_sha256": "558acf936e975145e3faa598c66b1a88773a3a6e70b798a5b3b3ba1dc198676d"
+  }
+]

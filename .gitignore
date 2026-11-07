@@ -1,0 +1,29 @@
+# Local inputs, tools and disposable build trees
+/handoff/
+/tools/
+/work/
+/output/
+/audit/
+__pycache__/
+*.py[cod]
+
+# Never publish signing material, account exports or raw logs
+.local-signing/
+.env
+.env.*
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*.log
+*.apk
+*.aab
+*.zip
+*.har
+*.db
+*.sqlite*
+local.properties
+.idea/
+.vscode/

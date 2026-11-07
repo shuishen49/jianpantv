@@ -1,0 +1,16 @@
+{
+  "version": "5.0.78-tv.11",
+  "version_code": 5089,
+  "package": "local.tv.jianpianmobile",
+  "tested_apk_sha256": "3f7989602b996a5d11c9eefbdc7c3f7542479d25c549f5186e6cee7ba85e9438",
+  "tested_signer_sha256": "b90fbbf29671e0dc83c7ad3b43381c62c8d6b8788693a4bbdf1cb922951bc9d7",
+  "original_apk_sha256": "f7a524d843c4b077099ff49795ac17a49d187a942139752f466e32cef8db084b",
+  "native_snapshot_files": 14,
+  "publication_tooling_changes": [
+    "Signing password comes from environment or hidden prompt",
+    "Verifier accepts local tool paths and expected signer"
+  ],
+  "application_runtime_changed_for_publication": false,
+  "private_keys_or_account_data_published": false,
+  "real_tv_tested": false
+}
