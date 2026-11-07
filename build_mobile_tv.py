@@ -17,13 +17,14 @@ import subprocess
 import xml.etree.ElementTree as ET
 import zipfile
 from security_patch_tv import apply_security_patches
+from fullscreen_patch_tv import apply_fullscreen_patches
 
 
 ROOT = Path(__file__).resolve().parent
 PACKAGE = "local.tv.jianpianmobile"
-VERSION_NAME = "5.0.78-tv.11"
-VERSION_CODE = 5089
-RELEASE_ID = "20261107-local-tv11"
+VERSION_NAME = "5.0.78-tv.12"
+VERSION_CODE = 5090
+RELEASE_ID = "20261107-local-tv12"
 INPUT_SHA256 = "f7a524d843c4b077099ff49795ac17a49d187a942139752f466e32cef8db084b"
 ANDROID = "{http://schemas.android.com/apk/res/android}"
 ET.register_namespace("android", ANDROID[1:-1])
@@ -34,10 +35,19 @@ def run(args, **kwargs):
 
 
 def main():
+    global PACKAGE
     parser = argparse.ArgumentParser()
     parser.add_argument("--java-home", type=Path, required=True)
     parser.add_argument("--build-tools", type=Path, required=True)
+    parser.add_argument("--package", default=PACKAGE,
+                        help="Use a separate package when the installed signing key is unavailable")
+    parser.add_argument("--app-label", default="荐片·电视新版测试")
     args = parser.parse_args()
+    if not args.package or any(
+        not part.isascii() or not part.isidentifier() for part in args.package.split(".")
+    ) or "." not in args.package:
+        raise ValueError("Invalid Android package name")
+    PACKAGE = args.package
     java = args.java_home / "bin/java.exe"
     keytool = args.java_home / "bin/keytool.exe"
     apktool = ROOT / "tools/apktool_3.0.3.jar"
@@ -47,13 +57,13 @@ def main():
         raise RuntimeError("Input APK does not match the supplied sample")
 
     pristine = ROOT / "work/mobile-original"
-    decoded = ROOT / "work/mobile-tv11"
+    decoded = ROOT / "work/mobile-tv12"
     if not pristine.exists():
         run([java, "-jar", apktool, "d", original, "-o", pristine])
     # Start with a clean disposable stage to avoid stale vendor classes.
     if decoded.exists():
         resolved = decoded.resolve()
-        if resolved.parent != (ROOT / "work").resolve() or resolved.name != "mobile-tv11":
+        if resolved.parent != (ROOT / "work").resolve() or resolved.name != "mobile-tv12":
             raise RuntimeError("Unexpected staging cleanup target")
         shutil.rmtree(resolved)
     shutil.copytree(pristine, decoded)
@@ -151,6 +161,7 @@ def main():
             raise RuntimeError("Player overlay hook does not match expected sample")
         player_source = player_source.replace(anchor, anchor + "\n" + hook, 1)
     player_path.write_text(player_source, encoding="utf-8")
+    apply_fullscreen_patches(decoded)
     streaming_path = decoded / "smali/com/jp/runtime/shell/StreamingMediaRuntime.smali"
     streaming = streaming_path.read_text("utf-8")
     nearest_sync = (
@@ -195,7 +206,7 @@ def main():
         })
 
     app = manifest.find("application")
-    app.set(ANDROID + "label", "荐片·电视新版测试")
+    app.set(ANDROID + "label", args.app_label)
     app.set(ANDROID + "allowBackup", "false")
     app.set(ANDROID + "debuggable", "false")
     app.set(ANDROID + "banner", "@drawable/tv_banner")
@@ -299,7 +310,7 @@ def main():
     aligned = output / "jianpian-mobile-tv-aligned.apk"
     signed = output / ("jianpian-mobile-tv-" + VERSION_NAME + ".apk")
     # Keep the input path relative; this also avoids known aapt path issues.
-    run([java, "-jar", apktool, "b", "work/mobile-tv11", "-o", unsigned], cwd=ROOT)
+    run([java, "-jar", apktool, "b", "work/mobile-tv12", "-o", unsigned], cwd=ROOT)
     run([args.build_tools / "zipalign.exe", "-P", "16", "-f", "4", unsigned, aligned])
 
     private = ROOT / ".local-signing"
@@ -357,6 +368,8 @@ def main():
             "On-screen remote keyboard and dedicated full-screen playback controls",
             "Offline pinyin character input and immersive TV window",
             "Fullscreen timeline with real native progress and remote seek controls",
+            "Cinema WebView transparency restored on Android 9",
+            "Video TextureView kept attached across cinema layer changes",
         ],
         "runtime_validation": "pending",
         "security_patch": security,

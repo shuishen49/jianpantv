@@ -1,6 +1,10 @@
 # 荐片电视适配版
 
-当前版本：**5.0.78-tv.11**，版本号 **5089**。独立包名为 `local.tv.jianpianmobile`，桌面名称为“荐片·电视新版测试”。
+当前源码版本：**5.0.78-tv.12**，版本号 **5090**。修复索尼 Android 9 电视全屏切换时的 WebView 遮挡与视频视图重新挂载问题，**修复后的真机效果待用户测试**。
+
+本机生成的测试包使用独立包名 `local.tv.jianpiansonytest`，桌面名称为“荐片·索尼全屏测试”。它可以与 tv.11 共存，需要单独登录。不要卸载 tv.11 来解决签名不一致；本机没有 tv.11 的原签名密钥。
+
+默认构建包名仍为 `local.tv.jianpianmobile`。维护原版本时必须使用原签名密钥；仅在独立测试时指定 `--package` 和 `--app-label`。详见 [tv.12 修复与测试说明](docs/tv.12-索尼全屏黑屏修复.md)。
 
 这是基于指定手机 APK 制作的电视适配与安全修复源码仓库，包含适配脚本、构建补丁、修改后的原生 smali 和脱敏测试记录。原厂完整 Gradle 工程不在现有资料中；本仓库通过原始 APK 和补丁重建电视版。
 
@@ -22,6 +26,7 @@
 | --- | --- |
 | `build_mobile_tv.py` | 从固定原始 APK 生成、对齐并签名电视版 |
 | `security_patch_tv.py` | 统计 SDK 移除、运行时冻结和 WebView 加固补丁 |
+| `fullscreen_patch_tv.py` | 全屏透明背景、保留视频视图与退出全屏恢复 |
 | `tv-adapter/` | 电视界面、方向键导航、拼音表及播放器桥接补丁 |
 | `generate_tv_pinyin.py` | 可选的离线拼音表生成器 |
 | `patched/smali/` | tv.11 最终构建中发生变化的 14 个原生文件，便于审阅 |
@@ -64,11 +69,21 @@ python .\build_mobile_tv.py `
 构建输出：
 
 ```text
-output/jianpian-mobile-tv-5.0.78-tv.11.apk
+output/jianpian-mobile-tv-5.0.78-tv.12.apk
 output/mobile-tv-build.json
 ```
 
-首次构建会在 `work/mobile-original` 解包原始 APK；每次构建会重建经过路径检查的临时目录 `work/mobile-tv11`。
+首次构建会在 `work/mobile-original` 解包原始 APK；每次构建会重建经过路径检查的临时目录 `work/mobile-tv12`。
+
+生成与 tv.11 共存的索尼测试包：
+
+```powershell
+python .\build_mobile_tv.py `
+  --java-home 'C:\path\to\jdk-17' `
+  --build-tools 'C:\path\to\Android\Sdk\build-tools\36.0.0' `
+  --package local.tv.jianpiansonytest `
+  --app-label '荐片·索尼全屏测试'
+```
 
 拼音数据已提交，普通构建不需要安装额外 Python 包。仅在重新生成字表时安装构建依赖：
 
@@ -83,14 +98,17 @@ python .\generate_tv_pinyin.py
 
 ```powershell
 python .\testing\verify_tv10_security.py `
-  --tv-version 11 `
+  --tv-version 12 `
   --java-home 'C:\path\to\jdk-17' `
-  --build-tools 'C:\path\to\Android\Sdk\build-tools\36.0.0'
+  --build-tools 'C:\path\to\Android\Sdk\build-tools\36.0.0' `
+  --expected-signer f16177462b86ed9e88fc6d11b34dcb8b0c129c8589e698af677c8ef446307efb
 ```
 
-验证器默认核对本次已交付 APK 的签名证书。自行签名时，用 `apksigner` 获取自己的证书 SHA-256，再通过 `--expected-signer <证书SHA-256>` 显式传入预期值。验证范围包括：危险权限、被移除的 SDK 和旧桥、业务网页不变性、每个网页资源及 bundle 哈希、v2/v3 签名和 ZIP 对齐。
+上述命令核对本机 tv.12 独立测试包的签名。验证器未指定参数时仍使用 tv.11 的历史签名基线。自行签名时，用 `apksigner` 获取自己的证书 SHA-256，再通过 `--expected-signer <证书SHA-256>` 显式传入预期值。验证范围包括：危险权限、被移除的 SDK 和旧桥、业务网页不变性、每个网页资源及 bundle 哈希、v2/v3 签名和 ZIP 对齐。
 
-本次已交付 APK 的 SHA-256：
+以下哈希与雷电测试记录是仓库保留的 **tv.11 历史基线**，不代表 tv.12 的测试结果。tv.12 见上述独立报告。
+
+tv.11 已交付 APK 的 SHA-256：
 
 ```text
 3f7989602b996a5d11c9eefbdc7c3f7542479d25c549f5186e6cee7ba85e9438

@@ -263,10 +263,18 @@ html.jp-local-tv.jp-tv-cinema .detail__player-header { visibility: hidden !impor
 html.jp-local-tv.jp-tv-cinema .detail__player-shell {
   position: fixed !important; inset: 0 !important; margin: 0 !important;
   width: 100vw !important; height: 100vh !important; z-index: 80;
+  padding: 0 !important;
+  background: transparent !important;
 }
 html.jp-local-tv.jp-tv-cinema .detail__player-shell .integrated-player,
 html.jp-local-tv.jp-tv-cinema .detail__player-shell .integrated-player__stage {
   width: 100% !important; height: 100% !important; aspect-ratio: auto !important;
+}
+/* Native video sits below the WebView; only its stage is transparent.
+   Loading/error UI and the cinema controls retain their own backgrounds. */
+html.jp-local-tv.jp-tv-cinema .integrated-player--native,
+html.jp-local-tv.jp-tv-cinema .integrated-player--native .integrated-player__stage {
+  background: transparent !important;
 }
 html.jp-local-tv.jp-tv-cinema .detail__player-shell:before { display: none !important; }
 html.jp-local-tv.jp-tv-cinema .jp-tv-cinema-bar {

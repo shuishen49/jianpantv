@@ -46,7 +46,7 @@ def once(source, before, after):
 
 def apply_security_patches(decoded: Path):
     root = decoded.resolve()
-    if root.name not in ("mobile-tv10", "mobile-tv11") or root.parent.name != "work":
+    if root.name not in ("mobile-tv10", "mobile-tv11", "mobile-tv12") or root.parent.name != "work":
         raise RuntimeError("Security patch requires an isolated TV build tree")
     changes = []
     internal = root / "smali/com/jp/bootstrap/internal"

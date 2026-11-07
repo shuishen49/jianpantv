@@ -1,0 +1,34 @@
+{
+  "apk": "D:\\source_code\\jianpantv\\output\\jianpian-mobile-tv-5.0.78-tv.12.apk",
+  "sha256": "f86f16ca267fc341ec98d52276fef8f236d70ec8213992cb7dabe1d3cd6154df",
+  "size_bytes": 6645812,
+  "static_checks": {
+    "compiled_dex_no_umeng_types": true,
+    "compiled_dex_no_originless_fallback_types": true,
+    "analytics_disabled_key_empty": true,
+    "builtin_and_each_web_resource_hash_valid": true,
+    "original_business_web_modules_unchanged": true,
+    "no_storage_media_camera_phone_ad_permissions": true,
+    "same_signer_v2_v3_verified": true,
+    "zip_alignment_verified": true
+  },
+  "native_libraries": [
+    "lib/arm64-v8a/libandroidx.graphics.path.so",
+    "lib/armeabi-v7a/libandroidx.graphics.path.so",
+    "lib/x86/libandroidx.graphics.path.so",
+    "lib/x86_64/libandroidx.graphics.path.so"
+  ],
+  "dex_class_count": 4790,
+  "original_web_files_verified": 10,
+  "permissions": [
+    "android.permission.INTERNET",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.FOREGROUND_SERVICE",
+    "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
+    "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+    "android.permission.WAKE_LOCK",
+    "local.tv.jianpiansonytest.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+    "android.permission.MODIFY_AUDIO_SETTINGS"
+  ],
+  "signer_sha256": "f16177462b86ed9e88fc6d11b34dcb8b0c129c8589e698af677c8ef446307efb"
+}
