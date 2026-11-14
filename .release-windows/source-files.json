@@ -1,0 +1,22 @@
+{
+  "windows-native/build_native.py": "905f465ba57f5ef957e31bb4023105d914bdf009c507ba1a85768bd7855203e3",
+  "windows-native/build_tests.py": "72a5f4a475a325b4eac1207f381c390205fcd41b2435b7149218d141fecd2ec6",
+  "windows-native/cache.h": "2740e3fe7ca01a612efe2585c510cdb9c4c08c8a65c822106e326b320e65e614",
+  "windows-native/cache_test.c": "613c6bd2d9ecad5365739a004aa8fb0205e07183558d72b2395045108e23f502",
+  "windows-native/check_fullscreen.py": "df8018841a65dfc1ff1bdfee32e55c08d255084f7e890045fa08027dc499f1a6",
+  "windows-native/compat/EventToken.h": "bcdd22b1f2d621f557cb887cb6130b510ce46feef6f02d94a366182ebff8aac9",
+  "windows-native/desktop.js": "c89ee8af37f5fdf484daacc2f56522c008cc869cf501798bff6e7199f1686db7",
+  "windows-native/desktop.manifest": "bd05785b5bdaa6258a390215edf41fdd60f86ed96a6ce386390814066f0ebd6f",
+  "windows-native/desktop_test.cjs": "2b1e96fdacf20635b112b6ebfc8a3956680d527a253005bc18f4d68b816860f4",
+  "windows-native/fullscreen.js": "0eb6eabb797b2b48f2ebddb854c0d727110e9ea592e2f9fd53499799ce2c8be5",
+  "windows-native/fullscreen_test.cjs": "9847c1d6f7206bf894370699d78ca40b1af5c59fe29a8acb591fa36aa4cf8f91",
+  "windows-native/main.c": "20756509180d778006ed9bd71fcfdcc52b5f365c2e368447a959a1b34e75a96e",
+  "windows-native/package_native.py": "a49cb746fe92c4c836a46a30f450d833864b0b3f9fd66ef6868bd291ad56d28a",
+  "windows-native/playlist_test.c": "0d68f8836b30745f0266d57f1208c95f754a4b8bbaf3fdf8498a9daf386c7cb7",
+  "windows-native/policy.h": "c966d4212bab96f7ca77f2f9a13813d927b791dd5ad1e7d6d02c0709dda0d336",
+  "windows-native/policy_test.c": "3f6f95839042e09b8af47424089d21e7324b0c0b4a7c0e9f4946b226c47f57fd",
+  "windows-native/README.md": "6921d724c01fc2eb3eed5ee38013db1358e433d2df1c5ef15526b12b03081c59",
+  "windows-native/storage-dialog.rc": "fa3cbf7c3db522f4cd38999501ee25b94aa6949123237e8f8153bc3518a8d3ad",
+  "windows-native/verify_native.py": "1a2a0b341b180cfe4a5fff7b73f9f2c9f5cf3ec911168dc5ab56aaca36a282db",
+  "windows-desktop/desktop.css": "daf050cbecf0ae5c0f94d67b364620cf90cb3b2d18e7b95948723c55ef25e9de"
+}
