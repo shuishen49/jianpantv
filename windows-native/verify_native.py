@@ -7,10 +7,11 @@ import shutil
 import struct
 import subprocess
 import sys
+from check_fullscreen import check as check_fullscreen
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "output/Jianpian-Windows-C-0.2.1"
-TEST = ROOT / "testing/windows-native-0.2.1"
+OUT = ROOT / "output/Jianpian-Windows-C-0.2.2"
+TEST = ROOT / "testing/windows-native-0.2.2"
 BUILD = ROOT / "work/windows-native-build"
 
 
@@ -88,6 +89,16 @@ def check_functional():
     assert states[4]["videos"][0]["paused"]
     assert states[5]["videos"][0]["currentTime"] >= 60 and not states[5]["videos"][0]["paused"]
     assert memory[6]["native_fullscreen"]
+    full = states[6]["desktopFullscreen"]
+    assert full["nativeFullscreen"] and full["playerFullscreen"] and full["unobstructed"]
+    assert abs(full["player"]["x"]) <= 2 and abs(full["player"]["y"]) <= 2
+    assert abs(full["player"]["width"] - full["width"]) <= 2
+    assert abs(full["player"]["height"] - full["height"]) <= 2
+    assert states[6]["videoNodePreserved"] and not states[6]["videos"][0]["paused"]
+    assert states[6]["videos"][0]["currentTime"] > states[5]["videos"][0]["currentTime"]
+    assert not states[7]["desktopFullscreen"]["nativeFullscreen"]
+    assert not states[7]["desktopFullscreen"]["playerFullscreen"]
+    assert all("请旋转手机" not in state["text"] for state in states)
     assert len({entry["window_handle"] for entry in memory}) == 1
     assert states[12]["route"].endswith("#/home") and not states[12]["videos"]
     assert runtime["api_success"] > 0 and runtime["api_failure"] == 0
@@ -122,6 +133,9 @@ def check_functional():
     return {"homepage": True, "real_search_results": states[1]["cards"], "video_decoded_1080p": True,
             "playback_progressed": [video3["currentTime"], video4["currentTime"]],
             "pause": True, "seek_and_resume": True, "native_fullscreen": True,
+            "player_button_fills_viewport": True, "fullscreen_preserves_playback": True,
+            "fullscreen_unobstructed": True,
+            "no_phone_rotation_prompt": True, "fullscreen_exit_restores_layout": True,
             "window_handle_preserved": True, "returned_home": True, "runtime": runtime,
             "small_player_by_default": True, "discussion_confined_to_right_pane": True,
             "compact_window_900x640": True, "detail_scroll": True,
@@ -145,6 +159,7 @@ def main():
     policy = subprocess.run([str(BUILD / "policy-test.exe")], capture_output=True, text=True, check=True)
     report = {"timestamp": datetime.datetime.now().astimezone().isoformat(), "pe": pe,
               "url_policy": json.loads(policy.stdout), "runtime_integrity": check_integrity()}
+    report["fullscreen_regression"] = check_fullscreen()
     if "--binary-only" not in sys.argv:
         for executable in ("cache-test", "playlist-test"):
             folder = TEST / executable

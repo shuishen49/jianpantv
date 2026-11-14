@@ -1,19 +1,21 @@
 # 荐片电视适配版与 Windows 客户端
 
-## Windows C 桌面版 0.2.1
+## Windows C 桌面版 0.2.2
 
-[下载 Windows 测试版](https://github.com/shuishen49/jianpantv/releases/tag/v0.2.1-windows)
+[下载 Windows 测试版](https://github.com/shuishen49/jianpantv/releases/tag/v0.2.2-windows)
 （Windows 10/11 x64，便携 ZIP 约 1.03 MiB，需要系统 WebView2 Runtime）。
 C17 / Win32 宿主，无需模拟器。支持小窗播放、完整详情与讨论、
 自定义视频保存路径及自动创建目录、普通 HLS 边下边播与整集缓存。
 系统运行环境、浏览器用户数据和视频缓存另占空间。
 
-[使用与验证范围](docs/windows-0.2.1-release.md) ·
+[使用与验证范围](docs/windows-0.2.2-release.md) ·
 [Windows 客户端构建说明](docs/windows-native-build.md) ·
 [C 客户端源码](windows-native/)
 
 原版 P2P 内核未移植，完整长片离线播放、账号登录及全部线路尚未验证。
 EXE 尚未签署 Authenticode；最终运行目录和便携 ZIP 的 Defender 扫描未检出威胁。
+
+本版修复 Windows 全屏时的“请旋转手机观看”提示及 F11 仅放大窗口的问题，并避免详情和讨论覆盖全屏视频。播放器按钮、工具栏和 F11 统一全屏；Esc / F11 或右上角按钮退出。
 
 ## 电视适配版
 

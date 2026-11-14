@@ -1,0 +1,84 @@
+{
+  "version": "0.2.2",
+  "language": "C17",
+  "architecture": "x64",
+  "compiler": "Zig 0.14.1 (Clang C compiler)",
+  "apk_input_sha256": "f7a524d843c4b077099ff49795ac17a49d187a942139752f466e32cef8db084b",
+  "web_bundle_sha256": "67c852a704f6bbb92c7e35c9ec56a97503662cbce67140e31ede733407679ac6",
+  "microsoft_sdk_sha256": "90778deb1b77e36292828b4b5833c9255c27533f40e0ddd55891ae718944edc4",
+  "assets": {
+    "assets/app-modern.js": {
+      "sha256": "d9b31624879361afa0f1eec042d4bac65d2d7fbb76c4191984e1ed96dffc270f",
+      "bytes": 2122056,
+      "compressed_bytes": 675949
+    },
+    "assets/avatar-default-DnkUUMbV.png": {
+      "sha256": "71ff2aaecf6d54aa73c72f70d9caf9354bd541e467eb9278ee2a29a5a930e7fc",
+      "bytes": 95322,
+      "compressed_bytes": 94657
+    },
+    "assets/avatar-guest-CkEyOZ3z.png": {
+      "sha256": "f9c79ce4c4fce27c733771503ed96b04f708bdfc1348de4ef0b1a8c2c8869abc",
+      "bytes": 71161,
+      "compressed_bytes": 70828
+    },
+    "assets/index-Xyj434N6.css": {
+      "sha256": "89c21127314f372a0077a761b96ea6e1499a560bb2b72502c18d135b19743fdd",
+      "bytes": 335141,
+      "compressed_bytes": 44990
+    },
+    "assets/logo-DkDMvUmZ.png": {
+      "sha256": "f134af389cc8be3debdefba9f1c4e22b424936e70409ba9d02e01dec770dbdaf",
+      "bytes": 4652,
+      "compressed_bytes": 4628
+    },
+    "assets/profile-hero-DMFLXwVC.png": {
+      "sha256": "3b692dd373da8619e09e58b4b95de7a2a642e5cf02ce302e7500c89c06f6094f",
+      "bytes": 46858,
+      "compressed_bytes": 46581
+    },
+    "desktop-fullscreen.js": {
+      "sha256": "0eb6eabb797b2b48f2ebddb854c0d727110e9ea592e2f9fd53499799ce2c8be5",
+      "bytes": 3374,
+      "compressed_bytes": 1320
+    },
+    "desktop.css": {
+      "sha256": "daf050cbecf0ae5c0f94d67b364620cf90cb3b2d18e7b95948723c55ef25e9de",
+      "bytes": 5026,
+      "compressed_bytes": 1686
+    },
+    "desktop.js": {
+      "sha256": "c89ee8af37f5fdf484daacc2f56522c008cc869cf501798bff6e7199f1686db7",
+      "bytes": 8545,
+      "compressed_bytes": 3518
+    },
+    "index.html": {
+      "sha256": "d1a5e3c9af731cbb269c039282b549ab3fa0d33b981a0c004696094759493b61",
+      "bytes": 4661,
+      "compressed_bytes": 1837
+    },
+    "logo.png": {
+      "sha256": "f134af389cc8be3debdefba9f1c4e22b424936e70409ba9d02e01dec770dbdaf",
+      "bytes": 4652,
+      "compressed_bytes": 4628
+    }
+  },
+  "no_android_runtime": true,
+  "no_original_windows_binary": true,
+  "exe_sha256": "ee31e405b032c0c08a680968b4ae1c6e2e5ba63ae828bca46ac005037b91475e",
+  "loader_sha256": "d3fce90bdeecb08596e377dea6a316354dd8949e32ff09b89d51be00c14e21b6",
+  "files": {
+    "Jianpian.exe": {
+      "bytes": 1050624,
+      "sha256": "ee31e405b032c0c08a680968b4ae1c6e2e5ba63ae828bca46ac005037b91475e"
+    },
+    "Microsoft-WebView2-LICENSE.txt": {
+      "bytes": 1487,
+      "sha256": "0af8f1b807512aae39c2ac1aa4d0cae65cabecb6fd554b8439a5162a0d6eca55"
+    },
+    "WebView2Loader.dll": {
+      "bytes": 194912,
+      "sha256": "d3fce90bdeecb08596e377dea6a316354dd8949e32ff09b89d51be00c14e21b6"
+    }
+  }
+}

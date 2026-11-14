@@ -14,7 +14,7 @@ import os
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = Path(__file__).resolve().parent
 STAGE = ROOT / "work/windows-native-build"
-OUT = ROOT / "output/Jianpian-Windows-C-0.2.1"
+OUT = ROOT / "output/Jianpian-Windows-C-0.2.2"
 SDK = ROOT / "tools/webview2"
 ZIG = ROOT / "tools/zig-x86_64-windows-0.14.1/zig.exe"
 APK = ROOT / "handoff/apks/mobile-5.0.78.apk"
@@ -49,6 +49,23 @@ def compress(data):
         cabinet.CloseCompressor(handle)
 
 
+def adapt_fullscreen(app):
+    # Replace the shared mobile enter/exit and resize helpers, not just the toast.
+    start = app.index("async function k0(e,t={}){")
+    end = app.index("function E0(){", start)
+    assert app.count("async function k0(e,t={}){") == 1
+    assert "请旋转手机观看" in app[start:end] and "async function _0(e){" in app[start:end]
+    app = app[:start] + (
+        'async function k0(e,t={}){if(!e)return"unsupported";QZ=e;'
+        'return window.__jpDesktopFullscreen.enter(e)}'
+        'async function _0(e){QZ=null;return window.__jpDesktopFullscreen.exit(e)}'
+    ) + app[end:]
+    target = 'function p0(e){e&&(QZ=e,n0(!0),a0()?c0(e):f0(e))}'
+    assert app.count(target) == 1
+    return app.replace(target,
+        'function p0(e){e&&window.__jpDesktopFullscreen.refresh(e)}')
+
+
 def prepare_assets():
     assert sha(APK) == APK_SHA, "Unexpected original APK"
     assert sha(SDK / "microsoft.web.webview2.1.0.4314.35.nupkg") == SDK_SHA
@@ -74,9 +91,11 @@ def prepare_assets():
     app = app.replace(target, "window.__jpRegisterHls(new e({enableWorker:!0,lowLatencyMode:!1,"
                       "maxBufferLength:20,maxMaxBufferLength:40,maxBufferSize:2e7,"
                       "backBufferLength:20,frontBufferFlushThreshold:60,...r}))")
+    app = adapt_fullscreen(app)
     assets["assets/app-modern.js"] = app.encode()
     html = assets["index.html"].decode()
     html = html.replace("</head>", '<link rel="stylesheet" href="/runtime/desktop.css" />'
+                        '<script src="/runtime/desktop-fullscreen.js"></script>'
                         '<script src="/runtime/desktop.js"></script></head>')
     html = html.replace('<script nomodule src="/runtime/assets/app-legacy.js"></script>', "")
     html = html.replace("<title>荐片 jianpian.com</title>", "<title>荐片 · Windows</title>")
@@ -84,6 +103,7 @@ def prepare_assets():
     assets["index.html"] = html.encode()
     assets["desktop.css"] = (ROOT / "windows-desktop/desktop.css").read_bytes()
     assets["desktop.js"] = (SOURCE / "desktop.js").read_bytes()
+    assets["desktop-fullscreen.js"] = (SOURCE / "fullscreen.js").read_bytes()
     result = bytearray(b"JPW1" + struct.pack("<I", len(assets)))
     inventory = {}
     for name, body in sorted(assets.items()):
@@ -129,7 +149,7 @@ def main():
     subprocess.run(command, env=env, check=True)
     shutil.copyfile(loader, OUT / "WebView2Loader.dll")
     shutil.copyfile(SDK / "LICENSE.txt", OUT / "Microsoft-WebView2-LICENSE.txt")
-    evidence = {"version": "0.2.1", "language": "C17", "architecture": "x64",
+    evidence = {"version": "0.2.2", "language": "C17", "architecture": "x64",
                 "compiler": "Zig 0.14.1 (Clang C compiler)",
                 "apk_input_sha256": APK_SHA, "web_bundle_sha256": BUNDLE_SHA,
                 "microsoft_sdk_sha256": SDK_SHA, "assets": assets,

@@ -1,0 +1,16 @@
+{
+  "version": "0.2.2",
+  "player_internal_button": true,
+  "no_phone_rotation_prompt": true,
+  "details_hidden_in_fullscreen": true,
+  "visible_exit_button": true,
+  "toolbar_button": true,
+  "f11_exit": true,
+  "f11": true,
+  "escape_exit": true,
+  "player_expand_button": true,
+  "exe_sha256": "ee31e405b032c0c08a680968b4ae1c6e2e5ba63ae828bca46ac005037b91475e",
+  "timestamp": "2026-11-14T15:38:40.271Z",
+  "method": "Actual Windows UI clicks and F11/Escape on final binary; screenshots visually inspected",
+  "storage_settings_saved_in_prior_022_build": true
+}

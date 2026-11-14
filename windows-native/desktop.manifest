@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-  <assemblyIdentity name="Local.JianpianDesktop.Native" version="0.2.1.0" type="win32" processorArchitecture="amd64" />
+  <assemblyIdentity name="Local.JianpianDesktop.Native" version="0.2.2.0" type="win32" processorArchitecture="amd64" />
   <description>Jianpian Windows Desktop</description>
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security><requestedPrivileges>

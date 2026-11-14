@@ -1,0 +1,32 @@
+name: Publish verified Windows 0.2.2 release
+
+on:
+  push:
+    branches:
+      - codex/release-windows-022-20261114
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-jianpantv-windows-022
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch the source and release staging commit
+        env:
+          EXPECTED_REPOSITORY: shuishen49/jianpantv
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "$EXPECTED_REPOSITORY"
+          git clone --depth 2 --branch "$GITHUB_REF_NAME" \
+            "https://github.com/$GITHUB_REPOSITORY.git" release-stage
+          test "$(git -C release-stage rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Validate source and assets, upload, and publish
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 release-stage/.github/scripts/publish_windows_022.py

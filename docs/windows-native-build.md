@@ -62,7 +62,7 @@ python .\windows-native\build_tests.py
 python .\windows-native\verify_native.py --binary-only
 ```
 
-输出在 `output/Jianpian-Windows-C-0.2.1/`。
+输出在 `output/Jianpian-Windows-C-0.2.2/`。
 程序运行还需要目标机器已安装的 Microsoft Edge WebView2 Runtime。
 完整解压发布包后运行；不要只复制 EXE 而丢弃微软加载器 DLL。
 
@@ -73,8 +73,8 @@ python .\windows-native\verify_native.py --binary-only
 在自己的可写目录运行诊断：
 
 ```powershell
-$diagnostics = Join-Path (Get-Location) 'testing\windows-native-0.2.1'
-.\output\Jianpian-Windows-C-0.2.1\Jianpian.exe --diagnostics $diagnostics --smoke-test
+$diagnostics = Join-Path (Get-Location) 'testing\windows-native-0.2.2'
+.\output\Jianpian-Windows-C-0.2.2\Jianpian.exe --diagnostics $diagnostics --smoke-test
 ```
 
 等诊断完成后运行：

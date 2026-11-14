@@ -134,7 +134,7 @@
       <p class="jp-cache-help">详情和讨论可在右侧滚动查看。全屏快捷键 F11，退出按 Esc。视频缓存会另占磁盘空间。</p>`;
     panel.querySelector(".jp-player-expand").onclick = () => {
       const player = shell.querySelector(".integrated-player");
-      player?.requestFullscreen().catch(() => { message = "请点击窗口上方的“全屏”或按 F11"; render(); });
+      window.__jpDesktopFullscreen.enter(player);
     };
     panel.querySelector(".jp-cache-save").onclick = saveEpisode;
     panel.querySelector(".jp-cache-cancel").onclick = () => job?.abort();

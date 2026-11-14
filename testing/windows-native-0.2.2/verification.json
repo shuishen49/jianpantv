@@ -1,0 +1,122 @@
+{
+  "timestamp": "2026-11-14T23:36:02.035688+08:00",
+  "pe": {
+    "machine": "0x8664",
+    "imports": [
+      "user32.dll",
+      "gdi32.dll",
+      "ole32.dll",
+      "shlwapi.dll",
+      "shell32.dll",
+      "winhttp.dll",
+      "bcrypt.dll",
+      "cabinet.dll",
+      "ws2_32.dll",
+      "dwmapi.dll",
+      "api-ms-win-crt-heap-l1-1-0.dll",
+      "api-ms-win-crt-private-l1-1-0.dll",
+      "api-ms-win-crt-runtime-l1-1-0.dll",
+      "api-ms-win-crt-stdio-l1-1-0.dll",
+      "api-ms-win-crt-string-l1-1-0.dll",
+      "kernel32.dll",
+      "api-ms-win-crt-math-l1-1-0.dll",
+      "api-ms-win-crt-environment-l1-1-0.dll"
+    ],
+    "uses_dotnet": false,
+    "aslr": true,
+    "nx": true,
+    "high_entropy_aslr": true
+  },
+  "url_policy": {
+    "cases": 32,
+    "failed": 0
+  },
+  "runtime_integrity": {
+    "intact": {
+      "verified": true
+    },
+    "tampered": {
+      "verified": false
+    },
+    "missing": {
+      "verified": false
+    }
+  },
+  "fullscreen_regression": {
+    "passed": 8,
+    "adapted_mobile_helpers": true,
+    "no_orientation_api": true,
+    "native_and_player_share_state": true,
+    "exit_button": true,
+    "escape": true,
+    "route_exit": true,
+    "failed_enter_restores_layout": true,
+    "video_node_retained": true
+  },
+  "cache-test": {
+    "passed": 40,
+    "checksum_and_truncation": true,
+    "range_separation": true
+  },
+  "playlist-test": {
+    "passed": 11,
+    "complete_manifest": true,
+    "key_rewrite": true,
+    "missing_fragments_rejected": true,
+    "path_traversal_rejected": true
+  },
+  "download_controller": {
+    "passed": 9,
+    "complete_vod": true,
+    "relative_urls": true,
+    "aes128_key": true,
+    "init_segment": true,
+    "failed_job_unpublished": true,
+    "cancel": true,
+    "folder_change": true,
+    "live_and_unsupported_rejected": true
+  },
+  "functional": {
+    "homepage": true,
+    "real_search_results": 8,
+    "video_decoded_1080p": true,
+    "playback_progressed": [
+      85.754677,
+      90.924965
+    ],
+    "pause": true,
+    "seek_and_resume": true,
+    "native_fullscreen": true,
+    "player_button_fills_viewport": true,
+    "fullscreen_preserves_playback": true,
+    "fullscreen_unobstructed": true,
+    "no_phone_rotation_prompt": true,
+    "fullscreen_exit_restores_layout": true,
+    "window_handle_preserved": true,
+    "returned_home": true,
+    "runtime": {
+      "language": "C17",
+      "emulator_required": false,
+      "api_success": 48,
+      "api_failure": 0,
+      "media_success": 44,
+      "media_failure": 4,
+      "blocked_media": 4,
+      "last_win32_error": 5,
+      "selected_api_host": "w24b52ebe.bdgnbrws.com",
+      "cache_hits": 27,
+      "cache_writes": 6,
+      "cache_errors": 0,
+      "cache_bytes": 5263624
+    },
+    "small_player_by_default": true,
+    "discussion_confined_to_right_pane": true,
+    "compact_window_900x640": true,
+    "detail_scroll": true,
+    "real_download_while_playing": true,
+    "cancel_download": true,
+    "cache_entries_verified": 25,
+    "account_login_tested": false,
+    "all_media_lines_tested": false
+  }
+}

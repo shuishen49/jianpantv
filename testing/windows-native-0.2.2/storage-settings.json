@@ -1,0 +1,16 @@
+{
+  "tested_version": "0.2.1",
+  "scope": "Historical UI baseline; unchanged cache.h and storage-dialog.rc verified byte-for-byte. 0.2.2 cache/path tests were rerun; this does not claim the historical UI test was rerun.",
+  "historical_result": {
+    "dialog": "app settings with editable path",
+    "selected_directory": "D:\\jianpandownload",
+    "directory_was_absent": true,
+    "created_on_save": true,
+    "media_directory_exists": true,
+    "setting_persisted": true,
+    "reopened_with_same_path": true,
+    "invalid_relative_path_shows_inline_error": true,
+    "cancel_preserves_setting": true,
+    "nested_creation_native_test_passed": true
+  }
+}

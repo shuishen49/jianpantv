@@ -95,8 +95,10 @@ static LONG saved_style;
 static WINDOWPLACEMENT saved_placement = { .length = sizeof(WINDOWPLACEMENT) };
 static wchar_t diagnostic_dir[PATH_CAP];
 static int diagnostic_stage;
+static unsigned diagnostic_playback_waits;
 static IStream *preview_stream;
 static BOOL diagnostic_busy;
+static void set_fullscreen(BOOL value);
 
 static void *allocate(size_t size) { return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size ? size : 1); }
 static void deallocate(void *value) { if (value) HeapFree(GetProcessHeap(), 0, value); }
@@ -450,7 +452,13 @@ static void desktop_request(ICoreWebView2WebResourceRequestedEventArgs *args,
         ICoreWebView2WebResourceRequest *source, const wchar_t *path, const wchar_t *method) {
     wchar_t base[PATH_CAP];
     cache_snapshot(base);
-    if (!wcscmp(path, L"/desktop/cache-status") && !wcscmp(method, L"GET")) {
+    if ((!wcscmp(path, L"/desktop/fullscreen/enter") || !wcscmp(path, L"/desktop/fullscreen/exit")) &&
+            !wcscmp(method, L"POST")) {
+        set_fullscreen(!wcscmp(path, L"/desktop/fullscreen/enter"));
+        const char *json = fullscreen ? "{\"fullscreen\":true}" : "{\"fullscreen\":false}";
+        respond(args, json, (DWORD)strlen(json), 200,
+            L"Content-Type: application/json\r\nCache-Control: no-store\r\n");
+    } else if (!wcscmp(path, L"/desktop/cache-status") && !wcscmp(method, L"GET")) {
         wchar_t escaped[PATH_CAP*2], json[PATH_CAP*2+512];
         size_t used = 0;
         for (size_t i = 0; base[i]; ++i) {
@@ -742,6 +750,9 @@ static void set_fullscreen(BOOL value) {
         SetWindowPos(window, NULL, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
     }
     layout();
+    if (core) ICoreWebView2_ExecuteScript(core, value ?
+        L"window.__jpDesktopFullscreen&&window.__jpDesktopFullscreen.setNative(true)" :
+        L"window.__jpDesktopFullscreen&&window.__jpDesktopFullscreen.setNative(false)", NULL);
 }
 static void toggle_fullscreen(void) {
     BOOL element = FALSE;
@@ -895,7 +906,8 @@ static void diagnostic_actions(void) {
     case 5:
         ICoreWebView2_ExecuteScript(core, L"(function(){var v=document.querySelector('video');"
             L"if(v){v.currentTime=60;v.play().catch(function(){});window.__jpSmokeAction='seek_60_and_resume'}})()", NULL); break;
-    case 6: toggle_fullscreen(); break;
+    case 6:
+        ICoreWebView2_ExecuteScript(core, L"document.querySelector('.jp-player-expand').click()", NULL); break;
     case 7:
         if (fullscreen) toggle_fullscreen();
         ICoreWebView2_ExecuteScript(core, L"document.getElementById('work-discussion-tab').click()", NULL); break;
@@ -931,6 +943,16 @@ static HRESULT STDMETHODCALLTYPE preview_complete(ICoreWebView2CapturePreviewCom
 HANDLER(ICoreWebView2CapturePreviewCompletedHandler, preview_handler, preview_complete);
 static HRESULT STDMETHODCALLTYPE script_complete(ICoreWebView2ExecuteScriptCompletedHandler *self,
         HRESULT error, LPCWSTR json) {
+    /* Live sources may take longer than the first ten-second sample to decode.
+       Wait for actual playback, within a fixed 90-second budget, before taking
+       the before/after playback and fullscreen measurements. */
+    if (smoke && diagnostic_stage == 3 && SUCCEEDED(error) && json &&
+            wcsstr(json, L"\"playbackReady\":false") && diagnostic_playback_waits++ < 45) {
+        --diagnostic_stage;
+        diagnostic_busy = FALSE;
+        SetTimer(window, 1, 2000, NULL);
+        return S_OK;
+    }
     wchar_t name[80], path[PATH_CAP], runtime[2048];
     _snwprintf(name, ARRAY_COUNT(name), L"ui-state-%d.json", diagnostic_stage);
     diagnostic_path(path, name);
@@ -959,10 +981,15 @@ static void capture_diagnostic(void) {
     if (!core || diagnostic_busy || !diagnostic_dir[0]) return;
     diagnostic_busy = TRUE; ++diagnostic_stage;
     ICoreWebView2_ExecuteScript(core,
-        L"(function(){return {title:document.title,route:location.pathname+location.hash,"
+        L"(function(){var observed=document.querySelector('video');"
+        L"if(observed&&observed.readyState>=3&&!window.__jpSmokeVideo)window.__jpSmokeVideo=observed;"
+        L"return {title:document.title,route:location.pathname+location.hash,"
+        L"playbackReady:!!(observed&&observed.readyState>=3&&observed.videoWidth>=1920&&!observed.paused),"
+        L"videoNodePreserved:observed?observed===window.__jpSmokeVideo:null,"
         L"secureContext:window.isSecureContext,hasAndroidBridge:!!(window.jpBridge||window.Android),"
         L"cards:document.querySelectorAll('.search .result').length,action:window.__jpSmokeAction||null,"
         L"fullscreen:!!document.fullscreenElement,events:window.__jpDesktopEvents||[],"
+        L"desktopFullscreen:window.__jpDesktopFullscreen?window.__jpDesktopFullscreen.state():null,"
         L"cache:window.__jpCacheState?window.__jpCacheState():null,"
         L"layout:Array.from(document.querySelectorAll('.detail__player-shell,.detail__tabs,.detail__pager,.detail__pane,.discussion__composer'))"
         L".map(function(e){var r=e.getBoundingClientRect();return {class:e.className,x:r.x,y:r.y,"
@@ -1233,7 +1260,7 @@ int WINAPI wWinMain(HINSTANCE executable, HINSTANCE previous, PWSTR command_line
     if (!asset_data || FAILED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED))) return 1;
     WSADATA sockets;
     if (WSAStartup(MAKEWORD(2, 2), &sockets)) return 1;
-    http_session = WinHttpOpen(L"JianpianWindows/0.2.1", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
+    http_session = WinHttpOpen(L"JianpianWindows/0.2.2", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
         WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
     if (!http_session) return 1;
     WinHttpSetTimeouts(http_session, 6000, 6000, 10000, 15000);
