@@ -1,0 +1,19 @@
+{
+  "windows-native/build_native.py": "61557150aea4aea825332862112da474551c3395e23dc6ac0a8d1c5d1b997711",
+  "windows-native/build_tests.py": "72a5f4a475a325b4eac1207f381c390205fcd41b2435b7149218d141fecd2ec6",
+  "windows-native/cache.h": "2740e3fe7ca01a612efe2585c510cdb9c4c08c8a65c822106e326b320e65e614",
+  "windows-native/cache_test.c": "613c6bd2d9ecad5365739a004aa8fb0205e07183558d72b2395045108e23f502",
+  "windows-native/compat/EventToken.h": "bcdd22b1f2d621f557cb887cb6130b510ce46feef6f02d94a366182ebff8aac9",
+  "windows-native/desktop.js": "c72b8aaf14e57c82a3030911456e8a516ab525413c590e8d8a446b50d6f6e0b9",
+  "windows-native/desktop.manifest": "540d418f06788455f3450dd5a060fb06c5bf4fc7e03edd0dea6d18334cf312a5",
+  "windows-native/desktop_test.cjs": "2b1e96fdacf20635b112b6ebfc8a3956680d527a253005bc18f4d68b816860f4",
+  "windows-native/main.c": "296d78702d2b8ab41fa1667f9b8a82675c744491910e80a31b8cd2051ca6f0fc",
+  "windows-native/package_native.py": "fc9d81057131e9a6436aaed61389651f357a22bd8e69358a5cc9d8a160bdd723",
+  "windows-native/playlist_test.c": "0d68f8836b30745f0266d57f1208c95f754a4b8bbaf3fdf8498a9daf386c7cb7",
+  "windows-native/policy.h": "c966d4212bab96f7ca77f2f9a13813d927b791dd5ad1e7d6d02c0709dda0d336",
+  "windows-native/policy_test.c": "3f6f95839042e09b8af47424089d21e7324b0c0b4a7c0e9f4946b226c47f57fd",
+  "windows-native/README.md": "99e16616f691f1169339551f7ae04987470185cdb762882888225f3cc5146640",
+  "windows-native/storage-dialog.rc": "fa3cbf7c3db522f4cd38999501ee25b94aa6949123237e8f8153bc3518a8d3ad",
+  "windows-native/verify_native.py": "51780632a76c1c537af18a24bb4aa22c8c1afd69d9418f9e5463dbbad5507be3",
+  "windows-desktop/desktop.css": "d18cdfdffd553b6e1f147246f3359085c9e2fcf294099488e5a59a3465ab0621"
+}

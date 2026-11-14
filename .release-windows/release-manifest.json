@@ -1,0 +1,24 @@
+{
+  "repository": "shuishen49/jianpantv",
+  "tag": "v0.2.1-windows",
+  "title": "荐片 Windows C 桌面版 0.2.1（小窗播放与自定义缓存目录测试版）",
+  "source_commit": "295e5f906761606c02d8fc7843aede4dc31e959a",
+  "assets": {
+    "Jianpian-Windows-C-0.2.1.zip": {
+      "size": 1079553,
+      "sha256": "263cc21ea10c5c7e37fe4dc35de8b8e6485a1c36100061bff239fe99292fb5b2"
+    },
+    "Jianpian-Windows-C-0.2.1-source-and-checks.zip": {
+      "size": 55460,
+      "sha256": "7c1e62466142516fc8fdb11b6c6c68942b3bae062406611620a22e939c9975fc"
+    },
+    "windows-0.2.1-release-report.md": {
+      "size": 4504,
+      "sha256": "f7a8480d6a1a85adb53ef71614f48e3055ad6b8935c146a7c37f7eaefe10fe0c"
+    },
+    "SHA256SUMS.txt": {
+      "size": 309,
+      "sha256": "1751793fc042a61915ea18057cee85ba67617082dd97709cc94b46ca8fc9bab2"
+    }
+  }
+}
