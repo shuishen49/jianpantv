@@ -1,0 +1,41 @@
+{
+  "created_at": "2026-11-14T22:13:59.655350+08:00",
+  "runtime_directory": "D:\\source_code\\jianpian\\output\\Jianpian-Windows-C-0.2.1",
+  "runtime_bytes": 1248272,
+  "files": {
+    "Jianpian.exe": {
+      "bytes": 1048064,
+      "sha256": "1c4b13c01be99586efff88cac9fc8270e41db17a93104d026ce7f13dba5160c0"
+    },
+    "Microsoft-WebView2-LICENSE.txt": {
+      "bytes": 1487,
+      "sha256": "0af8f1b807512aae39c2ac1aa4d0cae65cabecb6fd554b8439a5162a0d6eca55"
+    },
+    "SHA256SUMS.txt": {
+      "bytes": 432,
+      "sha256": "c0f1152323569456282d2c1f8c79bb14e55142b9195c82d343841baa92c39a32"
+    },
+    "WebView2Loader.dll": {
+      "bytes": 194912,
+      "sha256": "d3fce90bdeecb08596e377dea6a316354dd8949e32ff09b89d51be00c14e21b6"
+    },
+    "使用说明.txt": {
+      "bytes": 2456,
+      "sha256": "32b1af93eb513a2e2fced4b7a344260187441261008eb5c7c7056934681db028"
+    },
+    "安全检测.txt": {
+      "bytes": 921,
+      "sha256": "21f9025a0be968237a2794e932481efb3a912c0b047637726fb8cb66ca527699"
+    }
+  },
+  "runtime_zip": {
+    "path": "D:\\source_code\\jianpian\\output\\Jianpian-Windows-C-0.2.1.zip",
+    "bytes": 1079553,
+    "sha256": "263cc21ea10c5c7e37fe4dc35de8b8e6485a1c36100061bff239fe99292fb5b2"
+  },
+  "source_zip": {
+    "path": "D:\\source_code\\jianpian\\output\\Jianpian-Windows-C-0.2.1-source-and-checks.zip",
+    "bytes": 55460,
+    "sha256": "7c1e62466142516fc8fdb11b6c6c68942b3bae062406611620a22e939c9975fc"
+  }
+}

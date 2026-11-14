@@ -2,3 +2,5 @@
 * -text whitespace=cr-at-eol
 # The native snapshots retain the exact EOF whitespace from the tested build.
 patched/** whitespace=cr-at-eol,-blank-at-eof
+# Retain the byte-exact upstream Microsoft license, including its spaces.
+testing/windows-native-0.2.1/Microsoft-WebView2-LICENSE.txt whitespace=cr-at-eol,-blank-at-eol

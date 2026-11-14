@@ -1,0 +1,6 @@
+{
+  "native_custom_settings_dialog": true,
+  "editable_path": true,
+  "existing_folder_picker_removed": true,
+  "save_creates_missing_directory": true
+}

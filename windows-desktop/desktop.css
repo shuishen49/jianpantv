@@ -1,0 +1,74 @@
+/* Desktop refinements over the application's responsive browser layout. */
+:root { color-scheme: dark; --jp-safe-top: 0px; --jp-safe-bottom: 0px; }
+html, body, #app { width: 100%; height: 100%; margin: 0; background: #121212; }
+html.jp-standalone { height: 100%; }
+button, a, input, select { -webkit-app-region: no-drag; }
+button, a { cursor: pointer; }
+input, textarea { user-select: text; }
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: #42464e; border: 2px solid #15171b; border-radius: 8px; }
+::-webkit-scrollbar-track { background: #15171b; }
+.jp-tv-keyboard, .jp-tv-nav-help, .jp-tv-search-entry { display: none !important; }
+.ad-slot, .ads-slot, .ad-banner, .advertisement { display: none !important; }
+@media (min-width: 1000px) {
+  .search { max-width: none; }
+  .poster-card, .movie-card, .work-card { transition: transform .15s ease, box-shadow .15s ease; }
+  .poster-card:hover, .movie-card:hover, .work-card:hover {
+    transform: translateY(-3px); box-shadow: 0 10px 28px #0005;
+  }
+}
+/* Keep the player bounded; each original tab retains its own vertical scroller. */
+.detail[data-v-777332d1] {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.35fr) minmax(340px, 1fr);
+  grid-template-rows: 48px minmax(0, 1fr);
+  gap: 12px 20px;
+  padding: 20px;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+}
+.detail > .detail__player-shell {
+  grid-column: 1; grid-row: 1 / 3; align-self: start;
+  width: 100%; min-width: 0; max-height: 100%;
+  overflow-y: auto; padding-top: 0 !important;
+}
+.detail > .detail__tabs { grid-column: 2; grid-row: 1; height: 48px !important; }
+.detail > .detail__pager {
+  grid-column: 2; grid-row: 2; min-height: 0; height: 100%; width: 100%;
+}
+.detail .detail__pane { box-sizing: border-box; min-height: 0; scrollbar-width: auto; }
+.detail .discussion { box-sizing: border-box; min-height: 100%; }
+.detail .discussion__composer {
+  position: sticky !important; left: auto !important; right: auto !important; bottom: 0;
+  box-sizing: border-box; width: 100%; padding-inline: 12px;
+}
+.detail .discussion__feed { padding-bottom: 20px; }
+.detail .detail__body { padding: 12px 12px 48px; gap: 20px; }
+.detail .detail__synopsis {
+  display: block !important; -webkit-line-clamp: unset !important;
+  max-height: none !important; white-space: normal !important;
+}
+.detail .detail__source-list, .detail .detail__episode-list, .detail .detail__episode-ranges {
+  flex-wrap: wrap; overflow: visible; margin-inline: 0; padding-inline: 0;
+}
+.jp-desktop-cache { padding: 16px; background: #1b1e24; border-radius: 0 0 10px 10px; }
+.jp-desktop-controls { display: flex; flex-wrap: wrap; gap: 10px; }
+.jp-desktop-controls button {
+  border: 1px solid #424955; border-radius: 7px; padding: 10px 14px;
+  background: #2a303a; color: #f4f5f7; font: inherit;
+}
+.jp-desktop-controls button:first-child { background: #c5eee5; color: #16302b; border-color: #c5eee5; }
+.jp-desktop-controls button:disabled { opacity: .45; cursor: default; }
+.jp-desktop-cache p { margin: 12px 0 0; line-height: 1.65; font-size: 13px; overflow-wrap: anywhere; }
+.jp-cache-path, .jp-cache-help { color: #9fa9b8; }
+.jp-cache-progress { color: #c9e4dc; }
+.integrated-player:fullscreen {
+  width: 100vw !important; height: 100vh !important; max-width: none !important;
+  aspect-ratio: auto !important; margin: 0 !important;
+}
+.integrated-player:fullscreen:before { display: none !important; }
+@media (max-width: 1000px) {
+  .detail[data-v-777332d1] { padding: 12px; gap: 12px; grid-template-columns: minmax(0, 1.1fr) minmax(330px, 1fr); }
+  .jp-desktop-cache { padding: 12px; }
+}

@@ -1,4 +1,21 @@
-# 荐片电视适配版
+# 荐片电视适配版与 Windows 客户端
+
+## Windows C 桌面版 0.2.1
+
+[下载 Windows 测试版](https://github.com/shuishen49/jianpantv/releases/tag/v0.2.1-windows)
+（Windows 10/11 x64，便携 ZIP 约 1.03 MiB，需要系统 WebView2 Runtime）。
+C17 / Win32 宿主，无需模拟器。支持小窗播放、完整详情与讨论、
+自定义视频保存路径及自动创建目录、普通 HLS 边下边播与整集缓存。
+系统运行环境、浏览器用户数据和视频缓存另占空间。
+
+[使用与验证范围](docs/windows-0.2.1-release.md) ·
+[Windows 客户端构建说明](docs/windows-native-build.md) ·
+[C 客户端源码](windows-native/)
+
+原版 P2P 内核未移植，完整长片离线播放、账号登录及全部线路尚未验证。
+EXE 尚未签署 Authenticode；最终运行目录和便携 ZIP 的 Defender 扫描未检出威胁。
+
+## 电视适配版
 
 当前源码版本：**5.0.78-tv.12**，版本号 **5090**。修复索尼 Android 9 电视全屏切换时的 WebView 遮挡与视频视图重新挂载问题，**修复后的真机效果待用户测试**。
 

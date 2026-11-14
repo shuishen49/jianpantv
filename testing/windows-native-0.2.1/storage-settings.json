@@ -1,0 +1,12 @@
+{
+  "dialog": "app settings with editable path",
+  "selected_directory": "D:\\jianpandownload",
+  "directory_was_absent": true,
+  "created_on_save": true,
+  "media_directory_exists": true,
+  "setting_persisted": true,
+  "reopened_with_same_path": true,
+  "invalid_relative_path_shows_inline_error": true,
+  "cancel_preserves_setting": true,
+  "nested_creation_native_test_passed": true
+}

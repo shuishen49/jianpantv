@@ -1,0 +1,13 @@
+102 DIALOGEX 0, 0, 396, 178
+STYLE 0x80C808C0
+CAPTION "视频保存设置"
+FONT 9, "Microsoft YaHei UI"
+BEGIN
+    LTEXT "设置视频下载和缓存的保存位置", 1003, 18, 16, 360, 14
+    LTEXT "保存目录", 1004, 18, 42, 360, 12
+    EDITTEXT 1001, 18, 58, 360, 22, 0x10080
+    LTEXT "例如 D:\\jianpandownload。文件夹不存在时会自动创建，支持多级目录。", 1005, 18, 87, 360, 22
+    LTEXT "", 1002, 18, 113, 360, 22
+    PUSHBUTTON "暂不修改", 2, 210, 143, 78, 23
+    DEFPUSHBUTTON "保存设置", 1, 298, 143, 80, 23
+END
