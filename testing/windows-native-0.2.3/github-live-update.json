@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-11-15T00:48:37.961092+08:00",
+  "method": "Explicit older-version test driver using production HTTPS, metadata, download, verifier, helper and real final application",
+  "fixture_directory": "D:\\source_code\\jianpian\\testing\\windows-native-0.2.3\\github-live-1794674917893345000",
+  "expected_exe_sha256": "75c61a3bb1f9a721391cbc5a7d0f4a69cc2535e11b6b6048f9c23f0b36976643",
+  "driver_exit_code": 0,
+  "driver_stderr": "",
+  "download": {
+    "version": "0.2.3",
+    "size": 1068544,
+    "sha256": "75c61a3bb1f9a721391cbc5a7d0f4a69cc2535e11b6b6048f9c23f0b36976643",
+    "real_github_metadata": true,
+    "real_release_download": true,
+    "candidate_verified": true
+  },
+  "installed_sha256": "75c61a3bb1f9a721391cbc5a7d0f4a69cc2535e11b6b6048f9c23f0b36976643",
+  "real_application_readiness_handshake": true,
+  "backup_and_helper_removed": true,
+  "video_marker_preserved": true,
+  "saved_directory_setting_unchanged": true,
+  "passed": true,
+  "post_update_ui_shows_current_023": true,
+  "test_app_closed": true,
+  "release_source_commit": "799cb89abe1578b6c1393207e611818a444fc6e8"
+}
