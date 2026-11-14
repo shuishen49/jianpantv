@@ -1,0 +1,17 @@
+{
+  "version": "0.2.3",
+  "exe_sha256": "75c61a3bb1f9a721391cbc5a7d0f4a69cc2535e11b6b6048f9c23f0b36976643",
+  "timestamp": "2026-11-15T00:35:35.062198+08:00",
+  "player_internal_button": true,
+  "player_expand_button": true,
+  "toolbar_button": true,
+  "f11": true,
+  "escape_exit": true,
+  "f11_exit": true,
+  "visible_exit_button": true,
+  "no_phone_rotation_prompt": true,
+  "details_hidden_in_fullscreen": true,
+  "method": "Actual Windows UI clicks and F11/Escape on final EXE after its completed playback smoke; screenshots visually inspected",
+  "normal_startup_preserves_saved_path": true,
+  "normal_startup_cancel_tested": true
+}

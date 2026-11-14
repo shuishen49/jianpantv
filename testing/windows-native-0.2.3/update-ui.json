@@ -1,0 +1,23 @@
+{
+  "version": "0.2.3",
+  "exe_sha256": "75c61a3bb1f9a721391cbc5a7d0f4a69cc2535e11b6b6048f9c23f0b36976643",
+  "timestamp": "2026-11-15T00:35:35.062198+08:00",
+  "normal_startup": true,
+  "check_button_visible": true,
+  "check_button_disabled_while_busy": true,
+  "manual_retry": true,
+  "real_api_rate_limit_message": true,
+  "app_usable_after_error": true,
+  "confirmation_fixture": {
+    "offered_version": "0.2.4",
+    "actual_current_version": "0.2.3",
+    "production_confirmation_function": true,
+    "sample_is_not_a_published_release": true,
+    "default_no_visually_confirmed": true,
+    "version_size_source_and_restart_warning_visible": true,
+    "clicked_no": true,
+    "returned_to_app": true,
+    "driver_sha256": "21edf65463fa0211e7d7c2d2c247ff34a12918805d64abe9e8fac159fbb461e4"
+  },
+  "live_download_restart_test": "To be recorded separately after the real Release is published."
+}

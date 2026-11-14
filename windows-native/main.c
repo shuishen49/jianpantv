@@ -23,6 +23,7 @@
 #include "WebView2.h"
 #include "policy.h"
 #include "integrity.h"
+#include "version.h"
 
 #define APP_ORIGIN L"https://jianpian.desktop.local"
 #define APP_URL APP_ORIGIN L"/runtime/index.html"
@@ -72,7 +73,7 @@ typedef struct Request {
     wchar_t *range;
     wchar_t cache_base[PATH_CAP], cache_id[65];
 } Request;
-static HWND window, label, buttons[5];
+static HWND window, label, buttons[6];
 static HINSTANCE instance;
 static HFONT font;
 static HBRUSH background;
@@ -138,6 +139,8 @@ static void write_json(const wchar_t *path, const wchar_t *text) {
     deallocate(bytes);
 }
 #include "cache.h"
+#include "update_core.h"
+#include "update.h"
 
 static void storage_setting(wchar_t *path) {
     DWORD count = GetEnvironmentVariableW(L"LOCALAPPDATA", path, PATH_CAP);
@@ -723,12 +726,12 @@ static void layout(void) {
     RECT bounds;
     GetClientRect(window, &bounds);
     int toolbar = fullscreen ? 0 : 42;
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 6; ++i) {
         ShowWindow(buttons[i], fullscreen ? SW_HIDE : SW_SHOW);
         MoveWindow(buttons[i], 8 + 88 * i, 7, 80, 29, TRUE);
     }
     ShowWindow(label, fullscreen ? SW_HIDE : SW_SHOW);
-    MoveWindow(label, 454, 12, bounds.right > 466 ? bounds.right - 466 : 0, 23, TRUE);
+    MoveWindow(label, 542, 12, bounds.right > 554 ? bounds.right - 554 : 0, 23, TRUE);
     bounds.top = toolbar;
     if (controller) ICoreWebView2Controller_put_Bounds(controller, bounds);
 }
@@ -1060,6 +1063,7 @@ static HRESULT STDMETHODCALLTYPE controller_created(ICoreWebView2CreateCoreWebVi
     layout();
     ICoreWebView2Controller_put_IsVisible(controller, TRUE);
     ICoreWebView2_Navigate(core, APP_URL);
+    update_signal_ready();
     return S_OK;
 }
 HANDLER(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler, controller_handler, controller_created);
@@ -1138,8 +1142,8 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wparam, LPAR
         font = CreateFontW(-15, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Microsoft YaHei UI");
         {
-            const wchar_t *names[5] = { L"← 返回", L"⌂ 首页", L"↻ 刷新", L"⛶ 全屏", L"保存位置" };
-            for (int i = 0; i < 5; ++i) {
+            const wchar_t *names[6] = { L"← 返回", L"⌂ 首页", L"↻ 刷新", L"⛶ 全屏", L"保存位置", L"检查更新" };
+            for (int i = 0; i < 6; ++i) {
                 buttons[i] = CreateWindowExW(0, L"BUTTON", names[i], WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_OWNERDRAW,
                     0, 0, 0, 0, hwnd, (HMENU)(INT_PTR)(100 + i), instance, NULL);
                 SendMessageW(buttons[i], WM_SETFONT, (WPARAM)font, FALSE);
@@ -1180,6 +1184,7 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wparam, LPAR
     }
     case WM_COMMAND:
         if (LOWORD(wparam) == 104) { choose_storage(); return 0; }
+        if (LOWORD(wparam) == 105) { update_check(TRUE); return 0; }
         if (!core) return 0;
         switch (LOWORD(wparam)) {
         case 100: {
@@ -1197,7 +1202,13 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wparam, LPAR
         if (wparam == VK_F11 || (wparam == VK_ESCAPE && fullscreen)) toggle_fullscreen();
         return 0;
     case WM_TOGGLE_FULLSCREEN: toggle_fullscreen(); return 0;
-    case WM_TIMER: if (wparam == 1) capture_diagnostic(); return 0;
+    case WM_UPDATE_DONE: update_complete((UpdateJob *)lparam); return 0;
+    case WM_TIMER:
+        if (wparam == 1) capture_diagnostic();
+        else if (wparam == 2) { KillTimer(hwnd,2); update_check(FALSE); }
+        else if (wparam == 3) update_cleanup();
+        else if (wparam == 4) update_check(FALSE);
+        return 0;
     case WM_NETWORK_DONE: {
         Request *request = (Request *)lparam;
         if (request->error) {
@@ -1222,6 +1233,7 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wparam, LPAR
     case WM_CLOSE:
         closing = TRUE;
         KillTimer(hwnd, 1);
+        KillTimer(hwnd, 2); KillTimer(hwnd, 3); KillTimer(hwnd, 4);
         if (controller) ICoreWebView2Controller_Close(controller);
         DestroyWindow(hwnd);
         return 0;
@@ -1234,8 +1246,16 @@ int WINAPI wWinMain(HINSTANCE executable, HINSTANCE previous, PWSTR command_line
     instance = executable;
     SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32 | LOAD_LIBRARY_SEARCH_USER_DIRS);
     int argc = 0;
-    wchar_t check_path[PATH_CAP] = {0};
+    wchar_t check_path[PATH_CAP] = {0}, update_check_path[PATH_CAP] = {0};
     LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    if (argv && argc >= 2 && !wcscmp(argv[1],L"--apply-update")) {
+        int result=up_apply(argc,argv); LocalFree(argv); return result;
+    }
+    if (argv && argc == 4 && !wcscmp(argv[1],L"--update-restart") && up_nonce(argv[2])) {
+        update_restart=TRUE;
+        wcscpy(update_cleanup_nonce,argv[2]);
+        update_ready=up_handle(argv[3]);
+    }
     for (int i = 1; argv && i < argc; ++i) {
         if (!wcscmp(argv[i], L"--diagnostics") && i + 1 < argc) {
             DWORD count = GetFullPathNameW(argv[++i], ARRAY_COUNT(diagnostic_dir), diagnostic_dir, NULL);
@@ -1243,6 +1263,9 @@ int WINAPI wWinMain(HINSTANCE executable, HINSTANCE previous, PWSTR command_line
         } else if (!wcscmp(argv[i], L"--verify-runtime") && i + 1 < argc) {
             DWORD count = GetFullPathNameW(argv[++i], ARRAY_COUNT(check_path), check_path, NULL);
             if (!count || count >= ARRAY_COUNT(check_path)) check_path[0] = 0;
+        } else if (!wcscmp(argv[i],L"--check-updates") && i+1 < argc) {
+            DWORD count=GetFullPathNameW(argv[++i],ARRAY_COUNT(update_check_path),update_check_path,NULL);
+            if (!count || count >= ARRAY_COUNT(update_check_path)) update_check_path[0]=0;
         } else if (!wcscmp(argv[i], L"--smoke-test")) smoke = TRUE;
     }
     if (argv) LocalFree(argv);
@@ -1252,6 +1275,17 @@ int WINAPI wWinMain(HINSTANCE executable, HINSTANCE previous, PWSTR command_line
         write_json(check_path, verified ? L"{\"verified\":true}" : L"{\"verified\":false}");
         return verified ? 0 : 2;
     }
+    if (update_check_path[0]) {
+        UpdateRelease release={0}; DWORD status=0;
+        BOOL ok=up_check(&release,&status);
+        wchar_t json[1024];
+        _snwprintf(json,ARRAY_COUNT(json),L"{\"current\":\"" JP_VERSION_W L"\",\"ok\":%ls,"
+            L"\"http_status\":%lu,\"available\":%ls,\"version\":\"%hs\",\"asset\":\"%hs\",\"sha256\":\"%hs\"}",
+            ok ? L"true" : L"false",status,ok && release.version[0] ? L"true" : L"false",
+            release.version,release.asset,release.sha);
+        write_json(update_check_path,json);
+        return ok ? 0 : 2;
+    }
     if (diagnostic_dir[0]) SHCreateDirectoryExW(NULL, diagnostic_dir, NULL);
     HRSRC resource = FindResourceW(executable, MAKEINTRESOURCEW(101), RT_RCDATA);
     if (!resource) return 1;
@@ -1260,7 +1294,7 @@ int WINAPI wWinMain(HINSTANCE executable, HINSTANCE previous, PWSTR command_line
     if (!asset_data || FAILED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED))) return 1;
     WSADATA sockets;
     if (WSAStartup(MAKEWORD(2, 2), &sockets)) return 1;
-    http_session = WinHttpOpen(L"JianpianWindows/0.2.2", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
+    http_session = WinHttpOpen(L"JianpianWindows/" JP_VERSION_W, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
         WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
     if (!http_session) return 1;
     WinHttpSetTimeouts(http_session, 6000, 6000, 10000, 15000);
@@ -1288,8 +1322,17 @@ int WINAPI wWinMain(HINSTANCE executable, HINSTANCE previous, PWSTR command_line
     UpdateWindow(window);
     if (smoke && diagnostic_dir[0]) {
         cache_set_directory(diagnostic_dir);
+    } else if (update_restart) {
+        wchar_t config[PATH_CAP],saved[PATH_CAP];
+        storage_setting(config);
+        if (config[0] && read_storage_path(config,saved)) cache_set_directory(saved);
     } else choose_storage();
     initialize_browser();
+    if (!smoke && !diagnostic_dir[0]) {
+        SetTimer(window,2,8000,NULL);
+        SetTimer(window,4,4u*60u*60u*1000u,NULL);
+    }
+    if (update_cleanup_nonce[0]) SetTimer(window,3,500,NULL);
     MSG message;
     while (GetMessageW(&message, NULL, 0, 0) > 0) {
         TranslateMessage(&message);

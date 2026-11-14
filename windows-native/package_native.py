@@ -7,8 +7,8 @@ import subprocess
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "output/Jianpian-Windows-C-0.2.2"
-TEST = ROOT / "testing/windows-native-0.2.2"
+OUT = ROOT / "output/Jianpian-Windows-C-0.2.3"
+TEST = ROOT / "testing/windows-native-0.2.3"
 BUILD = ROOT / "work/windows-native-build"
 SCANNER = Path(r"C:\ProgramData\Microsoft\Windows Defender\Platform\CurrentVersion\MpCmdRun.exe")
 
@@ -35,7 +35,7 @@ def scan(target, filename):
 def zip_files(destination, files):
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for path, name in sorted(files, key=lambda item: item[1]):
-            info = zipfile.ZipInfo(name, (2026, 11, 14, 0, 0, 0))
+            info = zipfile.ZipInfo(name, (2026, 11, 15, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
             archive.writestr(info, path.read_bytes())
     with zipfile.ZipFile(destination) as archive:
@@ -54,13 +54,19 @@ def main():
     assert verification["functional"]["video_decoded_1080p"]
     assert verification["functional"]["player_button_fills_viewport"]
     assert verification["functional"]["fullscreen_unobstructed"]
+    update = read_json(TEST / "update-verification.json")
+    assert update["exe_sha256"] == sha(OUT / "Jianpian.exe") and update["passed"] >= 65
+    assert update["transaction_success"]["passed"] and update["transaction_restart_failure"]["passed"]
+    update_ui = read_json(TEST / "update-ui.json")
+    assert update_ui["exe_sha256"] == sha(OUT / "Jianpian.exe")
+    assert update_ui["manual_retry"] and update_ui["confirmation_fixture"]["clicked_no"]
     fullscreen_ui = read_json(TEST / "fullscreen-ui.json")
     assert fullscreen_ui["exe_sha256"] == sha(OUT / "Jianpian.exe")
     assert all(fullscreen_ui[name] for name in (
         "player_internal_button", "player_expand_button", "toolbar_button", "f11",
         "escape_exit", "f11_exit", "visible_exit_button", "no_phone_rotation_prompt"))
     (OUT / "使用说明.txt").write_text(
-        "荐片 Windows C 桌面版 0.2.2（非官方移植）\n\n"
+        "荐片 Windows C 桌面版 0.2.3（非官方移植）\n\n"
         "完整解压后双击 Jianpian.exe。请保留同文件夹的 WebView2Loader.dll。\n"
         "适用 Windows 10/11 x64，需要微软 Edge WebView2 Runtime；本机测试环境已经安装。\n"
         "发布包复用系统运行库，不包含浏览器、Android 运行环境或原 Windows 客户端。\n\n"
@@ -68,6 +74,10 @@ def main():
         "打开影片默认左侧小窗播放，右侧详情和讨论独立滚动，点击“全屏播放”可放大。\n"
         "修复手机横屏提示；播放器全屏、全屏播放按钮、工具栏和 F11 使用同一桌面全屏逻辑。\n"
         "全屏右上角可点击“退出全屏 (Esc)”，或按 Esc / F11 返回小播放器。\n"
+        "启动后会在后台检查 GitHub 的 Windows 更新；工具栏也可点击“检查更新”。\n"
+        "发现新版会询问是否更新，默认不更新。确认后下载、校验，并关闭和重新启动程序。\n"
+        "安装会停止当前播放和下载，保留视频、缓存及保存路径；失败时保留或还原原版本。\n"
+        "0.2.2 及更早版本需要先手动下载本版，之后可使用程序内更新。\n"
         "启动会弹出“视频保存设置”，可直接输入 D:\\jianpandownload 等完整路径。\n"
         "点击“保存设置”后自动创建不存在的文件夹，支持多级目录，并记住路径。\n"
         "工具栏“保存位置”可随时修改；新设置直接使用填写的目录，不额外套文件夹。\n"
@@ -100,13 +110,14 @@ def main():
         f"WebView2Loader.dll SHA-256：{sha(OUT / 'WebView2Loader.dll')}\n"
         "该 DLL 的 Microsoft Corporation 数字签名验证有效。\n\n"
         "实测完整 DLL 校验通过；缺失和改动后的 DLL 会被拒绝。\n"
-        "32 项媒体地址边界测试通过。没有自动更新、开机自启或系统命令执行功能。\n"
+        "32 项媒体地址边界测试通过。更新需用户确认，限定本项目 GitHub HTTPS 地址，验证 SHA-256 和运行环境兼容性。\n"
+        "更新通过原生程序替换与启动握手完成；没有开机自启或系统命令执行功能。\n"
         "原 Windows 客户端没有参与构建。没有关闭或绕过杀毒软件。\n",
         encoding="utf-8-sig")
     sums = "".join(f"{sha(p)}  {p.name}\n" for p in sorted(OUT.iterdir())
                    if p.is_file() and p.name != "SHA256SUMS.txt")
     (OUT / "SHA256SUMS.txt").write_text(sums, encoding="utf-8")
-    runtime_zip = ROOT / "output/Jianpian-Windows-C-0.2.2.zip"
+    runtime_zip = ROOT / "output/Jianpian-Windows-C-0.2.3.zip"
     runtime_files = [(path, OUT.name + "/" + path.name) for path in OUT.iterdir() if path.is_file()]
     zip_files(runtime_zip, runtime_files)
     scan(runtime_zip, "defender-final-zip.json")
@@ -117,13 +128,13 @@ def main():
     source_files.append((ROOT / "windows-desktop/desktop.css", "windows-desktop/desktop.css"))
     for name in ("verification.json", "microsoft-signature.json", "defender-final-files.json",
                  "defender-final-zip.json", "profile-disk.json", "folder-dialog.json",
-                 "storage-settings.json", "fullscreen-ui.json"):
+                 "storage-settings.json", "fullscreen-ui.json", "update-verification.json", "update-ui.json"):
         source_files.append((TEST / name, "evidence/" + name))
     source_files.append((BUILD / "build-inventory.json", "evidence/build-inventory.json"))
     source_files.append((ROOT / "tools/zig-download.json", "evidence/zig-download.json"))
     source_files.append((ROOT / "tools/webview2/download.json", "evidence/webview2-download.json"))
     source_files.append((OUT / "Microsoft-WebView2-LICENSE.txt", "evidence/Microsoft-WebView2-LICENSE.txt"))
-    source_zip = ROOT / "output/Jianpian-Windows-C-0.2.2-source-and-checks.zip"
+    source_zip = ROOT / "output/Jianpian-Windows-C-0.2.3-source-and-checks.zip"
     zip_files(source_zip, source_files)
     report = {
         "created_at": datetime.datetime.now().astimezone().isoformat(),

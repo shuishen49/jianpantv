@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-11-15T00:40:08.242155+08:00",
+  "target": "D:\\source_code\\jianpian\\output\\Jianpian-Windows-C-0.2.3",
+  "exit_code": 0,
+  "stdout": "Scan starting...\nScan finished.\nScanning D:\\source_code\\jianpian\\output\\Jianpian-Windows-C-0.2.3 found no threats.\n",
+  "stderr": "",
+  "remediation_disabled": true
+}

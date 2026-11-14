@@ -11,13 +11,14 @@ env = os.environ.copy()
 env["ZIG_GLOBAL_CACHE_DIR"] = str(STAGE / "compiler-cache")
 env["ZIG_LOCAL_CACHE_DIR"] = str(STAGE / "compiler-cache-local")
 for source, name in (("policy_test.c", "policy-test"), ("cache_test.c", "cache-test"),
-                     ("playlist_test.c", "playlist-test")):
+                     ("playlist_test.c", "playlist-test"), ("update_test.c", "update-test")):
     test = []
     for value in command:
         if value.endswith("main.c"):
             value = str(ROOT / "windows-native" / source)
         elif value.endswith("app.res"):
-            continue
+            if source != "update_test.c":
+                continue
         elif value.startswith("-Wl,"):
             value = "-Wl,--dynamicbase,--nxcompat,--high-entropy-va"
         elif value.endswith("Jianpian.exe"):

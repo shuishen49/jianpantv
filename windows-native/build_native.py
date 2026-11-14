@@ -14,7 +14,7 @@ import os
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = Path(__file__).resolve().parent
 STAGE = ROOT / "work/windows-native-build"
-OUT = ROOT / "output/Jianpian-Windows-C-0.2.2"
+OUT = ROOT / "output/Jianpian-Windows-C-0.2.3"
 SDK = ROOT / "tools/webview2"
 ZIG = ROOT / "tools/zig-x86_64-windows-0.14.1/zig.exe"
 APK = ROOT / "handoff/apks/mobile-5.0.78.apk"
@@ -128,6 +128,9 @@ def main():
     resource = '// UTF-8 resources\n#pragma code_page(65001)\n'
     resource += f'1 24 "{(SOURCE / "desktop.manifest").as_posix()}"\n'
     resource += f'101 10 "{(STAGE / "assets.bin").as_posix()}"\n'
+    (STAGE / "update-contract.txt").write_bytes(
+        f"JPUPDATE1\n0.2.3\n{loader_sha}\n".encode("ascii"))
+    resource += f'103 10 "{(STAGE / "update-contract.txt").as_posix()}"\n'
     resource += f'#include "{(SOURCE / "storage-dialog.rc").as_posix()}"\n'
     (STAGE / "app.rc").write_text(resource)
     env = os.environ.copy()
@@ -149,7 +152,7 @@ def main():
     subprocess.run(command, env=env, check=True)
     shutil.copyfile(loader, OUT / "WebView2Loader.dll")
     shutil.copyfile(SDK / "LICENSE.txt", OUT / "Microsoft-WebView2-LICENSE.txt")
-    evidence = {"version": "0.2.2", "language": "C17", "architecture": "x64",
+    evidence = {"version": "0.2.3", "language": "C17", "architecture": "x64",
                 "compiler": "Zig 0.14.1 (Clang C compiler)",
                 "apk_input_sha256": APK_SHA, "web_bundle_sha256": BUNDLE_SHA,
                 "microsoft_sdk_sha256": SDK_SHA, "assets": assets,
