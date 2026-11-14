@@ -1,0 +1,28 @@
+{
+  "repository": "shuishen49/jianpantv",
+  "tag": "v0.2.3-windows",
+  "title": "荐片 Windows C 桌面版 0.2.3（GitHub 更新提醒与确认后更新）",
+  "source_commit": "799cb89abe1578b6c1393207e611818a444fc6e8",
+  "assets": {
+    "Jianpian-Windows-C-0.2.3.zip": {
+      "size": 1090739,
+      "sha256": "2cccd7a407f4849919d89e2aea1a81ff2d017ef02c207b4ab9c080afcac47447"
+    },
+    "Jianpian-Windows-C-0.2.3-source-and-checks.zip": {
+      "size": 84009,
+      "sha256": "fe5e38c4acef626e75b1988f284af0bbb198ab0bdda69db1fcfd6b00cc1b62d7"
+    },
+    "Jianpian-Windows-C-0.2.3.exe": {
+      "size": 1068544,
+      "sha256": "75c61a3bb1f9a721391cbc5a7d0f4a69cc2535e11b6b6048f9c23f0b36976643"
+    },
+    "windows-0.2.3-release-report.md": {
+      "size": 3472,
+      "sha256": "4343e781d9afbc31c0a968d045594f0fa234325ea598a45c3328f0b5d789655b"
+    },
+    "SHA256SUMS.txt": {
+      "size": 405,
+      "sha256": "aba68ee9cbf8b64cde64700127e099e98902f71d03d475d9e62d18c5ce6f8e2a"
+    }
+  }
+}
