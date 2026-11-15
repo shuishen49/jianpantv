@@ -1,0 +1,28 @@
+{
+  "repository": "shuishen49/jianpantv",
+  "tag": "v0.2.4-windows",
+  "title": "荐片 Windows C 桌面版 0.2.4（全屏方向键与单个 MP4）",
+  "source_commit": "2c301ba185004fd8d0c04d0c4f7a7e2e85b467ab",
+  "assets": {
+    "Jianpian-Windows-C-0.2.4.zip": {
+      "size": 1667600,
+      "sha256": "ab3f87138df72dcbcd16d71c00d18ecaf3edd584e8b72d0e6e6f7785c9b8762d"
+    },
+    "Jianpian-Windows-C-0.2.4-source-and-checks.zip": {
+      "size": 14496406,
+      "sha256": "be3e55b76717a8e4b31a6e3ca592fe27a7e4c12661beda99500de412fa8d04d4"
+    },
+    "Jianpian-Windows-C-0.2.4.exe": {
+      "size": 2263552,
+      "sha256": "58f9b147131fa934da57aa9888da019f92efbb6b6963c669f419380f710d9667"
+    },
+    "windows-0.2.4-release-report.md": {
+      "size": 3989,
+      "sha256": "15ba24177765fb168926b6c750b05eb0be179bd433ccef198d6a60fc43e25b8a"
+    },
+    "SHA256SUMS.txt": {
+      "size": 405,
+      "sha256": "7c5b9afa338965eba3ebab9d73cb3b6d48da54c2c43beae25bcb5a51c66c9704"
+    }
+  }
+}

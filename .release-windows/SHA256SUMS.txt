@@ -1,0 +1,4 @@
+ab3f87138df72dcbcd16d71c00d18ecaf3edd584e8b72d0e6e6f7785c9b8762d  Jianpian-Windows-C-0.2.4.zip
+be3e55b76717a8e4b31a6e3ca592fe27a7e4c12661beda99500de412fa8d04d4  Jianpian-Windows-C-0.2.4-source-and-checks.zip
+58f9b147131fa934da57aa9888da019f92efbb6b6963c669f419380f710d9667  Jianpian-Windows-C-0.2.4.exe
+15ba24177765fb168926b6c750b05eb0be179bd433ccef198d6a60fc43e25b8a  windows-0.2.4-release-report.md
