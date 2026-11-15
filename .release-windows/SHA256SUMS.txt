@@ -1,0 +1,4 @@
+9ebbac21182ba711b689f15b07d779f604ae8ed954f783569d0b03436e90c8bb  Jianpian-Windows-C-0.2.6.zip
+b68b4651fa40f5217d4f677286e0077c7851d190b997a4a4f0283a398b6cb51a  Jianpian-Windows-C-0.2.6-source-and-checks.zip
+c22ecd7127f0e3df040bd8adb2d9a0f6e747d5bbfd0b7699bfddceac7c67a8bf  Jianpian-Windows-C-0.2.6.exe
+92a1b6b92484c6e55dd7c8e4f5d261ce0a962ad66cda4c99f4a766a8082f10c9  windows-0.2.6-release-report.md

@@ -1,0 +1,28 @@
+{
+  "repository": "shuishen49/jianpantv",
+  "tag": "v0.2.6-windows",
+  "title": "荐片 Windows C 桌面版 0.2.6（新图标与界面、MP4 命名和自动清理）",
+  "source_commit": "432f083327fbc7a0faaa0e5e5244356e3caabb73",
+  "assets": {
+    "Jianpian-Windows-C-0.2.6.zip": {
+      "size": 1789565,
+      "sha256": "9ebbac21182ba711b689f15b07d779f604ae8ed954f783569d0b03436e90c8bb"
+    },
+    "Jianpian-Windows-C-0.2.6-source-and-checks.zip": {
+      "size": 15810891,
+      "sha256": "b68b4651fa40f5217d4f677286e0077c7851d190b997a4a4f0283a398b6cb51a"
+    },
+    "Jianpian-Windows-C-0.2.6.exe": {
+      "size": 2393600,
+      "sha256": "c22ecd7127f0e3df040bd8adb2d9a0f6e747d5bbfd0b7699bfddceac7c67a8bf"
+    },
+    "windows-0.2.6-release-report.md": {
+      "size": 6242,
+      "sha256": "92a1b6b92484c6e55dd7c8e4f5d261ce0a962ad66cda4c99f4a766a8082f10c9"
+    },
+    "SHA256SUMS.txt": {
+      "size": 405,
+      "sha256": "147e373c849a99ecc401616e835c0b86fcfb52a9d0f84f1d70f034825ce2d7a3"
+    }
+  }
+}
