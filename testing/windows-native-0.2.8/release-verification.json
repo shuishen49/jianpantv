@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-11-15T17:09:44.185027+08:00",
+  "method": "GitHub connector GET workflow collection, Release by tag and Git ref; server digests compared to manifest",
+  "run_id": 43697675731,
+  "head_sha": "0a9275a8ddbed78e36b07440ebffaf665341811c",
+  "conclusion": "success",
+  "release_id": 445931346,
+  "draft": false,
+  "prerelease": true,
+  "published_at": "2026-11-15T09:07:17Z",
+  "source_commit": "027b3213978d11def376de4388bd8e96d529af01",
+  "verified_assets": {
+    "Jianpian-Windows-C-0.2.8.zip": {
+      "size": 1803611,
+      "sha256": "4995f18cb0b51e2bfa68530b89753a2c019c98f7d61675091a107501653a5aad"
+    },
+    "Jianpian-Windows-C-0.2.8-source-and-checks.zip": {
+      "size": 15989678,
+      "sha256": "89f1809fea90d978464ba9d5cf28e5ff258c2ab9129c993d32f4e50980bffb10"
+    },
+    "Jianpian-Windows-C-0.2.8.exe": {
+      "size": 2418176,
+      "sha256": "a69f5389d618e913bdfe44c573977679144aa99565c2a3b58147ca9e2010f1ec"
+    },
+    "windows-0.2.8-release-report.md": {
+      "size": 4306,
+      "sha256": "4c8ee67b61e18347bdde7311070eeb9b7343ecf3699cb6469c63a2fec9e862f1"
+    },
+    "SHA256SUMS.txt": {
+      "size": 405,
+      "sha256": "57ac95ebb0b132366fdd8df132219c14f762371465afb7a9905322957304fd5d"
+    }
+  }
+}
