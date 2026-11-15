@@ -1,0 +1,4 @@
+4995f18cb0b51e2bfa68530b89753a2c019c98f7d61675091a107501653a5aad  Jianpian-Windows-C-0.2.8.zip
+a69f5389d618e913bdfe44c573977679144aa99565c2a3b58147ca9e2010f1ec  Jianpian-Windows-C-0.2.8.exe
+89f1809fea90d978464ba9d5cf28e5ff258c2ab9129c993d32f4e50980bffb10  Jianpian-Windows-C-0.2.8-source-and-checks.zip
+4c8ee67b61e18347bdde7311070eeb9b7343ecf3699cb6469c63a2fec9e862f1  windows-0.2.8-release-report.md
