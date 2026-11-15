@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-11-15T14:53:03.048754+08:00",
+  "method": "GitHub connector GET main ref and raw feed; actual 0.2.6 executable --check-updates",
+  "observed_main_source_commit": "9489826ec7949855f86a9cec0a8eeeceeaa439a9",
+  "observed_remote_feed": {
+    "schema": 1,
+    "platform": "windows-x64",
+    "version": "0.2.7",
+    "size": 2398720,
+    "sha256": "21f371e55721de64c309d2659fd8e45e99d4900e7d3869e8fed785f326ff914f",
+    "loader_sha256": "d3fce90bdeecb08596e377dea6a316354dd8949e32ff09b89d51be00c14e21b6"
+  },
+  "old_client": {
+    "current": "0.2.6",
+    "ok": true,
+    "http_status": 200,
+    "available": true,
+    "version": "0.2.7",
+    "asset": "Jianpian-Windows-C-0.2.7.exe",
+    "sha256": "21f371e55721de64c309d2659fd8e45e99d4900e7d3869e8fed785f326ff914f"
+  },
+  "installed_update": false,
+  "release_assets_unchanged": true
+}
