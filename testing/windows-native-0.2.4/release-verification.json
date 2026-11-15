@@ -1,0 +1,14 @@
+{
+  "run_id": 43668815527,
+  "conclusion": "success",
+  "release_id": 445763979,
+  "published_at": "2026-11-15T02:39:51Z",
+  "source_commit": "2c301ba185004fd8d0c04d0c4f7a7e2e85b467ab",
+  "verified_assets": [
+    "Jianpian-Windows-C-0.2.4-source-and-checks.zip",
+    "Jianpian-Windows-C-0.2.4.exe",
+    "Jianpian-Windows-C-0.2.4.zip",
+    "SHA256SUMS.txt",
+    "windows-0.2.4-release-report.md"
+  ]
+}
