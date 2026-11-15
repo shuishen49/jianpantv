@@ -1,0 +1,4 @@
+14ec00c3694adc132000434f98ecd475f9bf4802d81faf26f33363651b05f1a4  Jianpian-Windows-C-0.2.7.zip
+21f371e55721de64c309d2659fd8e45e99d4900e7d3869e8fed785f326ff914f  Jianpian-Windows-C-0.2.7.exe
+03d190cc321840f5c9cbf84449589abfa46598b1ddb4d2f25b0776ad0fa5a33d  Jianpian-Windows-C-0.2.7-source-and-checks.zip
+ba80ec97427780090eea1f988f383ccc0703f62d9d1371e98af25fff2f7d68db  windows-0.2.7-release-report.md
