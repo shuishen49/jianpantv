@@ -171,6 +171,7 @@
     panel.innerHTML = `<div class="jp-desktop-controls">
       <button type="button" class="jp-player-expand">⛶ 全屏播放</button>
       <button type="button" class="jp-cache-save">缓存整集（MP4）</button>
+      <button type="button" class="jp-local-library">本地影片</button>
       <button type="button" class="jp-cache-cancel" hidden>停止保存</button></div>
       <p class="jp-cache-path"></p><p class="jp-cache-progress" role="status"></p>
       <p class="jp-cache-help">详情和讨论可在右侧滚动查看。F11 全屏，Esc 退出；全屏时 ← 快退 10 秒，→ 快进 10 秒。整集保存为单个 MP4，成功后自动清理本集分片缓存；失败或停止时保留分片供重试。</p>`;
@@ -179,6 +180,7 @@
       window.__jpDesktopFullscreen.enter(player);
     };
     panel.querySelector(".jp-cache-save").onclick = saveEpisode;
+    panel.querySelector(".jp-local-library").onclick = () => window.__jpLocal.openLibrary();
     panel.querySelector(".jp-cache-cancel").onclick = () => job?.abort();
     shell.appendChild(panel); render(); poll();
   }

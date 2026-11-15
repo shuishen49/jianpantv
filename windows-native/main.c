@@ -12,6 +12,7 @@
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <shellapi.h>
+#include <commdlg.h>
 #include <psapi.h>
 #include <dwmapi.h>
 #include <tlhelp32.h>
@@ -74,7 +75,7 @@ typedef struct Request {
     wchar_t *range;
     wchar_t cache_base[PATH_CAP], cache_id[65];
 } Request;
-static HWND window, label, buttons[6];
+static HWND window, label, buttons[8];
 static HINSTANCE instance;
 static HFONT font;
 static HBRUSH background;
@@ -92,7 +93,7 @@ static DWORD asset_size;
 static LONG pending_requests;
 static DWORD api_success, api_failure, media_success, media_failure, last_network_error;
 static DWORD blocked_media;
-static BOOL fullscreen, closing, smoke;
+static BOOL fullscreen, closing, smoke, local_smoke;
 static LONG saved_style;
 static WINDOWPLACEMENT saved_placement = { .length = sizeof(WINDOWPLACEMENT) };
 static wchar_t diagnostic_dir[PATH_CAP];
@@ -532,11 +533,14 @@ static void mp4_request(ICoreWebView2WebResourceRequestedEventArgs *args,
         deallocate(bytes);
     } else reject_request(args, 503);
 }
+#include "local_ui.h"
 static void desktop_request(ICoreWebView2WebResourceRequestedEventArgs *args,
         ICoreWebView2WebResourceRequest *source, const wchar_t *path, const wchar_t *method) {
     wchar_t base[PATH_CAP];
     cache_snapshot(base);
-    if ((!wcscmp(path, L"/desktop/fullscreen/enter") || !wcscmp(path, L"/desktop/fullscreen/exit")) &&
+    if (prefix(path, L"/desktop/local/")) {
+        local_request(args, source, path, method, base);
+    } else if ((!wcscmp(path, L"/desktop/fullscreen/enter") || !wcscmp(path, L"/desktop/fullscreen/exit")) &&
             !wcscmp(method, L"POST")) {
         set_fullscreen(!wcscmp(path, L"/desktop/fullscreen/enter"));
         const char *json = fullscreen ? "{\"fullscreen\":true}" : "{\"fullscreen\":false}";
@@ -742,6 +746,8 @@ static HRESULT STDMETHODCALLTYPE resources(ICoreWebView2WebResourceRequestedEven
     BOOL local = local_uri(uri);
     const wchar_t *path = local ? uri + wcslen(APP_ORIGIN) : NULL;
     BOOL api = local && prefix(path, L"/api/v1/");
+    /* Offline integration mode: reject every non-embedded/network resource. */
+    if (local_smoke && (!local || api)) { reject_request(args, 503); goto done; }
     if (local && prefix(path, L"/desktop/")) {
         desktop_request(args, source, path, method);
         goto done;
@@ -818,8 +824,8 @@ static void layout(void) {
     GetClientRect(window, &bounds);
     int toolbar = fullscreen ? 0 : 52;
     int left = 12;
-    static const int widths[6] = {84, 84, 84, 84, 108, 108};
-    for (int i = 0; i < 6; ++i) {
+    static const int widths[8] = {72, 72, 72, 72, 100, 100, 100, 100};
+    for (int i = 0; i < 8; ++i) {
         ShowWindow(buttons[i], fullscreen ? SW_HIDE : SW_SHOW);
         MoveWindow(buttons[i], left, 8, widths[i], 36, TRUE);
         left += widths[i] + 8;
@@ -849,7 +855,10 @@ static void toolbar_icon(HDC dc, int x, int y, UINT command) {
             MoveToEx(dc,a+(i&1 ? -5 : 5),b,NULL); LineTo(dc,a,b); LineTo(dc,a,b+(i&2 ? -5 : 5));
         }
         break;
-    case 104: Polyline(dc, folder, 7); break;
+    case 104: case 107: Polyline(dc, folder, 7); break;
+    case 106:
+        Rectangle(dc,x+1,y+2,x+18,y+17);
+        MoveToEx(dc,x+7,y+5,NULL); LineTo(dc,x+13,y+10); LineTo(dc,x+7,y+14); LineTo(dc,x+7,y+5); break;
     case 105:
         Ellipse(dc,x+1,y+1,x+18,y+18);
         MoveToEx(dc,x+9,y+14,NULL); LineTo(dc,x+9,y+5);
@@ -899,6 +908,10 @@ static HRESULT STDMETHODCALLTYPE accelerator(ICoreWebView2AcceleratorKeyPressedE
     UINT key = 0;
     ICoreWebView2AcceleratorKeyPressedEventArgs_get_KeyEventKind(args, &kind);
     ICoreWebView2AcceleratorKeyPressedEventArgs_get_VirtualKey(args, &key);
+    if (kind == COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN && key == 'O' && (GetKeyState(VK_CONTROL) & 0x8000)) {
+        ICoreWebView2AcceleratorKeyPressedEventArgs_put_Handled(args, TRUE);
+        PostMessageW(window, WM_LOCAL_OPEN, 0, 0); return S_OK;
+    }
     if ((kind == COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN || kind == COREWEBVIEW2_KEY_EVENT_KIND_SYSTEM_KEY_DOWN) &&
         (key == VK_F11 || (key == VK_ESCAPE && fullscreen))) {
         BOOL element = FALSE;
@@ -937,7 +950,17 @@ static HRESULT STDMETHODCALLTYPE popup(ICoreWebView2NewWindowRequestedEventHandl
 HANDLER(ICoreWebView2NewWindowRequestedEventHandler, popup_handler, popup);
 static HRESULT STDMETHODCALLTYPE permission(ICoreWebView2PermissionRequestedEventHandler *self,
         ICoreWebView2 *sender, ICoreWebView2PermissionRequestedEventArgs *args) {
-    ICoreWebView2PermissionRequestedEventArgs_put_State(args, COREWEBVIEW2_PERMISSION_STATE_DENY);
+    COREWEBVIEW2_PERMISSION_KIND kind = COREWEBVIEW2_PERMISSION_KIND_UNKNOWN_PERMISSION;
+    LPWSTR uri = NULL;
+    ICoreWebView2PermissionRequestedEventArgs_get_PermissionKind(args, &kind);
+    ICoreWebView2PermissionRequestedEventArgs_get_Uri(args, &uri);
+    /* A selected local movie should start immediately, including file-open
+       launches without a prior click inside the browser. Other permissions
+       retain the application's deny policy. */
+    ICoreWebView2PermissionRequestedEventArgs_put_State(args,
+        kind == COREWEBVIEW2_PERMISSION_KIND_AUTOPLAY && local_visible && uri && local_uri(uri) ?
+        COREWEBVIEW2_PERMISSION_STATE_ALLOW : COREWEBVIEW2_PERMISSION_STATE_DENY);
+    CoTaskMemFree(uri);
     return S_OK;
 }
 HANDLER(ICoreWebView2PermissionRequestedEventHandler, permission_handler, permission);
@@ -958,7 +981,7 @@ static HRESULT STDMETHODCALLTYPE navigated(ICoreWebView2NavigationCompletedEvent
     BOOL success = FALSE;
     ICoreWebView2NavigationCompletedEventArgs_get_IsSuccess(args, &success);
     set_status(success ? L"鼠标与键盘操作 · F11 全屏" : L"页面未成功加载，请刷新后重试。");
-    if (success && diagnostic_dir[0] && !diagnostic_stage) SetTimer(window, 1, 10000, NULL);
+    if (success && diagnostic_dir[0] && !diagnostic_stage) SetTimer(window, 1, local_smoke ? 2000 : 10000, NULL);
     return S_OK;
 }
 HANDLER(ICoreWebView2NavigationCompletedEventHandler, navigation_complete_handler, navigated);
@@ -1016,6 +1039,40 @@ static void capture_memory(void) {
 }
 static void diagnostic_actions(void) {
     if (!smoke) return;
+    if (local_smoke) {
+        static const wchar_t *actions[] = {
+            L"",
+            L"document.querySelector('.jp-local video').pause()",
+            L"var v=document.querySelector('.jp-local video');v.currentTime=Math.min(2,v.duration/3);v.play()",
+            L"window.__jpDesktopFullscreen.enter()",
+            L"window.__jpDesktopFullscreen.seek(10)",
+            L"window.__jpDesktopFullscreen.exit()",
+            L"(async()=>{var s=window.__jpLocal.state().source;window.__jpLocalSource=s;"
+              L"var a=await fetch(s,{headers:{Range:'bytes=0-31'}}),b=await a.arrayBuffer();"
+              L"var h=await fetch(s,{method:'HEAD'}),size=Number(h.headers.get('content-length'));"
+              L"var t=await fetch(s,{headers:{Range:'bytes=-8'}}),tail=await t.arrayBuffer();"
+              L"var e=await fetch(s,{headers:{Range:'bytes='+(size-8)+'-'}}),end=await e.arrayBuffer();"
+              L"var bad=await fetch(s,{headers:{Range:'bytes='+size+'-'}});"
+              L"var multi=await fetch(s,{headers:{Range:'bytes=0-1,3-4'}});"
+              L"var denied=await fetch('/desktop/local/file/../../Windows/win.ini');"
+              L"var unknown=await fetch('/desktop/local/file/00000000000000000000000000000000');"
+              L"window.__jpLocalRanges={partial:a.status,bytes:b.byteLength,contentRange:a.headers.get('content-range'),"
+              L"head:h.status,size:size,tail:t.status,tailBytes:tail.byteLength,end:e.status,"
+              L"tailMatches:JSON.stringify([...new Uint8Array(tail)])===JSON.stringify([...new Uint8Array(end)]),"
+              L"unsatisfiable:bad.status,multi:multi.status,denied:denied.status,unknown:unknown.status};})()",
+            L"window.__jpLocal.close().then(()=>window.__jpLocal.openLibrary())",
+            L"document.querySelector('.jp-local-movie')?.click()",
+            L"window.__jpLocal.playFile(new File(['bad video'], '损坏视频.mp4',{type:'video/mp4'}))",
+            L"(async()=>{var r=await fetch(window.__jpLocalSource);"
+              L"var f=new File([await r.arrayBuffer()],'拖入测试-国语.mp4',{type:'video/mp4'});"
+              L"var d=new DataTransfer();d.items.add(f);document.dispatchEvent(new DragEvent('drop',{dataTransfer:d,bubbles:true}))})()",
+            L"window.__jpLocal.close()",
+            L""
+        };
+        if ((unsigned)diagnostic_stage < ARRAY_COUNT(actions))
+            ICoreWebView2_ExecuteScript(core, actions[diagnostic_stage], NULL);
+        return;
+    }
     switch (diagnostic_stage) {
     case 1:
         ICoreWebView2_ExecuteScript(core, L"document.getElementById('app').__vue_app__.config.globalProperties.$router"
@@ -1063,9 +1120,9 @@ static void diagnostic_actions(void) {
 static HRESULT STDMETHODCALLTYPE preview_complete(ICoreWebView2CapturePreviewCompletedHandler *self, HRESULT error) {
     if (preview_stream) { IStream_Release(preview_stream); preview_stream = NULL; }
     diagnostic_actions();
-    if (smoke && diagnostic_stage == 3) SetTimer(window, 1, 5000, NULL);
+    if (smoke && !local_smoke && diagnostic_stage == 3) SetTimer(window, 1, 5000, NULL);
     diagnostic_busy = FALSE;
-    if (diagnostic_stage >= (smoke ? 17 : 3)) {
+    if (diagnostic_stage >= (local_smoke ? 12 : smoke ? 17 : 3)) {
         KillTimer(window, 1);
         wchar_t path[PATH_CAP];
         diagnostic_path(path, L"done.json");
@@ -1079,7 +1136,7 @@ static HRESULT STDMETHODCALLTYPE script_complete(ICoreWebView2ExecuteScriptCompl
     /* Live sources may take longer than the first ten-second sample to decode.
        Wait for actual playback, within a fixed 90-second budget, before taking
        the before/after playback and fullscreen measurements. */
-    if (smoke && diagnostic_stage == 3 && SUCCEEDED(error) && json &&
+    if (smoke && !local_smoke && diagnostic_stage == 3 && SUCCEEDED(error) && json &&
             wcsstr(json, L"\"playbackReady\":false") && diagnostic_playback_waits++ < 45) {
         --diagnostic_stage;
         diagnostic_busy = FALSE;
@@ -1127,11 +1184,13 @@ static void capture_diagnostic(void) {
         L"cards:document.querySelectorAll('.search .result').length,action:window.__jpSmokeAction||null,"
         L"fullscreen:!!document.fullscreenElement,events:window.__jpDesktopEvents||[],"
         L"desktopFullscreen:window.__jpDesktopFullscreen?window.__jpDesktopFullscreen.state():null,"
+        L"localPlayer:window.__jpLocal?.state(),localRanges:window.__jpLocalRanges||null,"
         L"cache:window.__jpCacheState?window.__jpCacheState():null,"
         L"layout:Array.from(document.querySelectorAll('.detail__player-shell,.detail__tabs,.detail__pager,.detail__pane,.discussion__composer'))"
         L".map(function(e){var r=e.getBoundingClientRect();return {class:e.className,x:r.x,y:r.y,"
         L"width:r.width,height:r.height,scrollHeight:e.scrollHeight,scrollTop:e.scrollTop,inert:e.inert}}),"
-        L"videos:Array.from(document.querySelectorAll('video')).map(function(v){return {paused:v.paused,"
+        L"videos:Array.from(document.querySelectorAll('video')).filter(function(v){return !v.closest('.jp-local[hidden]')})"
+        L".map(function(v){return {paused:v.paused,"
         L"readyState:v.readyState,currentTime:v.currentTime,duration:Number.isFinite(v.duration)?v.duration:0,"
         L"width:v.videoWidth,height:v.videoHeight,buffered:Array.from({length:v.buffered.length},"
         L"function(_,i){return [v.buffered.start(i),v.buffered.end(i)]})}}),text:document.body.innerText.slice(0,3500)}})()",
@@ -1245,6 +1304,7 @@ static BOOL loader_path(wchar_t *path) {
     return length && length < PATH_CAP && PathRemoveFileSpecW(path) &&
         PathAppendW(path, L"WebView2Loader.dll");
 }
+#include "browser_options.h"
 static void initialize_browser(void) {
     wchar_t path[PATH_CAP], profile[PATH_CAP];
     if (!loader_path(path) || !verify_loader(path)) {
@@ -1262,10 +1322,7 @@ static void initialize_browser(void) {
     }
     wcscat(profile, L"\\JianpianDesktop\\NativeWebView2");
     SHCreateDirectoryExW(NULL, profile, NULL);
-    SetEnvironmentVariableW(L"WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", smoke ?
-        L"--mute-audio --disk-cache-size=8388608 --media-cache-size=8388608" :
-        L"--disk-cache-size=8388608 --media-cache-size=8388608");
-    HRESULT result = create(NULL, profile, NULL,
+    HRESULT result = create(NULL, profile, (ICoreWebView2EnvironmentOptions *)&browser_options,
         (ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *)&environment_handler);
     if (FAILED(result)) show_failure(L"无法启动，请安装微软 Edge WebView2 Runtime 后重试。");
 }
@@ -1276,8 +1333,8 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wparam, LPAR
         font = CreateFontW(-15, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Microsoft YaHei UI");
         {
-            const wchar_t *names[6] = { L"返回", L"首页", L"刷新", L"全屏", L"保存位置", L"检查更新" };
-            for (int i = 0; i < 6; ++i) {
+            const wchar_t *names[8] = { L"返回", L"首页", L"刷新", L"全屏", L"保存位置", L"检查更新", L"本地影片", L"打开文件" };
+            for (int i = 0; i < 8; ++i) {
                 buttons[i] = CreateWindowExW(0, L"BUTTON", names[i], WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_OWNERDRAW,
                     0, 0, 0, 0, hwnd, (HMENU)(INT_PTR)(100 + i), instance, NULL);
                 SendMessageW(buttons[i], WM_SETFONT, (WPARAM)font, FALSE);
@@ -1286,6 +1343,7 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wparam, LPAR
         label = CreateWindowExW(0, L"STATIC", L"正在初始化 Windows 播放环境…",
             WS_CHILD | WS_VISIBLE | SS_LEFT, 0, 0, 0, 0, hwnd, NULL, instance, NULL);
         SendMessageW(label, WM_SETFONT, (WPARAM)font, FALSE);
+        DragAcceptFiles(hwnd, TRUE);
         return 0;
     case WM_SIZE: layout(); return 0;
     case WM_GETMINMAXINFO:
@@ -1323,26 +1381,40 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wparam, LPAR
     case WM_COMMAND:
         if (LOWORD(wparam) == 104) { choose_storage(); return 0; }
         if (LOWORD(wparam) == 105) { update_check(TRUE); return 0; }
+        if (LOWORD(wparam) == 106) { local_notify(); return 0; }
+        if (LOWORD(wparam) == 107) { local_choose(); return 0; }
         if (!core) return 0;
         switch (LOWORD(wparam)) {
         case 100: {
+            if (local_visible) {
+                ICoreWebView2_ExecuteScript(core, L"window.__jpLocal&&window.__jpLocal.close()", NULL); break;
+            }
             BOOL can = FALSE;
             ICoreWebView2_get_CanGoBack(core, &can);
             if (can) ICoreWebView2_GoBack(core);
             break;
         }
-        case 101: ICoreWebView2_Navigate(core, APP_URL); break;
+        case 101: local_visible = FALSE; ICoreWebView2_Navigate(core, APP_URL); break;
         case 102: ICoreWebView2_Reload(core); break;
         case 103: toggle_fullscreen(); break;
         }
         return 0;
     case WM_KEYDOWN:
-        if (wparam == VK_F11 || (wparam == VK_ESCAPE && fullscreen)) toggle_fullscreen();
+        if (wparam == 'O' && (GetKeyState(VK_CONTROL) & 0x8000)) PostMessageW(window, WM_LOCAL_OPEN, 0, 0);
+        else if (wparam == VK_F11 || (wparam == VK_ESCAPE && fullscreen)) toggle_fullscreen();
         else if (fullscreen && core && (wparam == VK_LEFT || wparam == VK_RIGHT))
             ICoreWebView2_ExecuteScript(core, wparam == VK_LEFT ?
                 L"window.__jpDesktopFullscreen?.seek(-10)" : L"window.__jpDesktopFullscreen?.seek(10)", NULL);
         return 0;
     case WM_TOGGLE_FULLSCREEN: toggle_fullscreen(); return 0;
+    case WM_LOCAL_OPEN: local_choose(); return 0;
+    case WM_DROPFILES: {
+        wchar_t path[PATH_CAP];
+        HDROP drop = (HDROP)wparam;
+        UINT n = DragQueryFileW(drop, 0, NULL, 0);
+        if (n && n < PATH_CAP && DragQueryFileW(drop, 0, path, PATH_CAP)) local_open_path(path);
+        DragFinish(drop); return 0;
+    }
     case WM_UPDATE_DONE: update_complete((UpdateJob *)lparam); return 0;
     case WM_TIMER:
         if (wparam == 1) capture_diagnostic();
@@ -1409,6 +1481,11 @@ int WINAPI wWinMain(HINSTANCE executable, HINSTANCE previous, PWSTR command_line
             DWORD count=GetFullPathNameW(argv[++i],ARRAY_COUNT(update_check_path),update_check_path,NULL);
             if (!count || count >= ARRAY_COUNT(update_check_path)) update_check_path[0]=0;
         } else if (!wcscmp(argv[i], L"--smoke-test")) smoke = TRUE;
+        else if (!wcscmp(argv[i], L"--local-smoke")) { smoke = TRUE; local_smoke = TRUE; }
+        else if (argv[i][0] != L'-' && local_extension(argv[i])) {
+            int index = local_register(argv[i]);
+            if (index >= 0) { local_current = index; local_visible = TRUE; ++local_revision; }
+        }
     }
     if (argv) LocalFree(argv);
     if (check_path[0]) {
@@ -1468,7 +1545,7 @@ int WINAPI wWinMain(HINSTANCE executable, HINSTANCE previous, PWSTR command_line
     UpdateWindow(window);
     if (smoke && diagnostic_dir[0]) {
         cache_set_directory(diagnostic_dir);
-    } else if (update_restart) {
+    } else if (update_restart || local_current >= 0) {
         wchar_t config[PATH_CAP],saved[PATH_CAP];
         storage_setting(config);
         if (config[0] && read_storage_path(config,saved)) cache_set_directory(saved);

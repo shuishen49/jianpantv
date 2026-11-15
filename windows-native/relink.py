@@ -18,7 +18,7 @@ def main():
         "-s", "-municode", *(str(path.resolve()) for path in inputs),
         "-luser32", "-lgdi32", "-lole32", "-lshlwapi", "-lshell32",
         "-lwinhttp", "-lbcrypt", "-lcabinet", "-lws2_32", "-luuid", "-lpsapi", "-ldwmapi",
-        "-lm", "-latomic", "-Wl,--subsystem,windows,--dynamicbase,--nxcompat,--high-entropy-va,--gc-sections",
+        "-lcomdlg32", "-lm", "-latomic", "-Wl,--subsystem,windows,--dynamicbase,--nxcompat,--high-entropy-va,--gc-sections",
         "-o", str(args.output.resolve())], check=True)
     print(args.output.resolve())
 

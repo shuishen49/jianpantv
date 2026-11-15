@@ -1,0 +1,7 @@
+{
+  "runtime_verified": true,
+  "relinked_sha256": "3ab20302c015089fe04cf39ae72c52552f6a138405aaac04291e527ef93d19b3",
+  "published_exe_sha256": "a69f5389d618e913bdfe44c573977679144aa99565c2a3b58147ca9e2010f1ec",
+  "objects_and_resources_used": true,
+  "original_apk_not_required_for_relink": true
+}

@@ -147,3 +147,75 @@ html.jp-css-fullscreen .jp-desktop-cache {
   .detail[data-v-777332d1] { padding: 12px; gap: 12px; grid-template-columns: minmax(0, 1.1fr) minmax(330px, 1fr); }
   .jp-desktop-cache { padding: 12px; }
 }
+/* Local movies share the host and fullscreen controls; no additional runtime. */
+.jp-local[hidden], .jp-local-drop[hidden], .jp-local-empty[hidden] { display: none !important; }
+.jp-local {
+  position: fixed; inset: 0; z-index: 2000; display: grid; grid-template-columns: 268px minmax(0,1fr);
+  background: #111318; color: #eef1f6; font: 14px "Microsoft YaHei UI", system-ui, sans-serif;
+}
+.jp-local button {
+  font: inherit; border: 1px solid #ffffff16; border-radius: 8px; color: #dce2ed;
+  background: #252a34; padding: 10px 14px; cursor: pointer;
+}
+.jp-local button:hover { background: #333a47; }
+.jp-local svg, .jp-local-drop svg { width: 24px; height: 24px; flex-shrink: 0; }
+.jp-local-sidebar {
+  min-height: 0; display: flex; flex-direction: column; gap: 16px; padding: 20px 16px;
+  background: #171a21; border-right: 1px solid #ffffff0c; box-sizing: border-box;
+}
+.jp-local .jp-local-back { align-self: start; background: transparent; border: 0; padding: 6px 0; color: #aeb8c9; }
+.jp-local-heading { display: flex; align-items: center; gap: 10px; color: #ff777b; margin-top: 12px; }
+.jp-local-heading h2 { font-size: 18px; margin: 0; color: #f1f3f8; font-weight: 600; }
+.jp-local-directory { font-size: 12px; line-height: 1.65; color: #909cb1; margin: 0; overflow-wrap: anywhere; }
+.jp-local-library-actions { display: flex; gap: 8px; }
+.jp-local .jp-local-library-actions button { font-size: 12px; padding: 8px 12px; flex: 1; }
+.jp-local .jp-local-open { color: #ff9194; background: #ff535518; border-color: #ff53552b; }
+.jp-local-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.jp-local .jp-local-movie {
+  text-align: left; display: grid; grid-template-columns: 30px minmax(0,1fr); gap: 2px 8px;
+  padding: 12px 8px; background: transparent; border-color: transparent; flex-shrink: 0;
+}
+.jp-local-movie-icon { grid-row: span 2; align-self: center; color: #8794ac; }
+.jp-local-movie-name { overflow-wrap: anywhere; line-height: 1.65; font-size: 13px; }
+.jp-local-movie small { color: #7f8da4; font-size: 11px; }
+.jp-local .jp-local-movie.is-playing { border-color: #ff535535; background: #ff535512; }
+.jp-local .jp-local-movie.is-playing .jp-local-movie-icon { color: #ff747a; }
+.jp-local-list > p, .jp-local-sidebar-note { color: #7f8da4; font-size: 12px; line-height: 1.9; margin: 0; }
+.jp-local-sidebar-note { border-top: 1px solid #ffffff0c; padding-top: 14px; }
+.jp-local-main { min-width: 0; min-height: 0; padding: 26px 32px 20px; display: flex; flex-direction: column; }
+.jp-local-eyebrow { color: #8997ad; font-size: 11px; letter-spacing: .16em; }
+.jp-local-main h1 { font-size: 22px; font-weight: 600; margin: 10px 0 22px; line-height: 1.5; overflow-wrap: anywhere; }
+.jp-local-stage {
+  flex: 1; min-height: 200px; position: relative; background: #080a0e; border-radius: 12px;
+  box-shadow: 0 0 0 1px #ffffff0a; overflow: hidden;
+}
+.jp-local-stage video { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: contain; }
+.jp-local-empty {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 50% 60%, #23212c, #101219 70%); padding: 20px; text-align: center;
+}
+.jp-local-empty > svg { width: 56px; height: 56px; color: #ff747a; margin-bottom: 12px; }
+.jp-local-empty h2 { font-size: 23px; font-weight: 500; margin: 12px 0 4px; }
+.jp-local-empty p { color: #909db2; margin-bottom: 24px; }
+.jp-local .jp-local-empty-open { background: #f45761; color: #fff; padding: 13px 20px; border: 0; }
+.jp-local-empty-open span { color: #ffffffa0; font-size: 11px; margin-left: 16px; }
+.jp-local-bottom { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 16px; }
+.jp-local-status { min-width: 0; color: #a0adc2; font-size: 12px; line-height: 1.7; margin: 0; }
+.jp-local-fullscreen { white-space: nowrap; }
+.jp-local-fullscreen span { margin-left: 16px; color: #909db2; font-size: 11px; }
+.jp-local-shortcuts { display: flex; flex-wrap: wrap; gap: 20px; color: #6f7d93; font-size: 11px; margin: 16px 0 0; }
+.jp-local-drop {
+  position: fixed; inset: 12px; z-index: 2147483646; display: flex; pointer-events: none;
+  flex-direction: column; justify-content: center; align-items: center; gap: 20px;
+  border: 2px dashed #ff7c86; border-radius: 16px; background: #161a25ed; color: #edf2ff;
+  font: 16px "Microsoft YaHei UI", system-ui, sans-serif;
+}
+.jp-local-drop svg { width: 64px; height: 64px; color: #ff7c86; }
+.jp-local-drop strong { font-size: 28px; font-weight: 500; }
+.jp-local-drop span { color: #9caac1; font-size: 13px; }
+.jp-local-stage.jp-desktop-fullscreen { border-radius: 0; }
+@media (max-width: 1000px) {
+  .jp-local { grid-template-columns: 230px minmax(0,1fr); }
+  .jp-local-main { padding: 20px; }
+  .jp-local-main h1 { font-size: 18px; margin-bottom: 16px; }
+}

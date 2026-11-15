@@ -1,0 +1,95 @@
+{
+  "schema": "scoped-ui-history-2",
+  "current_version": "0.2.8",
+  "timestamp": "2026-11-15T17:01:29.630578+08:00",
+  "historical_only": true,
+  "validated_exe_sha256": "a69f5389d618e913bdfe44c573977679144aa99565c2a3b58147ca9e2010f1ec",
+  "source_baseline_tag": "v0.2.7-windows",
+  "unchanged_sections": {
+    "native_set": {
+      "file": "windows-native/main.c",
+      "start": "static void set_fullscreen(BOOL value) {",
+      "end": "static void toggle_fullscreen(void) {",
+      "sha256": "b8e1680e15dfb5d30ceac806564590fc8233f2fd4893fb87ff2455537c9df723",
+      "baseline_sha256": "b8e1680e15dfb5d30ceac806564590fc8233f2fd4893fb87ff2455537c9df723"
+    },
+    "native_toggle": {
+      "file": "windows-native/main.c",
+      "start": "static void toggle_fullscreen(void) {",
+      "end": "static HRESULT STDMETHODCALLTYPE fullscreen_changed(",
+      "sha256": "45c6d35f7fe3a90393838e683d5dc3769ce0f54e91e04b57770c2c46507621a3",
+      "baseline_sha256": "45c6d35f7fe3a90393838e683d5dc3769ce0f54e91e04b57770c2c46507621a3"
+    },
+    "native_event": {
+      "file": "windows-native/main.c",
+      "start": "static HRESULT STDMETHODCALLTYPE fullscreen_changed(",
+      "end": "HANDLER(ICoreWebView2ContainsFullScreenElementChangedEventHandler,",
+      "sha256": "21d659997465474c2d5fe287ad874330c02f34cff2eb8c462294c4df3942a8e7",
+      "baseline_sha256": "21d659997465474c2d5fe287ad874330c02f34cff2eb8c462294c4df3942a8e7"
+    },
+    "native_f11_escape": {
+      "file": "windows-native/main.c",
+      "start": "    if ((kind == COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN",
+      "end": "\n    return S_OK;\n}\nHANDLER(ICoreWebView2Accelerator",
+      "sha256": "bdabcbd7a5cd400f3a656668ad913dcfa56d25abc52e5ffb2633f8007204a3c0",
+      "baseline_sha256": "bdabcbd7a5cd400f3a656668ad913dcfa56d25abc52e5ffb2633f8007204a3c0"
+    },
+    "fullscreen_runtime": {
+      "file": "windows-native/fullscreen.js",
+      "start": "  function apply(",
+      "end": "\n})();",
+      "sha256": "458cd5ef4e4545a801fe5e602469f82f54ce5255e5b018e6b281b0f6e88ea5b0",
+      "baseline_sha256": "458cd5ef4e4545a801fe5e602469f82f54ce5255e5b018e6b281b0f6e88ea5b0"
+    },
+    "fullscreen_adapter": {
+      "file": "windows-native/build_native.py",
+      "start": "def adapt_fullscreen(",
+      "end": "def adapt_save_metadata(",
+      "sha256": "6ad6a2792b180d84823a5417f0f0fbec51fe0fabf5813c57c0e91306ddaf0475",
+      "baseline_sha256": "6ad6a2792b180d84823a5417f0f0fbec51fe0fabf5813c57c0e91306ddaf0475"
+    },
+    "online_player_css": {
+      "file": "windows-desktop/desktop.css",
+      "start": ".integrated-player:fullscreen {",
+      "end": "@media (max-width: 1000px) {",
+      "sha256": "5764eb6acdff7425956f8418763114772f0cc690aadeb5ce6253bff37ee419f2",
+      "baseline_sha256": "5764eb6acdff7425956f8418763114772f0cc690aadeb5ce6253bff37ee419f2"
+    },
+    "toolbar_fullscreen": {
+      "file": "windows-native/main.c",
+      "start": "        case 103: toggle_fullscreen(); break;",
+      "end": "\n        }\n        return 0;",
+      "sha256": "46d60aa82d75953b7687b2bee7f7e9b99b39bdcb8e1a60910236909f74fb74a4",
+      "baseline_sha256": "46d60aa82d75953b7687b2bee7f7e9b99b39bdcb8e1a60910236909f74fb74a4"
+    }
+  },
+  "historical_baseline": {
+    "version": "0.2.4",
+    "exe_sha256": "58f9b147131fa934da57aa9888da019f92efbb6b6963c669f419380f710d9667",
+    "timestamp": "2026-11-15T10:33:12.182369+08:00",
+    "player_internal_button": true,
+    "player_expand_button": true,
+    "toolbar_button": true,
+    "f11": true,
+    "escape_exit": true,
+    "f11_exit": true,
+    "visible_exit_button": true,
+    "no_phone_rotation_prompt": true,
+    "details_hidden_in_fullscreen": true,
+    "method": "Physical Windows UI input via computer-use, screenshots and accessibility text inspected",
+    "physical_arrows": {
+      "paused_before": "01:38",
+      "paused_after_right": "01:48",
+      "paused_after_left": "01:38",
+      "paused_right_seconds": 10,
+      "paused_left_seconds": 10,
+      "paused_state_preserved": true,
+      "playing_state_preserved": true,
+      "seek_feedback_visible": true,
+      "single_key_not_double_applied": true
+    },
+    "normal_startup_preserves_saved_path": true,
+    "normal_startup_cancel_tested": true
+  },
+  "note": "Old online-player/updater/settings UI observations retain their original version and EXE hash. The listed source sections match the published 0.2.7 sources exactly. Fresh final-EXE local playback, physical keyboard/file-dialog tests and online regression are separate records. No new settings or updater dialog observation is claimed; diagnostic mode disables update_check."
+}

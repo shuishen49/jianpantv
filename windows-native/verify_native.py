@@ -131,11 +131,12 @@ def check_download_controller():
 
 
 def check_functional():
+    run = TEST / "smoke" if (TEST / "smoke/process.json").exists() else TEST
     for number in range(1, 18):
-        assert (TEST / f"ui-state-{number}.json").stat().st_mtime >= (OUT / "Jianpian.exe").stat().st_mtime
-    states = [read_json(TEST / f"ui-state-{i}.json") for i in range(1, 18)]
-    memory = [read_json(TEST / f"memory-{i}.json") for i in range(1, 18)]
-    runtime = read_json(TEST / "runtime.json")
+        assert (run / f"ui-state-{number}.json").stat().st_mtime >= (OUT / "Jianpian.exe").stat().st_mtime
+    states = [read_json(run / f"ui-state-{i}.json") for i in range(1, 18)]
+    memory = [read_json(run / f"memory-{i}.json") for i in range(1, 18)]
+    runtime = read_json(run / "runtime.json")
     assert all(state["secureContext"] and not state["hasAndroidBridge"] for state in states)
     assert states[0]["route"].endswith("#/home")
     assert "#/search?" in states[1]["route"] and states[1]["cards"] > 0
@@ -192,7 +193,7 @@ def check_functional():
     assert states[10]["cache"]["downloading"] or "整集已保存" in states[10]["cache"]["message"]
     assert not states[11]["cache"]["downloading"]
     cache_entries = 0
-    for info in (TEST / "media").glob("*.info"):
+    for info in (run / "media").glob("*.info"):
         metadata = info.read_bytes()
         magic, status, length, header_bytes = struct.unpack_from("<IIII", metadata)
         assert magic == 0x3243504a and status in (200, 206)
@@ -227,7 +228,7 @@ def main():
     assert pe["machine"] == "0x8664" and not pe["uses_dotnet"] and pe["aslr"] and pe["nx"]
     system_dlls = {"kernel32.dll", "user32.dll", "gdi32.dll", "msvcrt.dll", "ole32.dll",
                    "shlwapi.dll", "shell32.dll", "winhttp.dll", "bcrypt.dll", "cabinet.dll",
-                   "ws2_32.dll", "dwmapi.dll", "psapi.dll", "ntdll.dll", "advapi32.dll"}
+                   "ws2_32.dll", "dwmapi.dll", "psapi.dll", "ntdll.dll", "advapi32.dll", "comdlg32.dll"}
     assert all(name in system_dlls or
                (name.startswith("api-ms-win-crt-") and name.endswith(".dll"))
                for name in pe["imports"]), pe["imports"]

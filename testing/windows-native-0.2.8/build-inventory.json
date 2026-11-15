@@ -1,0 +1,147 @@
+{
+  "version": "0.2.8",
+  "language": "C17",
+  "architecture": "x64",
+  "compiler": "Zig 0.14.1 (Clang C compiler)",
+  "apk_input_sha256": "f7a524d843c4b077099ff49795ac17a49d187a942139752f466e32cef8db084b",
+  "web_bundle_sha256": "67c852a704f6bbb92c7e35c9ec56a97503662cbce67140e31ede733407679ac6",
+  "microsoft_sdk_sha256": "90778deb1b77e36292828b4b5833c9255c27533f40e0ddd55891ae718944edc4",
+  "assets": {
+    "assets/app-modern.js": {
+      "sha256": "b4842bdaf275933e583a82ba3dd982f1364446b0a8199db7a4aa1b7e54b6954e",
+      "bytes": 2123098,
+      "compressed_bytes": 676204
+    },
+    "assets/avatar-default-DnkUUMbV.png": {
+      "sha256": "71ff2aaecf6d54aa73c72f70d9caf9354bd541e467eb9278ee2a29a5a930e7fc",
+      "bytes": 95322,
+      "compressed_bytes": 94657
+    },
+    "assets/avatar-guest-CkEyOZ3z.png": {
+      "sha256": "f9c79ce4c4fce27c733771503ed96b04f708bdfc1348de4ef0b1a8c2c8869abc",
+      "bytes": 71161,
+      "compressed_bytes": 70828
+    },
+    "assets/index-Xyj434N6.css": {
+      "sha256": "89c21127314f372a0077a761b96ea6e1499a560bb2b72502c18d135b19743fdd",
+      "bytes": 335141,
+      "compressed_bytes": 44990
+    },
+    "assets/profile-hero-DMFLXwVC.png": {
+      "sha256": "3b692dd373da8619e09e58b4b95de7a2a642e5cf02ce302e7500c89c06f6094f",
+      "bytes": 46858,
+      "compressed_bytes": 46581
+    },
+    "desktop-fullscreen.js": {
+      "sha256": "5a22a3bf045f11cccbdd064db2475921bc9bd20dacf0d7d7e91e434e39c7cb18",
+      "bytes": 5139,
+      "compressed_bytes": 1894
+    },
+    "desktop-icon.png": {
+      "sha256": "f72c46be6db665c601c8512e5052d7e7d39d54c9517dad3e7445cbe4c0985f60",
+      "bytes": 43030,
+      "compressed_bytes": 43046
+    },
+    "desktop.css": {
+      "sha256": "b52be0b56613424c3d56895fd9e4171005917176c6511dcada31992a3594b067",
+      "bytes": 12375,
+      "compressed_bytes": 3506
+    },
+    "desktop.js": {
+      "sha256": "f4c8762f2335891cffe1d981cb8bcb5230e856ae3ca42b684084eb83fdde2ccf",
+      "bytes": 11720,
+      "compressed_bytes": 4562
+    },
+    "index.html": {
+      "sha256": "09a9b4e55daa2a8f786f5d3e6d5cd72762e5ad2e06cbc959d4d83eb508d05a2f",
+      "bytes": 4739,
+      "compressed_bytes": 1848
+    },
+    "local-player.js": {
+      "sha256": "4fd45ad6372ce4e61efd5b7275b331736992cfd689536b1758cd7cfe7b79cdae",
+      "bytes": 11648,
+      "compressed_bytes": 4137
+    }
+  },
+  "no_android_runtime": true,
+  "no_original_windows_binary": true,
+  "exe_sha256": "a69f5389d618e913bdfe44c573977679144aa99565c2a3b58147ca9e2010f1ec",
+  "loader_sha256": "d3fce90bdeecb08596e377dea6a316354dd8949e32ff09b89d51be00c14e21b6",
+  "remux": {
+    "version": "9.0.2",
+    "source_sha256": "8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e",
+    "source_url": "https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz",
+    "release_signing_fingerprint": "FCF986EA15E6E293A5644F10B4322F04D67658D8",
+    "license": "LGPL-2.1-or-later",
+    "network_disabled": true,
+    "decoders_disabled": true,
+    "encoders_disabled": true,
+    "configure": [
+      "./configure",
+      "--target-os=mingw32",
+      "--arch=x86_64",
+      "--cc=D:/source_code/jianpian/tools/zig-x86_64-windows-0.14.1/zig.exe cc -target x86_64-windows-gnu",
+      "--host-cc=D:/source_code/jianpian/tools/zig-x86_64-windows-0.14.1/zig.exe cc -target x86_64-windows-gnu",
+      "--ld=D:/source_code/jianpian/tools/zig-x86_64-windows-0.14.1/zig.exe cc -target x86_64-windows-gnu",
+      "--ar=D:/source_code/jianpian/tools/zig-x86_64-windows-0.14.1/zig.exe ar",
+      "--ranlib=D:/source_code/jianpian/tools/zig-x86_64-windows-0.14.1/zig.exe ranlib",
+      "--disable-everything",
+      "--disable-autodetect",
+      "--disable-programs",
+      "--enable-ffprobe",
+      "--disable-doc",
+      "--disable-network",
+      "--enable-debug=0",
+      "--disable-asm",
+      "--disable-x86asm",
+      "--disable-inline-asm",
+      "--disable-avdevice",
+      "--nm=true",
+      "--disable-avfilter",
+      "--disable-swresample",
+      "--disable-swscale",
+      "--disable-shared",
+      "--enable-static",
+      "--enable-small",
+      "--enable-demuxer=hls,mpegts,mov,aac,ac3,eac3",
+      "--enable-muxer=mp4",
+      "--enable-protocol=file,crypto",
+      "--enable-parser=h264,hevc,aac,ac3,mpegaudio",
+      "--enable-bsf=aac_adtstoasc,extract_extradata",
+      "--extra-cflags=-Os -ffunction-sections -fdata-sections",
+      "--extra-ldflags=-Wl,--gc-sections"
+    ],
+    "libraries": {
+      "tools/ffmpeg-9.0.2/libavformat/libavformat.a": {
+        "bytes": 1472004,
+        "sha256": "0ca6e71bb9ee9b6c49aefb71dab6d7a8eab5757d8860cbf6f73d4384d6f22377"
+      },
+      "tools/ffmpeg-9.0.2/libavcodec/libavcodec.a": {
+        "bytes": 1118186,
+        "sha256": "5036f31dffcdc83d1cc29e1cea1be2a30ff0bee9fa7696406b60b10458aba87e"
+      },
+      "tools/ffmpeg-9.0.2/libavutil/libavutil.a": {
+        "bytes": 1137494,
+        "sha256": "103f7ecdbb58ee640606aaa40eb73afc4f21369a36dfd6dd6369f0c618aea6d3"
+      }
+    }
+  },
+  "files": {
+    "FFmpeg-LGPL-2.1.txt": {
+      "bytes": 26517,
+      "sha256": "246041b6ecf9bc32d718a62c57877c78b5eb397b6467e74ed7ae2626ab189c30"
+    },
+    "Jianpian.exe": {
+      "bytes": 2418176,
+      "sha256": "a69f5389d618e913bdfe44c573977679144aa99565c2a3b58147ca9e2010f1ec"
+    },
+    "Microsoft-WebView2-LICENSE.txt": {
+      "bytes": 1487,
+      "sha256": "0af8f1b807512aae39c2ac1aa4d0cae65cabecb6fd554b8439a5162a0d6eca55"
+    },
+    "WebView2Loader.dll": {
+      "bytes": 194912,
+      "sha256": "d3fce90bdeecb08596e377dea6a316354dd8949e32ff09b89d51be00c14e21b6"
+    }
+  }
+}

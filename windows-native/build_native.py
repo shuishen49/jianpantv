@@ -89,10 +89,13 @@ def adapt_desktop_navigation(app):
             'u=Iv(()=>{const e=i.value.filter(e=>"history"!==e.page).map(e=>'
             '({...e,name:s[e.page],idle:l[e.page][0],active:l[e.page][1]}));'
             'const t=e.findIndex(e=>"profile"===e.page);'
-            'e.splice(t<0?e.length:t,0,{id:"desktop.history",page:"history",name:"History",'
+            'e.splice(t<0?e.length:t,0,{id:"desktop.local",page:"local",name:"DesktopLocal",'
+            'label:"本地影片",idle:jpDesktopHistoryIcon,active:jpDesktopHistoryIcon},'
+            '{id:"desktop.history",page:"history",name:"History",'
             'label:"观影历史",idle:jpDesktopHistoryIcon,active:jpDesktopHistoryIcon});return e})',
         'onClick:t=>function(e){d.switchTab(e.page,function(e){':
-            'onClick:t=>function(e){if("history"===e.page)return d.open({name:"History"});'
+            'onClick:t=>function(e){if("local"===e.page)return window.__jpLocal.openLibrary();'
+            'if("history"===e.page)return d.open({name:"History"});'
             'd.switchTab(e.page,function(e){',
         'class:Gd(["nav__item",{"is-active":f.value===e.name}]),onClick:':
             'class:Gd(["nav__item",{"is-active":f.value===e.name}]),'
@@ -141,6 +144,7 @@ def prepare_assets():
     html = assets["index.html"].decode()
     html = html.replace("</head>", '<link rel="stylesheet" href="/runtime/desktop.css" />'
                         '<script src="/runtime/desktop-fullscreen.js"></script>'
+                        '<script src="/runtime/local-player.js"></script>'
                         '<script src="/runtime/desktop.js"></script></head>')
     html = html.replace('<script nomodule src="/runtime/assets/app-legacy.js"></script>', "")
     html = html.replace("<title>荐片 jianpian.com</title>", "<title>荐片 · Windows</title>")
@@ -151,6 +155,7 @@ def prepare_assets():
     assets["desktop.css"] = (ROOT / "windows-desktop/desktop.css").read_bytes()
     assets["desktop.js"] = (SOURCE / "desktop.js").read_bytes()
     assets["desktop-fullscreen.js"] = (SOURCE / "fullscreen.js").read_bytes()
+    assets["local-player.js"] = (SOURCE / "local-player.js").read_bytes()
     assets["desktop-icon.png"] = (SOURCE / "assets/app-icon.png").read_bytes()
     del assets["logo.png"], assets["assets/logo-DkDMvUmZ.png"]
     result = bytearray(b"JPW1" + struct.pack("<I", len(assets)))
@@ -197,7 +202,7 @@ def main():
                *(str(FFMPEG / f"lib{lib}/lib{lib}.a") for lib in ("avformat", "avcodec", "avutil")),
                "-luser32", "-lgdi32", "-lole32", "-lshlwapi", "-lshell32",
                "-lwinhttp", "-lbcrypt", "-lcabinet", "-lws2_32", "-luuid", "-lpsapi", "-ldwmapi",
-               "-lm", "-latomic",
+               "-lcomdlg32", "-lm", "-latomic",
                "-Wl,--subsystem,windows,--dynamicbase,--nxcompat,--high-entropy-va,--gc-sections",
                "-o", str(OUT / "Jianpian.exe")]
     (STAGE / "build-command.json").write_text(json.dumps(command, indent=2))

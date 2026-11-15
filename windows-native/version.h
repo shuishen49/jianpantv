@@ -1,5 +1,5 @@
 #ifndef JP_VERSION
-#define JP_VERSION "0.2.7"
+#define JP_VERSION "0.2.8"
 #endif
 #define JP_WIDEN_(x) L##x
 #define JP_WIDEN(x) JP_WIDEN_(x)

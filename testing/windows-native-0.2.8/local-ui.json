@@ -1,0 +1,31 @@
+{
+  "physical_arrows": {
+    "paused_right_seconds": 10,
+    "paused_left_seconds": 10,
+    "observed_times_seconds": [
+      25,
+      35,
+      25
+    ],
+    "measurement": "Visible paused control timestamps; UIA slider values remained stale"
+  },
+  "f11": true,
+  "escape_exit": true,
+  "ctrl_o_opens_native_dialog": true,
+  "native_dialog_accepts_unicode_file": true,
+  "reopening_same_movie_preserves_position": true,
+  "local_fullscreen_button": true,
+  "f11_exit": true,
+  "toolbar_button": true,
+  "visible_exit_button": true,
+  "toolbar_open_file": true,
+  "cancel_preserves_video": true,
+  "native_back_closes_local": true,
+  "version": "0.2.8",
+  "exe_sha256": "a69f5389d618e913bdfe44c573977679144aa99565c2a3b58147ca9e2010f1ec",
+  "timestamp": "2026-11-15T08:58:26.220Z",
+  "method": "Windows Computer Use via @oai/sky; real keyboard, native file dialog and player/toolbar controls",
+  "physical_explorer_drag_tested": false,
+  "update_ui_tested": false,
+  "note": "The diagnostics build intentionally disables update_check. No update UI success is claimed. File drop uses the separate final-EXE DOM integration test. UIA slider values were stale; arrows were read from the visible paused controls (25 -> 35 -> 25 seconds)."
+}

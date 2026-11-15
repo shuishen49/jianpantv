@@ -48,6 +48,40 @@ def ui_evidence(name, current_sha):
     record = read_json(TEST / name)
     if record.get("exe_sha256") == current_sha:
         return record
+    if record.get("schema") == "scoped-ui-history-2":
+        # New local controls have fresh physical input and final-EXE offline
+        # coverage. Preserve the original controls/settings observations as
+        # historical, with exact comparisons of the relevant unchanged code.
+        # Do not label old screenshots or the old updater dialog as new tests.
+        assert record["current_version"] == VERSION and record["historical_only"]
+        assert record["validated_exe_sha256"] == current_sha
+        required = {
+            "fullscreen-ui.json": {"native_set", "native_toggle", "native_event", "native_f11_escape",
+                "fullscreen_runtime", "fullscreen_adapter", "online_player_css", "toolbar_fullscreen"},
+            "update-ui.json": {"updater_ui", "updater_transaction", "updater_json", "updater_command"},
+            "storage-settings.json": {"storage_logic", "storage_ui", "storage_resource"},
+        }[name]
+        assert set(record["unchanged_sections"]) == required
+        for section in record["unchanged_sections"].values():
+            text = (ROOT / section["file"]).read_text(encoding="utf-8")
+            if section["start"] is not None:
+                begin = text.index(section["start"])
+                text = text[begin:text.index(section["end"], begin)]
+            assert hashlib.sha256(text.encode()).hexdigest() == section["sha256"] == section["baseline_sha256"]
+        current = read_json(TEST / "verification.json")
+        assert current["functional"]["fullscreen_unobstructed"]
+        assert current["functional"]["history_repeated_navigation"]
+        local = read_json(TEST / "local-verification.json")
+        assert local["all_passed"] and local["exe_sha256"] == current_sha
+        physical = read_json(TEST / "local-ui.json")
+        assert physical["exe_sha256"] == current_sha
+        assert all(physical[key] for key in ("f11", "f11_exit", "escape_exit", "toolbar_button",
+            "visible_exit_button", "local_fullscreen_button", "ctrl_o_opens_native_dialog",
+            "toolbar_open_file", "native_dialog_accepts_unicode_file", "native_back_closes_local"))
+        assert physical["physical_arrows"]["observed_times_seconds"] == [25,35,25]
+        baseline = record["historical_baseline"]
+        assert baseline["exe_sha256"] == sha(ROOT / f"output/Jianpian-Windows-C-{baseline['version']}/Jianpian.exe")
+        return baseline
     if record.get("schema") == "scoped-ui-history-1":
         # Keep historical physical input explicitly historical. Changes to
         # unrelated cache/naming/toolbar code need not invalidate unchanged
@@ -107,8 +141,10 @@ def main():
     assert verification["functional"]["history_sidebar_button"]
     assert verification["functional"]["history_repeated_navigation"]
     assert verification["functional"]["home_history_row_removed"]
-    settings = read_json(TEST / "storage-settings.json")
-    assert settings["exe_sha256"] == sha(OUT / "Jianpian.exe") and settings["version"] == VERSION
+    settings_record = read_json(TEST / "storage-settings.json")
+    settings = ui_evidence("storage-settings.json", sha(OUT / "Jianpian.exe"))
+    if settings_record.get("schema") != "scoped-ui-history-2":
+        assert settings["exe_sha256"] == sha(OUT / "Jianpian.exe") and settings["version"] == VERSION
     assert settings["enter_rejects_relative_path"] and settings["reopen_retains_saved_path"]
     assert settings["history_sidebar_opens_original_history_route"] and settings["sidebar_returns_home"]
     update = read_json(TEST / "update-verification.json")
@@ -126,12 +162,22 @@ def main():
     assert mp4["exe_sha256"] == sha(OUT / "Jianpian.exe") and mp4["all_passed"] and mp4["passed"] >= 14
     assert mp4["checks"]["standalone_os_video_audio_decode_and_seek"]["decoded"]
     assert read_json(TEST / "lgpl-relink.json")["runtime_verified"]
+    if VERSION == "0.2.8":
+        local = read_json(TEST / "local-verification.json")
+        assert local["all_passed"] and local["exe_sha256"] == sha(OUT / "Jianpian.exe")
     (OUT / "使用说明.txt").write_text(
         f"荐片 Windows C 桌面版 {VERSION}（非官方移植）\n\n"
         "完整解压后双击 Jianpian.exe。请保留同文件夹的 WebView2Loader.dll。\n"
         "适用 Windows 10/11 x64，需要微软 Edge WebView2 Runtime；本机测试环境已经安装。\n"
         "发布包复用系统运行库，不包含浏览器、Android 运行环境或原 Windows 客户端。\n\n"
         "界面来自安卓版 5.0.78，Windows 宿主使用 C17。支持鼠标、键盘、F11 全屏、Esc 退出全屏。\n"
+        "左侧和工具栏“本地影片”列出保存目录中的视频，点击即可离线播放已保存的 MP4。\n"
+        "“打开文件”或 Ctrl+O 可打开其他位置的视频；也可以把视频文件拖入程序窗口。\n"
+        "可将视频拖到 Jianpian.exe 图标上，或在“打开方式”中选择本程序直接播放。\n"
+        "拖入的视频直接读取，不上传、不复制成第二份；打开本地播放器会暂停原来在线播放的视频。\n"
+        "本地播放器支持进度条、空格播放/暂停、方向键每次 10 秒、双击画面/F11 全屏、Esc 退出。\n"
+        "支持 MP4/M4V/MOV/WebM/MKV 文件选择，实际编码支持取决于系统 WebView2；推荐 H.264/AAC MP4。\n"
+        "已缓存但未完成或尚未合并的 HLS 分片不在本地影片列表中，请先完成整集 MP4 保存。\n"
         "左侧“观影历史”直接打开本地/账号历史，历史页保留侧栏，首页不再重复显示历史横栏。\n"
         "保存位置窗口使用深色标题栏、圆角输入区和强调色主按钮，可直接输入新文件夹路径。\n"
         "打开影片默认左侧小窗播放，右侧详情和讨论独立滚动，点击“全屏播放”可放大。\n"
@@ -171,7 +217,7 @@ def main():
         "数据目录：%LOCALAPPDATA%\\JianpianDesktop\\NativeWebView2\n"
         "若另一台电脑没有 WebView2，安装该微软运行环境会另占空间。\n\n"
         "检查安全检测.txt 和 SHA256SUMS.txt 可核对本次交付。\n"
-        "程序需要联网；内容和线路可用性依赖原服务。\n",
+        "在线播放需要联网，内容和线路可用性依赖原服务；已保存的本地 MP4 可以离线播放。\n",
         encoding="utf-8-sig")
     (OUT / "FFmpeg说明.txt").write_text(
         "本程序静态链接 FFmpeg 9.0.2 的 libavformat、libavcodec 和 libavutil，\n"
@@ -224,6 +270,9 @@ def main():
     for name in ("mp4-verification.json", "lgpl-relink.json"):
         source_files.append((TEST / name, "evidence/" + name))
     for name in ("saved-vod-verification.json", "ui-source-baseline.json"):
+        if (TEST / name).exists():
+            source_files.append((TEST / name, "evidence/" + name))
+    for name in ("local-verification.json", "local-ui.json", "local-player-ui.png"):
         if (TEST / name).exists():
             source_files.append((TEST / name, "evidence/" + name))
     source_files.append((BUILD / "remux-build.json", "evidence/remux-build.json"))

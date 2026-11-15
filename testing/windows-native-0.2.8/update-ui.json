@@ -1,0 +1,56 @@
+{
+  "schema": "scoped-ui-history-2",
+  "current_version": "0.2.8",
+  "timestamp": "2026-11-15T17:01:29.630578+08:00",
+  "historical_only": true,
+  "validated_exe_sha256": "a69f5389d618e913bdfe44c573977679144aa99565c2a3b58147ca9e2010f1ec",
+  "source_baseline_tag": "v0.2.7-windows",
+  "unchanged_sections": {
+    "updater_ui": {
+      "file": "windows-native/update.h",
+      "start": null,
+      "end": null,
+      "sha256": "dc7020ad77e2e4287fb5135f712def3029dd5f98d3204efc05eb1230211a02cb",
+      "baseline_sha256": "dc7020ad77e2e4287fb5135f712def3029dd5f98d3204efc05eb1230211a02cb"
+    },
+    "updater_transaction": {
+      "file": "windows-native/update_core.h",
+      "start": null,
+      "end": null,
+      "sha256": "e5423a57906723aa70604e1a02fdfe49b1a4d42a5e1a5b1842eb2b442bc56659",
+      "baseline_sha256": "e5423a57906723aa70604e1a02fdfe49b1a4d42a5e1a5b1842eb2b442bc56659"
+    },
+    "updater_json": {
+      "file": "windows-native/update_json.h",
+      "start": null,
+      "end": null,
+      "sha256": "cfa56175db218ca5fd65f04f579b4d65932f216d628f05171474c34df3380b45",
+      "baseline_sha256": "cfa56175db218ca5fd65f04f579b4d65932f216d628f05171474c34df3380b45"
+    },
+    "updater_command": {
+      "file": "windows-native/main.c",
+      "start": "        if (LOWORD(wparam) == 105)",
+      "end": "\n",
+      "sha256": "550efcfd6f108dec4bb14a4ae2e4cbd599617ac981998e80679e13835f873f16",
+      "baseline_sha256": "550efcfd6f108dec4bb14a4ae2e4cbd599617ac981998e80679e13835f873f16"
+    }
+  },
+  "historical_baseline": {
+    "version": "0.2.4",
+    "exe_sha256": "58f9b147131fa934da57aa9888da019f92efbb6b6963c669f419380f710d9667",
+    "timestamp": "2026-11-15T10:33:12.182369+08:00",
+    "normal_startup": true,
+    "check_button_visible": true,
+    "manual_check": true,
+    "result_version": "0.2.4",
+    "returned_to_app": true,
+    "method": "Actual final EXE normal startup, production Check updates button and result dialog",
+    "existing_save_path": "D:\\jianpandownload",
+    "confirmation_baseline": {
+      "tested_version": "0.2.3",
+      "source": "testing/windows-native-0.2.3/update-ui.json",
+      "note": "Historical production confirmation UI retained; not repeated as a new 0.2.4 observation."
+    }
+  },
+  "note": "Old online-player/updater/settings UI observations retain their original version and EXE hash. The listed source sections match the published 0.2.7 sources exactly. Fresh final-EXE local playback, physical keyboard/file-dialog tests and online regression are separate records. No new settings or updater dialog observation is claimed; diagnostic mode disables update_check."
+}

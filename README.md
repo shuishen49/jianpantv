@@ -1,22 +1,20 @@
 # 荐片电视适配版与 Windows 客户端
 
-## Windows C 桌面版 0.2.7
+## Windows C 桌面版 0.2.8
 
-[下载 Windows 测试版](https://github.com/shuishen49/jianpantv/releases/tag/v0.2.7-windows)
-（Windows 10/11 x64，便携 ZIP 1.71 MiB，需要系统 WebView2 Runtime）。
+[下载 Windows 测试版](https://github.com/shuishen49/jianpantv/releases/tag/v0.2.8-windows)
+（Windows 10/11 x64，便携 ZIP 1.72 MiB，需要系统 WebView2）。
 
-“观影历史”已放到左侧导航，直接查看本地/账号历史；首页不再重复显示历史横栏。
-保存位置窗口重新设计为深色标题栏、圆角输入区和珊瑚红主按钮，可直接输入新目录并自动创建。
-C17 / Win32 宿主，保留 TV 风格小播放器、右侧详情与讨论、全屏方向键 10 秒和 MP4 整集保存。
-成品使用 `《片名》-1080p-国语.mp4`，信息缺失时省略，成功后自动清理本集分片缓存。
-0.2.3 及以上可点“检查更新”；更早版本须完整下载 ZIP。
+新增本地影片播放器：从保存目录列表直接播放 MP4，支持“打开文件”、Ctrl+O、拖入视频，
+以及将视频拖到 EXE 图标启动。视频直接读取，不上传、不重复复制；可离线观看。
+支持进度条、空格暂停、左右各 10 秒、双击/F11 全屏和 Esc 退出。
+保留观影历史、右侧详情讨论、整集 MP4 保存及缓存自动清理。
+0.2.3 及以上可点击“检查更新”；更早版本请完整下载 ZIP。
 
-[变更与验证范围](docs/windows-0.2.7-release.md) ·
-[构建与 LGPL 重链接](windows-native/README.md) · [客户端源码](windows-native/)
+[变更与验证范围](docs/windows-0.2.8-release.md) · [源码和构建](windows-native/README.md)
 
-最终程序的保存窗口和历史入口完成实际 UI 检查；17 步在线播放/布局/历史导航检查通过。
-Defender 扫描未检出威胁；EXE 无 Authenticode 签名。
-账号登录、所有线路和多进程共用目录未验证；原版 P2P 内核未移植。
+最终 EXE 的离线、在线及 Windows 原生操作检查通过。Defender 未检出威胁；EXE 无 Authenticode 签名。
+编码支持由系统 WebView2 提供，推荐 H.264/AAC MP4；不自动注册系统文件关联。
 
 ## 电视适配版
 

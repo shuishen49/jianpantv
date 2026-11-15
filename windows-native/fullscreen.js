@@ -2,7 +2,8 @@
 (() => {
   "use strict";
   let nativeFullscreen = false, player = null, exitButton = null, seekNotice = null, noticeTimer;
-  const selectPlayer = () => document.querySelector(".integrated-player, .feed__stage");
+  const selectPlayer = () => document.querySelector(".jp-local:not([hidden]) .jp-local-stage") ||
+    document.querySelector(".integrated-player, .feed__stage");
   function apply(enabled, target = player || selectPlayer()) {
     const previous = player;
     nativeFullscreen = !!enabled;

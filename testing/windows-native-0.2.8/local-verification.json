@@ -1,0 +1,45 @@
+{
+  "version": "0.2.8",
+  "exe_sha256": "a69f5389d618e913bdfe44c573977679144aa99565c2a3b58147ca9e2010f1ec",
+  "timestamp": "2026-11-15T16:43:36.868629+08:00",
+  "all_passed": true,
+  "native": {
+    "passed": 7061,
+    "range_fuzz_cases": 5000,
+    "concurrent_clone_reads": 1000,
+    "sparse_file_over_4gib": true,
+    "registry_limit": 1024
+  },
+  "checkpoints": 12,
+  "functional": {
+    "offline_1080p_decode": true,
+    "file_launch_autoplays": true,
+    "pause": true,
+    "seek": true,
+    "fullscreen_unobstructed": true,
+    "fullscreen_seek_ten_seconds": true,
+    "return_to_window": true,
+    "library_click_plays": true,
+    "corrupt_file_message": true,
+    "dom_file_drop_plays": true,
+    "close_releases_video": true,
+    "no_video_copy_or_network": true
+  },
+  "http_ranges": {
+    "bytes": 32,
+    "contentRange": "bytes 0-31/14727073",
+    "denied": 404,
+    "end": 206,
+    "head": 200,
+    "multi": 416,
+    "partial": 206,
+    "size": 14727073,
+    "tail": 206,
+    "tailBytes": 8,
+    "tailMatches": true,
+    "unknown": 404,
+    "unsatisfiable": 416
+  },
+  "physical_explorer_drag_tested": false,
+  "note": "DOM drop is dispatched with a real File/DataTransfer inside the final EXE. This is distinct from a physical Explorer-to-WebView drag; manual UI evidence is recorded separately."
+}

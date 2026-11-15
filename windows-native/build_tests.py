@@ -13,6 +13,7 @@ env["ZIG_LOCAL_CACHE_DIR"] = str(STAGE / "compiler-cache-local")
 for source, name in (("policy_test.c", "policy-test"), ("cache_test.c", "cache-test"),
                      ("naming_test.c", "naming-test"),
                      ("cleanup_test.c", "cleanup-test"),
+                     ("local_test.c", "local-test"),
                      ("playlist_test.c", "playlist-test"), ("update_test.c", "update-test"),
                      ("remux_test.c", "remux-test")):
     test = []
