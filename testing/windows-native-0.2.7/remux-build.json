@@ -1,0 +1,59 @@
+{
+  "version": "9.0.2",
+  "source_sha256": "8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e",
+  "source_url": "https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz",
+  "release_signing_fingerprint": "FCF986EA15E6E293A5644F10B4322F04D67658D8",
+  "license": "LGPL-2.1-or-later",
+  "network_disabled": true,
+  "decoders_disabled": true,
+  "encoders_disabled": true,
+  "configure": [
+    "./configure",
+    "--target-os=mingw32",
+    "--arch=x86_64",
+    "--cc=D:/source_code/jianpian/tools/zig-x86_64-windows-0.14.1/zig.exe cc -target x86_64-windows-gnu",
+    "--host-cc=D:/source_code/jianpian/tools/zig-x86_64-windows-0.14.1/zig.exe cc -target x86_64-windows-gnu",
+    "--ld=D:/source_code/jianpian/tools/zig-x86_64-windows-0.14.1/zig.exe cc -target x86_64-windows-gnu",
+    "--ar=D:/source_code/jianpian/tools/zig-x86_64-windows-0.14.1/zig.exe ar",
+    "--ranlib=D:/source_code/jianpian/tools/zig-x86_64-windows-0.14.1/zig.exe ranlib",
+    "--disable-everything",
+    "--disable-autodetect",
+    "--disable-programs",
+    "--enable-ffprobe",
+    "--disable-doc",
+    "--disable-network",
+    "--enable-debug=0",
+    "--disable-asm",
+    "--disable-x86asm",
+    "--disable-inline-asm",
+    "--disable-avdevice",
+    "--nm=true",
+    "--disable-avfilter",
+    "--disable-swresample",
+    "--disable-swscale",
+    "--disable-shared",
+    "--enable-static",
+    "--enable-small",
+    "--enable-demuxer=hls,mpegts,mov,aac,ac3,eac3",
+    "--enable-muxer=mp4",
+    "--enable-protocol=file,crypto",
+    "--enable-parser=h264,hevc,aac,ac3,mpegaudio",
+    "--enable-bsf=aac_adtstoasc,extract_extradata",
+    "--extra-cflags=-Os -ffunction-sections -fdata-sections",
+    "--extra-ldflags=-Wl,--gc-sections"
+  ],
+  "libraries": {
+    "tools/ffmpeg-9.0.2/libavformat/libavformat.a": {
+      "bytes": 1472004,
+      "sha256": "0ca6e71bb9ee9b6c49aefb71dab6d7a8eab5757d8860cbf6f73d4384d6f22377"
+    },
+    "tools/ffmpeg-9.0.2/libavcodec/libavcodec.a": {
+      "bytes": 1118186,
+      "sha256": "5036f31dffcdc83d1cc29e1cea1be2a30ff0bee9fa7696406b60b10458aba87e"
+    },
+    "tools/ffmpeg-9.0.2/libavutil/libavutil.a": {
+      "bytes": 1137494,
+      "sha256": "103f7ecdbb58ee640606aaa40eb73afc4f21369a36dfd6dd6369f0c618aea6d3"
+    }
+  }
+}

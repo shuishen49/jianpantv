@@ -152,7 +152,8 @@ static void storage_setting(wchar_t *path) {
     SHCreateDirectoryExW(NULL, path, NULL);
     wcscat(path, L"\\video-directory-v2.txt");
 }
-typedef struct { wchar_t config[PATH_CAP], path[PATH_CAP]; } StorageSettings;
+#include "storage_ui.h"
+typedef struct { wchar_t config[PATH_CAP], path[PATH_CAP]; StorageUi ui; } StorageSettings;
 static BOOL read_storage_path(const wchar_t *file_path, wchar_t *path) {
     HANDLE file = CreateFileW(file_path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (file == INVALID_HANDLE_VALUE) return FALSE;
@@ -172,16 +173,26 @@ static INT_PTR CALLBACK storage_dialog(HWND dialog, UINT message, WPARAM wparam,
     case WM_INITDIALOG:
         settings = (StorageSettings *)lparam;
         SetWindowLongPtrW(dialog, DWLP_USER, lparam);
+        storage_ui_init(dialog, &settings->ui);
         SendDlgItemMessageW(dialog, 1001, EM_SETLIMITTEXT, PATH_CAP-151, 0);
         SetDlgItemTextW(dialog, 1001, settings->path);
         SendDlgItemMessageW(dialog, 1001, EM_SETSEL, 0, -1);
         return TRUE;
-    case WM_CTLCOLORDLG: return (INT_PTR)background;
+    case WM_CTLCOLORDLG: return settings ? (INT_PTR)settings->ui.surface : (INT_PTR)background;
     case WM_CTLCOLOREDIT:
     case WM_CTLCOLORSTATIC:
-        SetTextColor((HDC)wparam, GetDlgCtrlID((HWND)lparam) == 1002 ? RGB(255,164,148) : RGB(222,226,232));
-        SetBkColor((HDC)wparam, RGB(25,28,34));
-        return (INT_PTR)background;
+        if (settings) return storage_ui_color(&settings->ui, (HWND)lparam,
+            (HDC)wparam, message == WM_CTLCOLOREDIT);
+        return FALSE;
+    case WM_PAINT:
+        if (settings) { storage_ui_paint(dialog, &settings->ui); return TRUE; }
+        break;
+    case WM_DRAWITEM:
+        if (settings) return storage_ui_button(dialog, &settings->ui, (DRAWITEMSTRUCT *)lparam);
+        break;
+    case WM_DESTROY:
+        if (settings) storage_ui_destroy(&settings->ui);
+        return TRUE;
     case WM_COMMAND:
         if (LOWORD(wparam) == IDOK && settings) {
             wchar_t entered[PATH_CAP], resolved[PATH_CAP], old[PATH_CAP];
@@ -215,8 +226,13 @@ static INT_PTR CALLBACK storage_dialog(HWND dialog, UINT message, WPARAM wparam,
             return TRUE;
         }
         if (LOWORD(wparam) == IDCANCEL) { EndDialog(dialog, IDCANCEL); return TRUE; }
-        if (LOWORD(wparam) == 1001 && HIWORD(wparam) == EN_CHANGE)
-            SetDlgItemTextW(dialog, 1002, L"");
+        if (LOWORD(wparam) == 1001) {
+            if (HIWORD(wparam) == EN_CHANGE) SetDlgItemTextW(dialog, 1002, L"");
+            if (HIWORD(wparam) == EN_SETFOCUS || HIWORD(wparam) == EN_KILLFOCUS) {
+                RECT field = storage_rect(dialog, 20, 83, 326, 28);
+                InvalidateRect(dialog, &field, FALSE);
+            }
+        }
         break;
     case WM_CLOSE: EndDialog(dialog, IDCANCEL); return TRUE;
     }
@@ -1034,6 +1050,14 @@ static void diagnostic_actions(void) {
     case 12:
         SetWindowPos(window, NULL, 0, 0, 1360, 850, SWP_NOMOVE | SWP_NOZORDER);
         ICoreWebView2_Navigate(core, APP_URL); break;
+    case 13:
+    case 15:
+        ICoreWebView2_ExecuteScript(core, L"(function(){var b=Array.from(document.querySelectorAll('.nav__item'))"
+            L".find(function(e){return e.textContent.trim()==='观影历史'});if(b)b.click()})()", NULL); break;
+    case 14:
+    case 16:
+        ICoreWebView2_ExecuteScript(core, L"(function(){var b=Array.from(document.querySelectorAll('.nav__item'))"
+            L".find(function(e){return e.textContent.trim()==='首页'});if(b)b.click()})()", NULL); break;
     }
 }
 static HRESULT STDMETHODCALLTYPE preview_complete(ICoreWebView2CapturePreviewCompletedHandler *self, HRESULT error) {
@@ -1041,7 +1065,7 @@ static HRESULT STDMETHODCALLTYPE preview_complete(ICoreWebView2CapturePreviewCom
     diagnostic_actions();
     if (smoke && diagnostic_stage == 3) SetTimer(window, 1, 5000, NULL);
     diagnostic_busy = FALSE;
-    if (diagnostic_stage >= (smoke ? 13 : 3)) {
+    if (diagnostic_stage >= (smoke ? 17 : 3)) {
         KillTimer(window, 1);
         wchar_t path[PATH_CAP];
         diagnostic_path(path, L"done.json");
@@ -1096,6 +1120,10 @@ static void capture_diagnostic(void) {
         L"playbackReady:!!(observed&&observed.readyState>=3&&observed.videoWidth>=1920&&!observed.paused),"
         L"videoNodePreserved:observed?observed===window.__jpSmokeVideo:null,"
         L"secureContext:window.isSecureContext,hasAndroidBridge:!!(window.jpBridge||window.Android),"
+        L"desktopNavigation:{items:Array.from(document.querySelectorAll('.nav__item')).map(function(e){"
+        L"return {label:e.textContent.trim(),current:e.getAttribute('aria-current'),"
+        L"visible:e.getBoundingClientRect().width>0}}),"
+        L"homeHistoryBlocks:document.querySelectorAll('[block-type=\"continue_watching\"]').length},"
         L"cards:document.querySelectorAll('.search .result').length,action:window.__jpSmokeAction||null,"
         L"fullscreen:!!document.fullscreenElement,events:window.__jpDesktopEvents||[],"
         L"desktopFullscreen:window.__jpDesktopFullscreen?window.__jpDesktopFullscreen.state():null,"

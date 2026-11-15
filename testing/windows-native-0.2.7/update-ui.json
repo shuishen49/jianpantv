@@ -1,0 +1,52 @@
+{
+  "schema": "scoped-ui-history-1",
+  "current_version": "0.2.7",
+  "timestamp": "2026-11-15T14:44:57.151453+08:00",
+  "historical_only": true,
+  "validated_exe_sha256": "21f371e55721de64c309d2659fd8e45e99d4900e7d3869e8fed785f326ff914f",
+  "baseline_tag": "v0.2.4-windows",
+  "unchanged_sections": {
+    "window_commands": {
+      "file": "windows-native/main.c",
+      "start": "    case WM_COMMAND:\n        if (LOWORD(wparam) == 104)",
+      "end": "    case WM_KEYDOWN:\n",
+      "sha256": "1265f3a7b62da7892328d19db2e4ab58bded9e44cd1c0d69f7e0564b2d32afd9"
+    },
+    "updater_ui": {
+      "file": "windows-native/update.h",
+      "start": null,
+      "end": null,
+      "sha256": "dc7020ad77e2e4287fb5135f712def3029dd5f98d3204efc05eb1230211a02cb"
+    },
+    "updater_transaction": {
+      "file": "windows-native/update_core.h",
+      "start": null,
+      "end": null,
+      "sha256": "e5423a57906723aa70604e1a02fdfe49b1a4d42a5e1a5b1842eb2b442bc56659"
+    },
+    "updater_json": {
+      "file": "windows-native/update_json.h",
+      "start": null,
+      "end": null,
+      "sha256": "cfa56175db218ca5fd65f04f579b4d65932f216d628f05171474c34df3380b45"
+    }
+  },
+  "historical_baseline": {
+    "version": "0.2.4",
+    "exe_sha256": "58f9b147131fa934da57aa9888da019f92efbb6b6963c669f419380f710d9667",
+    "timestamp": "2026-11-15T10:33:12.182369+08:00",
+    "normal_startup": true,
+    "check_button_visible": true,
+    "manual_check": true,
+    "result_version": "0.2.4",
+    "returned_to_app": true,
+    "method": "Actual final EXE normal startup, production Check updates button and result dialog",
+    "existing_save_path": "D:\\jianpandownload",
+    "confirmation_baseline": {
+      "tested_version": "0.2.3",
+      "source": "testing/windows-native-0.2.3/update-ui.json",
+      "note": "Historical production confirmation UI retained; not repeated as a new 0.2.4 observation."
+    }
+  },
+  "note": "Physical UI observations are the original 0.2.4 tests, not repeated on 0.2.7. The listed key handling/fullscreen/updater sections match that tag exactly. Final 0.2.7 automated playback, history sidebar navigation, full-screen viewport/continuity, layout, cache, 18 input regressions and real update replacement/rollback were independently rerun. Fresh settings UI and history sidebar observations are recorded separately; physical fullscreen input was not repeated."
+}

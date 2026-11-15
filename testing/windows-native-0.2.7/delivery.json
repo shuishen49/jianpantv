@@ -1,0 +1,49 @@
+{
+  "created_at": "2026-11-15T14:45:36.877147+08:00",
+  "runtime_directory": "D:\\source_code\\jianpian\\output\\Jianpian-Windows-C-0.2.7",
+  "runtime_bytes": 2628558,
+  "files": {
+    "FFmpeg-LGPL-2.1.txt": {
+      "bytes": 26517,
+      "sha256": "246041b6ecf9bc32d718a62c57877c78b5eb397b6467e74ed7ae2626ab189c30"
+    },
+    "FFmpeg说明.txt": {
+      "bytes": 632,
+      "sha256": "3657a0465aa839ada60249f7538424d7e2b483bad8b2023e97efa3e44c73d56b"
+    },
+    "Jianpian.exe": {
+      "bytes": 2398720,
+      "sha256": "21f371e55721de64c309d2659fd8e45e99d4900e7d3869e8fed785f326ff914f"
+    },
+    "Microsoft-WebView2-LICENSE.txt": {
+      "bytes": 1487,
+      "sha256": "0af8f1b807512aae39c2ac1aa4d0cae65cabecb6fd554b8439a5162a0d6eca55"
+    },
+    "SHA256SUMS.txt": {
+      "bytes": 603,
+      "sha256": "3b3dce89035b8da73e856976f35aac33f0621a8b4da83a6d042034ac43cb81fe"
+    },
+    "WebView2Loader.dll": {
+      "bytes": 194912,
+      "sha256": "d3fce90bdeecb08596e377dea6a316354dd8949e32ff09b89d51be00c14e21b6"
+    },
+    "使用说明.txt": {
+      "bytes": 4621,
+      "sha256": "39f5ce45ba0e7a9afc910aaba22d38049a2f71aee99f1d68a3dd7764a956b37b"
+    },
+    "安全检测.txt": {
+      "bytes": 1066,
+      "sha256": "38716cb40c66e77a653872d1fa1b027d537333b29b134633c189b8e9e81f7898"
+    }
+  },
+  "runtime_zip": {
+    "path": "D:\\source_code\\jianpian\\output\\Jianpian-Windows-C-0.2.7.zip",
+    "bytes": 1791836,
+    "sha256": "14ec00c3694adc132000434f98ecd475f9bf4802d81faf26f33363651b05f1a4"
+  },
+  "source_zip": {
+    "path": "D:\\source_code\\jianpian\\output\\Jianpian-Windows-C-0.2.7-source-and-checks.zip",
+    "bytes": 15891004,
+    "sha256": "03d190cc321840f5c9cbf84449589abfa46598b1ddb4d2f25b0776ad0fa5a33d"
+  }
+}

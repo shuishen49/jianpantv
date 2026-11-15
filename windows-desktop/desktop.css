@@ -24,6 +24,19 @@ button:focus-visible, a:focus-visible { outline: 2px solid #ff6b6d; outline-offs
   color: #ff7476; background: #ff535516; border-color: #ff53552a;
 }
 .nav.nav--sidebar .nav__item:hover { background: #ffffff08; color: #f1f3f7; }
+.nav .nav__item[aria-current="page"] { color: #ff7476; }
+.nav.nav--sidebar .nav__list > li:has(.nav__item[aria-current="page"]) { position: relative; }
+.nav.nav--sidebar .nav__item[aria-current="page"]::before {
+  content: ""; position: absolute; left: 0; width: 3px; height: 18px;
+  border-radius: 0 3px 3px 0; background: #ff737a;
+}
+.library { background: #13161c; }
+.library .library__main { max-width: 1100px; margin-inline: auto; }
+.library .library__item {
+  border: 1px solid #ffffff0a; border-radius: 12px; background: #1a1e26;
+  transition: background .15s ease;
+}
+.library .library__item:hover { background: #222833; }
 .header[data-v-e9bf6cc7] .header__search {
   height: 36px; max-width: 500px; border-radius: 10px; background: #1b2029b8;
   box-shadow: inset 0 0 0 1px #ffffff19; color: #b9c3d1; text-shadow: none;

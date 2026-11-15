@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-11-15T14:41:35.041796+08:00",
+  "version": "0.2.7",
+  "exe_sha256": "21f371e55721de64c309d2659fd8e45e99d4900e7d3869e8fed785f326ff914f",
+  "method": "Windows Computer Use via @oai/sky; native keyboard input and sidebar clicks",
+  "isolated_localappdata": "D:\\source_code\\jianpian\\testing\\windows-native-0.2.7\\settings-final-profile",
+  "default_path_visible": "D:\\jianpandownload",
+  "dark_caption_and_buttons": true,
+  "visual_layout_no_clipping": true,
+  "tab_and_shift_tab": true,
+  "enter_rejects_relative_path": true,
+  "error_cleared_on_edit": true,
+  "enter_saves_and_creates_unicode_multilevel_directory": "D:\\source_code\\jianpian\\testing\\windows-native-0.2.7\\ui-created\\视频",
+  "reopen_retains_saved_path": true,
+  "escape_closes_without_changing_setting": true,
+  "history_sidebar_opens_original_history_route": true,
+  "history_keeps_sidebar_and_selected_state": true,
+  "sidebar_returns_home": true,
+  "account_login_tested": false,
+  "notes": "The helper reports modal focus at dialog level; typing was preceded by screenshot confirmation of edit focus/selection. Modal element-index mapping failed, so final input checks used observed keyboard focus and native Enter/Escape. Existing user configuration was not used."
+}

@@ -104,6 +104,13 @@ def main():
     assert verification["functional"]["video_decoded_1080p"]
     assert verification["functional"]["player_button_fills_viewport"]
     assert verification["functional"]["fullscreen_unobstructed"]
+    assert verification["functional"]["history_sidebar_button"]
+    assert verification["functional"]["history_repeated_navigation"]
+    assert verification["functional"]["home_history_row_removed"]
+    settings = read_json(TEST / "storage-settings.json")
+    assert settings["exe_sha256"] == sha(OUT / "Jianpian.exe") and settings["version"] == VERSION
+    assert settings["enter_rejects_relative_path"] and settings["reopen_retains_saved_path"]
+    assert settings["history_sidebar_opens_original_history_route"] and settings["sidebar_returns_home"]
     update = read_json(TEST / "update-verification.json")
     assert update["exe_sha256"] == sha(OUT / "Jianpian.exe") and update["passed"] >= 65
     assert update["transaction_success"]["passed"] and update["transaction_restart_failure"]["passed"]
@@ -125,6 +132,8 @@ def main():
         "适用 Windows 10/11 x64，需要微软 Edge WebView2 Runtime；本机测试环境已经安装。\n"
         "发布包复用系统运行库，不包含浏览器、Android 运行环境或原 Windows 客户端。\n\n"
         "界面来自安卓版 5.0.78，Windows 宿主使用 C17。支持鼠标、键盘、F11 全屏、Esc 退出全屏。\n"
+        "左侧“观影历史”直接打开本地/账号历史，历史页保留侧栏，首页不再重复显示历史横栏。\n"
+        "保存位置窗口使用深色标题栏、圆角输入区和强调色主按钮，可直接输入新文件夹路径。\n"
         "打开影片默认左侧小窗播放，右侧详情和讨论独立滚动，点击“全屏播放”可放大。\n"
         "修复手机横屏提示；播放器全屏、全屏播放按钮、工具栏和 F11 使用同一桌面全屏逻辑。\n"
         "全屏右上角可点击“退出全屏 (Esc)”，或按 Esc / F11 返回小播放器。\n"
@@ -207,6 +216,8 @@ def main():
                  "storage-settings.json", "fullscreen-ui.json", "update-verification.json", "update-ui.json"):
         source_files.append((TEST / name, "evidence/" + name))
     source_files.append((BUILD / "build-inventory.json", "evidence/build-inventory.json"))
+    for name in ("storage-dialog.png", "storage-error.png", "history-sidebar-ui.png"):
+        source_files.append((TEST / name, "evidence/" + name))
     source_files.append((ROOT / "tools/zig-download.json", "evidence/zig-download.json"))
     source_files.append((ROOT / "tools/webview2/download.json", "evidence/webview2-download.json"))
     source_files.append((OUT / "Microsoft-WebView2-LICENSE.txt", "evidence/Microsoft-WebView2-LICENSE.txt"))

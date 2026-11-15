@@ -75,6 +75,38 @@ def adapt_save_metadata(app):
         '"data-jp-episode":"movie"===ue.value.kind?"":u.value&&u.value.name||""},'
         'Ud(ue.value.title),9,["data-jp-language","data-jp-episode"])')
 
+def adapt_desktop_navigation(app):
+    # Adapt the pinned Vue navigation itself, so routing, selected state,
+    # keyboard access and the existing local/account history remain shared.
+    replacements = {
+        'TB={class:"nav__label"},xB=cm(':
+            'TB={class:"nav__label"},jpDesktopHistoryIcon=Rf({name:"DesktopHistoryIcon",'
+            'render(){return xg("svg",{class:"jp-icon",viewBox:"0 0 24 24",'
+            'fill:"none",stroke:"currentColor","stroke-width":1.8,'
+            '"stroke-linecap":"round","stroke-linejoin":"round"},['
+            'xg("path",{d:"M3 11a9 9 0 1 1 2.5 7M3 5v6h6M12 7v5l3 2"})])}}),xB=cm(',
+        'u=Iv(()=>i.value.map(e=>({...e,name:s[e.page],idle:l[e.page][0],active:l[e.page][1]})))':
+            'u=Iv(()=>{const e=i.value.filter(e=>"history"!==e.page).map(e=>'
+            '({...e,name:s[e.page],idle:l[e.page][0],active:l[e.page][1]}));'
+            'const t=e.findIndex(e=>"profile"===e.page);'
+            'e.splice(t<0?e.length:t,0,{id:"desktop.history",page:"history",name:"History",'
+            'label:"观影历史",idle:jpDesktopHistoryIcon,active:jpDesktopHistoryIcon});return e})',
+        'onClick:t=>function(e){d.switchTab(e.page,function(e){':
+            'onClick:t=>function(e){if("history"===e.page)return d.open({name:"History"});'
+            'd.switchTab(e.page,function(e){',
+        'class:Gd(["nav__item",{"is-active":f.value===e.name}]),onClick:':
+            'class:Gd(["nav__item",{"is-active":f.value===e.name}]),'
+            '"aria-current":f.value===e.name?"page":void 0,onClick:',
+        '_B=["onClick"]': '_B=["onClick","aria-current"]',
+        'var Aae=EM;': 'var Aae=new Set([...EM,"History"]);',
+        'function o(e){return i[e.block_type]}':
+            'function o(e){return"continue_watching"===e.block_type?null:i[e.block_type]}',
+    }
+    for original, replacement in replacements.items():
+        assert app.count(original) == 1, f"Unexpected navigation implementation: {original}"
+        app = app.replace(original, replacement)
+    return app
+
 
 def prepare_assets():
     assert sha(APK) == APK_SHA, "Unexpected original APK"
@@ -101,7 +133,7 @@ def prepare_assets():
     app = app.replace(target, "window.__jpRegisterHls(new e({enableWorker:!0,lowLatencyMode:!1,"
                       "maxBufferLength:20,maxMaxBufferLength:40,maxBufferSize:2e7,"
                       "backBufferLength:20,frontBufferFlushThreshold:60,...r}))")
-    app = adapt_save_metadata(adapt_fullscreen(app))
+    app = adapt_desktop_navigation(adapt_save_metadata(adapt_fullscreen(app)))
     target = 'var KD="/runtime/assets/logo-DkDMvUmZ.png"'
     assert app.count(target) == 1
     app = app.replace(target, 'var KD="/runtime/desktop-icon.png"')

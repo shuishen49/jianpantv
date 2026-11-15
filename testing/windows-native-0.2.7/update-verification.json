@@ -1,0 +1,23 @@
+{
+  "passed": 65,
+  "fuzz_inputs": 4000,
+  "release_filter": true,
+  "numeric_versions": true,
+  "digest_required": true,
+  "repository_and_redirect_policy": true,
+  "candidate_contract": true,
+  "transaction_success": {
+    "passed": true,
+    "target_sha256": "2c6c0df01e0bef753ec1229d1df4d8ddbb9d0bd3d840075f31c672301a70fa3a",
+    "pending_and_backup_cleaned": true,
+    "method": "Real helper process, inherited handles, ReplaceFile and readiness handshake"
+  },
+  "transaction_restart_failure": {
+    "passed": true,
+    "target_sha256": "a288a2e01375897078a774bbde848430562439b86661a6923e0055107cd3f72b",
+    "pending_and_backup_cleaned": true,
+    "method": "Real helper process, inherited handles, ReplaceFile and readiness handshake"
+  },
+  "exe_sha256": "21f371e55721de64c309d2659fd8e45e99d4900e7d3869e8fed785f326ff914f",
+  "timestamp": "2026-11-15T14:44:09.424790+08:00"
+}

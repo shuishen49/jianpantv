@@ -131,10 +131,10 @@ def check_download_controller():
 
 
 def check_functional():
-    for number in range(1, 14):
+    for number in range(1, 18):
         assert (TEST / f"ui-state-{number}.json").stat().st_mtime >= (OUT / "Jianpian.exe").stat().st_mtime
-    states = [read_json(TEST / f"ui-state-{i}.json") for i in range(1, 14)]
-    memory = [read_json(TEST / f"memory-{i}.json") for i in range(1, 14)]
+    states = [read_json(TEST / f"ui-state-{i}.json") for i in range(1, 18)]
+    memory = [read_json(TEST / f"memory-{i}.json") for i in range(1, 18)]
     runtime = read_json(TEST / "runtime.json")
     assert all(state["secureContext"] and not state["hasAndroidBridge"] for state in states)
     assert states[0]["route"].endswith("#/home")
@@ -157,6 +157,18 @@ def check_functional():
     assert all("请旋转手机" not in state["text"] for state in states)
     assert len({entry["window_handle"] for entry in memory}) == 1
     assert states[12]["route"].endswith("#/home") and not states[12]["videos"]
+    for number in (0, 12, 14, 16):
+        nav = states[number]["desktopNavigation"]
+        assert states[number]["route"].endswith("#/home")
+        assert nav["homeHistoryBlocks"] == 0
+        assert sum(item["label"] == "观影历史" and item["visible"] for item in nav["items"]) == 1
+        assert next(item for item in nav["items"] if item["label"] == "首页")["current"] == "page"
+    for number in (13, 15):
+        assert states[number]["route"].endswith("#/me/history")
+        nav = states[number]["desktopNavigation"]
+        history = [item for item in nav["items"] if item["label"] == "观影历史"]
+        assert len(history) == 1 and history[0]["visible"] and history[0]["current"] == "page"
+        assert "观影历史" in states[number]["text"]
     assert runtime["api_success"] > 0 and runtime["api_failure"] == 0
     # Line probing and media services can fail independently of the host.
     # Assert actual decoding/continuity above and report every extra failure;
@@ -189,7 +201,9 @@ def check_functional():
         assert len(body) == length and hashlib.sha256(body).digest() == metadata[16:48]
         cache_entries += 1
     assert cache_entries > 5
-    return {"homepage": True, "real_search_results": states[1]["cards"], "video_decoded_1080p": True,
+    return {"homepage": True, "history_sidebar_button": True, "history_route_keeps_sidebar": True,
+            "history_selected_state": True, "history_repeated_navigation": True, "home_history_row_removed": True,
+            "real_search_results": states[1]["cards"], "video_decoded_1080p": True,
             "playback_progressed": [video3["currentTime"], video4["currentTime"]],
             "pause": True, "seek_and_resume": True, "native_fullscreen": True,
             "player_button_fills_viewport": True, "fullscreen_preserves_playback": True,
