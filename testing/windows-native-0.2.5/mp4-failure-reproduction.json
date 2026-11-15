@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-11-15T11:23:27.263282+08:00",
+  "directory": "D:\\source_code\\jianpian\\work\\mp4-repro-025-1794713007262278900",
+  "key": "e716cd9244b464daa5dec6c10e836f1df01454de608a85d73cb1afc41ef91d91",
+  "manifest_sha256": "d0f9506619599bab25f144c1f0ce883e77ca3feedda0d1db2601b268f2424432",
+  "segments": 372,
+  "resources": 372,
+  "duration_seconds": 1484.7820000000002,
+  "discontinuities": 56,
+  "bad_records": [],
+  "bytes": 238280976,
+  "old_export": {
+    "exit_code": 1,
+    "stdout": "{\"phase\":4,\"progress\":201,\"bytes\":50948884,\"file\":\"荐片-复现样本-e716cd9244b4.mp4\",\"error\":\"MP4 合并失败（代码 -1094995529）；完整分片已保留，可重试或更换线路\"}\r\n",
+    "stderr": "Incomplete packet metadata in stream 0 (flags=2, pts=27059157, dts=27055403)\r\n"
+  }
+}
