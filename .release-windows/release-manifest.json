@@ -1,0 +1,28 @@
+{
+  "repository": "shuishen49/jianpantv",
+  "tag": "v0.2.5-windows",
+  "title": "荐片 Windows C 桌面版 0.2.5（修复 HLS 分片切换合并失败）",
+  "source_commit": "deace1ffe09b807979f9779bbe2099e124dbf792",
+  "assets": {
+    "Jianpian-Windows-C-0.2.5.zip": {
+      "size": 1670494,
+      "sha256": "45250ea1ca2468aea5fb2505d2d9d588f9907c39fe384aea2edcfd1f595f7e48"
+    },
+    "Jianpian-Windows-C-0.2.5-source-and-checks.zip": {
+      "size": 14511972,
+      "sha256": "32fddf9d2330ccaa9a190d9f2cd966418c05c0bea1e865ff652d256bc17a6285"
+    },
+    "Jianpian-Windows-C-0.2.5.exe": {
+      "size": 2268160,
+      "sha256": "35a8416985796dc85c083e6cbb151dce02e3f51c464f7322cad2ef407782978e"
+    },
+    "windows-0.2.5-release-report.md": {
+      "size": 4103,
+      "sha256": "b67bada18bf552300759508180cfb6dcf107cce539f3dc0b42ec75eb354bc4f3"
+    },
+    "SHA256SUMS.txt": {
+      "size": 405,
+      "sha256": "8503709ed0b3676a481b583baa340cb1953e4fe7bda8d332eb8288a3a20a27ba"
+    }
+  }
+}
