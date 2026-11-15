@@ -1,4 +1,4 @@
-荐片 Windows C 桌面版 0.2.4
+荐片 Windows C 桌面版 0.2.5
 
 这是从安卓版 5.0.78 内置页面移植的非官方 Windows 客户端，宿主使用 C17、Win32 和微软 WebView2。没有采用旧 Windows 客户端，也没有打包 Android 运行环境。
 
@@ -22,11 +22,13 @@
 
 “缓存整集（MP4）”遍历当前普通 HLS 点播清单，依次获取媒体、初始化片段和 AES-128 密钥，同时允许继续播放。全部片段成功保存后生成供合并使用的本地清单，在独立线程中通过裁剪编译的 FFmpeg C 容器库无重编码合并为单个 MP4。文件名包含片名及地址摘要，支持单独复制、移动和播放。只有完成尾部索引、刷盘和原子替换后才显示“已保存为 MP4”，随后删除本次临时 m3u8。已有旧版 m3u8 不会在升级时自动批量转换；重新点保存可复用地址和范围匹配的完整缓存。
 
+0.2.5 修复含 `EXT-X-DISCONTINUITY` 的 HLS 合并失败：每个声明的连续区间单独解封装，再按清单时长接回同一个 MP4 时间轴。这样允许切换点的 TS 计数器及时间戳重新开始，也处理插入片段结束后的时间戳前跳。各区间继承有效密钥、初始化段和原始媒体序号，保留 AES-128 隐式 IV。AAC 配置变化写入 MP4 样本描述。没有改写原始分片、忽略损坏标记或删去插入片段；校验失败、未声明的传输错误及不完整时长仍拒绝发布。错误信息显示出错阶段、包信息或时长差异。
+
 合并器只读取当前清单列出的 media/摘要.ts 文件，逐个核对缓存 SHA-256，FFmpeg 编译时关闭网络、解码器、编码器及无关格式。普通 H.264/AAC TS 和初始化分片通过短样本验证；AES-128 先按清单解密再封装，音视频参数只从压缩头读取。使用包内时间戳、时基和 DTS/PTS 差值，处理时间戳重置并检查实际输出时长，缺失、损坏、格式不支持或时长明显不符时不发布成功。取消、关闭和保存目录变化会停止合并，清理本次 partial，保留旧 MP4 和已完成分片。media 缓存继续保留供播放与重试，因而与最终 MP4 会分别占空间。没有后台常驻下载或本地影片库。
 
 直播、独立音轨、字节范围 HLS、DRM 和原版 P2P 下载内核不在整集保存支持范围。运行时会明确提示。普通播放仍按现有线路处理。重试时如果上游更换签名 URL，缓存按新地址重新下载；不推测不同地址是同一媒体。直连 MP4 不走这一 HLS 保存流程。
 
-实测范围见 `testing/windows-native-0.2.4/verification.json` 及 `mp4-verification.json`。14 项 MP4 检查包括真实 1080p H.264/AAC 的包数/时长、AES-128、初始化分片、合法 TS 连续计数下的时间戳重置、摘要损坏、缺片、路径越界、时长错误、取消和旧文件保留。单个 MP4 复制到独立目录后，Windows Media Foundation 实际解码视频为 NV12、音频为 PCM，并跳转至一秒处。测试使用短样本，不分发样本媒体，不宣称已验证全部编码格式或完整长片。更新、播放、全屏、路径及下载回归仍需通过；历史 UI 基线保留原始版本。
+实测范围见 `testing/windows-native-0.2.5/verification.json`、`mp4-verification.json` 和 `saved-vod-verification.json`。21 项短样本检查覆盖音视频包数/时长、AES-128、跨区间密钥/隐式 IV/初始化段继承、原始计数器重置、时间戳先后退再前跳、未声明的传输错误、区间内部丢包与 TEI、摘要损坏、缺片、路径、时长、取消和旧文件保留。另用用户已保存的 372 个分片、56 个切换标记复现旧版失败，并完成整集约 24 分 45 秒的 MP4 合并。35,617 个视频包和 69,529 个音频包全部保留；Windows Media Foundation 在 1、298、300、316、318、1483 秒解码 NV12 视频和 PCM 音频并跳转成功。没有逐帧解码或人工看完整集，不分发测试媒体，不宣称已验证全部编码格式。最终 EXE 在线播放、全屏、布局、缓存及更新原生检查通过；物理方向键和手动更新弹窗保留明确标注的 0.2.4 历史记录，对应源码逐字节一致。
 
 程序目录的体积和运行后的用户数据体积是两项不同数据。程序复用本机 WebView2，用户数据位于 `%LOCALAPPDATA%\JianpianDesktop\NativeWebView2`，包含浏览器的安全组件和缓存，后续会随使用变化。启动参数对浏览器磁盘缓存和媒体缓存各请求 8 MiB 的预算，这不是整个用户数据目录的大小上限。
 
@@ -63,7 +65,7 @@ FFmpeg 仅开启 HLS/MPEG-TS/MOV/AAC/AC3 容器读取、MP4 写入、相关压�
 python .\relink\relink.py --compiler D:\path\to\zig.exe --libraries .\relink --output .\Jianpian-relinked.exe
 ```
 
-`--libraries` 指向替换后的 libavformat.a、libavcodec.a 和 libavutil.a；保持与 FFmpeg 9.0.2 的 ABI 及 x64 Windows GNU 目标兼容。将重链 EXE 与微软 DLL 放在同目录运行。MP4 复现检查：`python windows-native/check_remux.py --fixture D:\path\to\short-h264-aac.ts`，测试媒体由复现者自行提供。
+`--libraries` 指向替换后的 libavformat.a、libavcodec.a 和 libavutil.a；保持与 FFmpeg 9.0.2 的 ABI 及 x64 Windows GNU 目标兼容。将重链 EXE 与微软 DLL 放在同目录运行。MP4 短样本检查：`python windows-native/check_remux.py --fixture D:\path\to\short-h264-aac.ts`。已有完整缓存的隔离复现：`python windows-native/check_remux_saved.py D:\video-directory 64位清单摘要 --seek 1 298 300 318`；脚本先复制到工作区，不修改原缓存，测试媒体由复现者自行提供。
 
 构建清单在 `work/windows-native-build/build-inventory.json`，包含输入文件、网页资源、EXE 和 DLL 的哈希。代码的 Android 目标替换、HLS 缓冲限制、CSP 调整、标题和桌面样式补充都在构建脚本中明确列出。
 

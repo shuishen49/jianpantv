@@ -1,24 +1,25 @@
 # 荐片电视适配版与 Windows 客户端
 
-## Windows C 桌面版 0.2.4
+## Windows C 桌面版 0.2.5
 
-[下载 Windows 测试版](https://github.com/shuishen49/jianpantv/releases/tag/v0.2.4-windows)
+[下载 Windows 测试版](https://github.com/shuishen49/jianpantv/releases/tag/v0.2.5-windows)
 （Windows 10/11 x64，便携 ZIP 1.59 MiB，需要系统 WebView2 Runtime）。
-C17 / Win32 宿主，TV 风格小播放器、完整详情与讨论、自定义保存路径和自动创建目录。
+C17 / Win32 宿主，TV 风格小播放器、右侧详情与讨论、自定义保存路径和自动创建目录。
 
-0.2.4 增加全屏左右键快退/快进 10 秒，暂停时定位保持暂停。
-“缓存整集（MP4）”在片段下载完成后自动无重编码合并为单个 MP4，可单独复制和播放。
-仅在合并成功后显示完成；失败/取消保留分片和旧文件，media 播放缓存另占空间。
-保留播放器按钮、工具栏、F11/Esc 桌面全屏，以及确认后下载校验并重启的 GitHub 更新。
-0.2.3 用户可在程序内“检查更新”，0.2.2 及更早版本须手动下载一次新 ZIP。
+0.2.5 修复含分片切换的 HLS 报“MP4 合并失败（代码 -1094995529）”。
+按清单切换点重新解析并拼接正确时间轴，保留 AAC 配置变化；不转码或删掉片段。
+保留全屏 ←/→ 快退/快进 10 秒、暂停状态、F11/Esc 和 GitHub 确认后更新。
+0.2.3/0.2.4 用户可在程序内“检查更新”；更早版本须完整下载新 ZIP。
 
-[使用与验证范围](docs/windows-0.2.4-release.md) ·
+[修复与验证范围](docs/windows-0.2.5-release.md) ·
 [Windows 构建与 LGPL 重链接](windows-native/README.md) ·
 [C 客户端源码](windows-native/)
 
-14 项 MP4 检查包含真实音视频解码和单文件跳转，实体方向键及最终 EXE 在线播放通过。
-使用短样本；未验证完整长片、全部格式/线路和账号登录。原版 P2P 内核未移植。
-EXE 尚无 Authenticode 签名；最终运行目录和 ZIP 的 Defender 扫描未检出威胁。
+21 项 MP4 短样本检查通过。用用户已有 372 个分片完成约 24 分 45 秒的整集合并，
+音视频包数保持一致，切换点前后及片尾的系统解码和跳转通过；未逐帧看完整集。
+最终 EXE 在线播放、全屏、布局和缓存通过；物理按键/手动更新 UI 保留明确的 0.2.4 历史记录。
+未验证全部线路和账号登录，原版 P2P 内核未移植。
+EXE 无 Authenticode 签名；最终运行目录和 ZIP 的 Defender 扫描未检出威胁。
 
 ## 电视适配版
 

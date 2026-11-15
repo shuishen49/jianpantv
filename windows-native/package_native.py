@@ -44,6 +44,25 @@ def zip_files(destination, files):
         for path, name in files:
             assert hashlib.sha256(archive.read(name)).hexdigest() == sha(path)
 
+def ui_evidence(name, current_sha):
+    record = read_json(TEST / name)
+    if record.get("exe_sha256") == current_sha:
+        return record
+    # A remux-only patch does not turn historical physical UI input into a new
+    # observation. Require exact unchanged UI/updater sources and retain the
+    # original report, version and executable digest in the release evidence.
+    assert record["current_version"] == VERSION and record["historical_only"]
+    required = {"windows-native/main.c", "windows-native/fullscreen.js", "windows-native/desktop.js",
+                "windows-desktop/desktop.css", "windows-native/update.h",
+                "windows-native/update_core.h", "windows-native/update_json.h"}
+    assert required <= set(record["unchanged_sources"])
+    for source, digest in record["unchanged_sources"].items():
+        assert sha(ROOT / source) == digest, source
+    baseline = record["historical_baseline"]
+    original = ROOT / f"output/Jianpian-Windows-C-{baseline['version']}/Jianpian.exe"
+    assert baseline["exe_sha256"] == sha(original)
+    return baseline
+
 
 def main():
     verification = read_json(TEST / "verification.json")
@@ -58,11 +77,9 @@ def main():
     update = read_json(TEST / "update-verification.json")
     assert update["exe_sha256"] == sha(OUT / "Jianpian.exe") and update["passed"] >= 65
     assert update["transaction_success"]["passed"] and update["transaction_restart_failure"]["passed"]
-    update_ui = read_json(TEST / "update-ui.json")
-    assert update_ui["exe_sha256"] == sha(OUT / "Jianpian.exe")
+    update_ui = ui_evidence("update-ui.json", sha(OUT / "Jianpian.exe"))
     assert update_ui["manual_check"] and update_ui["returned_to_app"]
-    fullscreen_ui = read_json(TEST / "fullscreen-ui.json")
-    assert fullscreen_ui["exe_sha256"] == sha(OUT / "Jianpian.exe")
+    fullscreen_ui = ui_evidence("fullscreen-ui.json", sha(OUT / "Jianpian.exe"))
     assert all(fullscreen_ui[name] for name in (
         "player_internal_button", "player_expand_button", "toolbar_button", "f11",
         "escape_exit", "f11_exit", "visible_exit_button", "no_phone_rotation_prompt"))
@@ -99,9 +116,12 @@ def main():
         "合并成功后删除该次临时 m3u8。media 内的播放缓存仍保留，会另占空间。\n"
         "中断后完整片段保留，重新发起时可复用；关闭程序后不继续下载。\n"
         "直播、独立音轨、字节范围 HLS 和 DRM 不支持整集保存；原版 P2P 内核未移植。\n"
-        "此版尚未提供本地影片库入口；账号登录、全部线路及完整长片的离线播放尚未验证。\n\n"
+        "0.2.5 修复 HLS 切换片段时计数器和时间戳重置导致的合并失败，保留 AAC 配置切换。\n"
+        "此版尚未提供本地影片库入口；账号登录和全部线路尚未验证。\n\n"
         "实测首页、搜索、1080p 播放、暂停、跳转、全屏、900×640 布局、讨论、真实缓存和停止下载通过。\n"
-        "完整下载控制器和本地播放列表发布使用短测试样本验证，未为测试下载整部长片。\n\n"
+        "21 项短样本 MP4 检查通过；另使用用户已下载的 372 个分片完成约 24 分 45 秒整集合并。\n"
+        "整集音视频包数保持一致，Windows 系统解码器在切换点前后和片尾解码/跳转通过。\n"
+        "未逐帧解码整集；物理方向键和手动更新弹窗保留 0.2.4 历史记录，相关源码逐字节一致。\n\n"
         "程序目录实际体积见交付记录。WebView2 用户数据和视频缓存另计，随使用增长。\n"
         "数据目录：%LOCALAPPDATA%\\JianpianDesktop\\NativeWebView2\n"
         "若另一台电脑没有 WebView2，安装该微软运行环境会另占空间。\n\n"
@@ -156,6 +176,9 @@ def main():
     source_files.append((OUT / "Microsoft-WebView2-LICENSE.txt", "evidence/Microsoft-WebView2-LICENSE.txt"))
     for name in ("mp4-verification.json", "lgpl-relink.json"):
         source_files.append((TEST / name, "evidence/" + name))
+    for name in ("saved-vod-verification.json", "ui-source-baseline.json"):
+        if (TEST / name).exists():
+            source_files.append((TEST / name, "evidence/" + name))
     source_files.append((BUILD / "remux-build.json", "evidence/remux-build.json"))
     for name in ("ffmpeg-9.0.2.tar.xz", "ffmpeg-9.0.2.tar.xz.asc", "ffmpeg-devel.asc"):
         source_files.append((ROOT / "tools" / name, "third-party/" + name))

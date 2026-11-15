@@ -75,6 +75,44 @@ def continuous_ts(body, counters):
         counters[pid] = current
     return bytes(data)
 
+def shift_ts_timestamps(body, ticks):
+    """Change PES timestamps without changing compressed A/V or TS counters."""
+    data = bytearray(body)
+    for cursor in range(0, len(data), 188):
+        if not data[cursor+1] & 0x40 or not data[cursor+3] & 0x10:
+            continue
+        start = cursor + 4
+        if data[cursor+3] & 0x20:
+            start += 1 + data[cursor+4]
+        if start+19 > cursor+188 or data[start:start+3] != b"\0\0\1":
+            continue
+        flags = data[start+7] >> 6
+        for offset in ([9, 14] if flags == 3 else [9] if flags == 2 else []):
+            pos = start+offset
+            a, b, c, d, e = data[pos:pos+5]
+            old = ((a & 14) << 29) | (b << 22) | ((c & 254) << 14) | (d << 7) | (e >> 1)
+            value = (old + ticks) & ((1 << 33)-1)
+            data[pos:pos+5] = bytes(((a & 0xf0) | (((value >> 30) & 7) << 1) | 1,
+                                    (value >> 22) & 255, ((value >> 14) & 254) | 1,
+                                    (value >> 7) & 255, ((value << 1) & 254) | 1))
+    return bytes(data)
+
+def video_continuation(body):
+    video_pid = None
+    for cursor in range(0, len(body), 188):
+        if not body[cursor+3] & 16:
+            continue
+        pid = ((body[cursor+1] & 31) << 8) | body[cursor+2]
+        start = cursor + 4
+        if body[cursor+3] & 32:
+            start += 1 + body[cursor+4]
+        if body[cursor+1] & 64:
+            if start+4 <= cursor+188 and body[start:start+3] == b"\0\0\1" and 0xe0 <= body[start+3] <= 0xef:
+                video_pid = pid
+        elif video_pid is not None and pid == video_pid and cursor >= len(body)//2:
+            return cursor
+    raise AssertionError("Fixture has no video PES continuation")
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -139,6 +177,18 @@ def main():
     encrypted_probe = probe(folder / saved_aes["file"])
     assert encrypted_probe["streams"] == result["streams"]
     checks["aes128_decrypted_to_mp4"] = {"passed": True, "saved": saved_aes}
+    second_iv = (8).to_bytes(16, "big")
+    subprocess.run(["node", "-e", cipher_script, str(args.fixture), str(encrypted),
+                    aes_key.hex(), second_iv.hex()], check=True)
+    second_encrypted = record(folder, "encrypted-sequence-8", encrypted.read_bytes())
+    key = manifest(folder, "aes-periods", vod([encrypted_resource, second_encrypted], seconds,
+        f'#EXT-X-MEDIA-SEQUENCE:7\n#EXT-X-KEY:METHOD=AES-128,URI="{secret}"\n',
+        discontinuity=True))
+    saved_aes_periods = export(folder, key, title="跨段密钥和序号")
+    assert saved_aes_periods["phase"] == 2, saved_aes_periods
+    aes_periods_probe = probe(folder / saved_aes_periods["file"])
+    assert abs(float(aes_periods_probe["format"]["duration"]) - seconds*2) < 0.3
+    checks["discontinuity_inherits_aes_key_and_implicit_iv_sequence"] = {"passed": True}
 
     # A real fragmented-MP4 initialization segment followed by a media fragment.
     fragment = folder / "fragment-fixture.mp4"
@@ -158,6 +208,52 @@ def main():
     fmp4_probe = probe(folder / saved_fmp4["file"])
     assert len(fmp4_probe["streams"]) == 2 and int(fmp4_probe["streams"][0]["nb_read_packets"]) > 0
     checks["fragmented_mp4_initialization"] = {"passed": True, "saved": saved_fmp4, "probe": fmp4_probe}
+    key = manifest(folder, "fmp4-periods", vod([media, media], fragment_duration,
+        f'#EXT-X-MAP:URI="{init}"\n', discontinuity=True))
+    saved_fmp4_periods = export(folder, key, title="跨段初始化")
+    assert saved_fmp4_periods["phase"] == 2, saved_fmp4_periods
+    assert abs(float(probe(folder / saved_fmp4_periods["file"])["format"]["duration"]) -
+               fragment_duration*2) < 0.3
+    checks["discontinuity_inherits_initialization"] = {"passed": True}
+
+    # Counters really reset here; do not sanitize the fixture to hide the bug.
+    key = manifest(folder, "raw-counter-resets", vod([resource]*4, seconds, discontinuity=True))
+    raw_resets = export(folder, key, title="原始连续计数重置")
+    assert raw_resets["phase"] == 2, raw_resets
+    reset_probe = probe(folder / raw_resets["file"])
+    for before, after in zip(result["streams"], reset_probe["streams"]):
+        assert int(after["nb_read_packets"]) == 4*int(before["nb_read_packets"])
+    assert abs(float(reset_probe["format"]["duration"]) - seconds*4) < 0.3
+    checks["declared_transport_counter_resets_preserve_all_packets"] = {"passed": True}
+
+    shifted = record(folder, "timestamp-forward", shift_ts_timestamps(source, 90000*300))
+    key = manifest(folder, "backward-then-forward", vod([shifted, resource, shifted], seconds,
+        discontinuity=True))
+    forward = export(folder, key, title="时间戳先后退再前进")
+    assert forward["phase"] == 2, forward
+    forward_probe = probe(folder / forward["file"])
+    assert abs(float(forward_probe["format"]["duration"]) - seconds*3) < 0.3
+    for before, after in zip(result["streams"], forward_probe["streams"]):
+        assert int(after["nb_read_packets"]) == 3*int(before["nb_read_packets"])
+    checks["backward_then_forward_timestamp_splice"] = {"passed": True}
+
+    key = manifest(folder, "undeclared-reset", vod([resource]*2, seconds))
+    undeclared = export(folder, key)
+    assert undeclared["phase"] == 4 and not (folder / undeclared["file"]).exists(), undeclared
+    assert "分片衔接" in undeclared["error"], undeclared
+    checks["undeclared_transport_errors_still_rejected_with_reason"] = {"passed": True}
+    video_payload = video_continuation(source)
+    flagged = bytearray(source)
+    flagged[video_payload+1] |= 0x80
+    for case, damaged_source in (
+        ("transport-error", bytes(flagged)),
+        ("interior-packet-loss", source[:video_payload] + source[video_payload+188:]),
+    ):
+        damaged_ref = record(folder, case, damaged_source)
+        key = manifest(folder, case, vod([damaged_ref], seconds, discontinuity=True))
+        damaged_result = export(folder, key)
+        assert damaged_result["phase"] == 4 and not (folder / damaged_result["file"]).exists(), damaged_result
+        checks[case + "_still_rejected_after_declared_reset"] = {"passed": True}
 
     counters = {}
     repeated_resources = [record(folder, f"continuity-{i}", continuous_ts(source, counters)) for i in range(100)]

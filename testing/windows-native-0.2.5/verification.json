@@ -1,0 +1,517 @@
+{
+  "timestamp": "2026-11-15T11:42:58.028490+08:00",
+  "pe": {
+    "machine": "0x8664",
+    "imports": [
+      "user32.dll",
+      "gdi32.dll",
+      "ole32.dll",
+      "shlwapi.dll",
+      "shell32.dll",
+      "winhttp.dll",
+      "bcrypt.dll",
+      "cabinet.dll",
+      "ws2_32.dll",
+      "dwmapi.dll",
+      "api-ms-win-crt-convert-l1-1-0.dll",
+      "api-ms-win-crt-heap-l1-1-0.dll",
+      "api-ms-win-crt-math-l1-1-0.dll",
+      "api-ms-win-crt-private-l1-1-0.dll",
+      "api-ms-win-crt-runtime-l1-1-0.dll",
+      "api-ms-win-crt-stdio-l1-1-0.dll",
+      "api-ms-win-crt-string-l1-1-0.dll",
+      "api-ms-win-crt-utility-l1-1-0.dll",
+      "kernel32.dll",
+      "api-ms-win-crt-time-l1-1-0.dll",
+      "api-ms-win-crt-environment-l1-1-0.dll",
+      "api-ms-win-crt-filesystem-l1-1-0.dll",
+      "api-ms-win-crt-locale-l1-1-0.dll"
+    ],
+    "uses_dotnet": false,
+    "aslr": true,
+    "nx": true,
+    "high_entropy_aslr": true
+  },
+  "url_policy": {
+    "cases": 32,
+    "failed": 0
+  },
+  "runtime_integrity": {
+    "intact": {
+      "verified": true
+    },
+    "tampered": {
+      "verified": false
+    },
+    "missing": {
+      "verified": false
+    }
+  },
+  "fullscreen_regression": {
+    "passed": 18,
+    "adapted_mobile_helpers": true,
+    "no_orientation_api": true,
+    "native_and_player_share_state": true,
+    "exit_button": true,
+    "escape": true,
+    "route_exit": true,
+    "failed_enter_restores_layout": true,
+    "video_node_retained": true,
+    "fullscreen_arrows_seconds": 10,
+    "paused_state_preserved": true,
+    "playing_state_preserved": true,
+    "seek_bounds": true,
+    "editable_and_modifiers_ignored": true,
+    "capture_prevents_double_seek": true
+  },
+  "update_regression": {
+    "passed": 65,
+    "fuzz_inputs": 4000,
+    "release_filter": true,
+    "numeric_versions": true,
+    "digest_required": true,
+    "repository_and_redirect_policy": true,
+    "candidate_contract": true,
+    "transaction_success": {
+      "passed": true,
+      "target_sha256": "b30e4206758fecfd47ee59c036ebf95d429eaab6d752c33532a8c5b22310fdd9",
+      "pending_and_backup_cleaned": true,
+      "method": "Real helper process, inherited handles, ReplaceFile and readiness handshake"
+    },
+    "transaction_restart_failure": {
+      "passed": true,
+      "target_sha256": "d728e82826eb9e03d84b6631f54db43fa683cb696daacb65db26514a10e58344",
+      "pending_and_backup_cleaned": true,
+      "method": "Real helper process, inherited handles, ReplaceFile and readiness handshake"
+    },
+    "exe_sha256": "35a8416985796dc85c083e6cbb151dce02e3f51c464f7322cad2ef407782978e",
+    "timestamp": "2026-11-15T11:42:59.575657+08:00"
+  },
+  "cache-test": {
+    "passed": 40,
+    "checksum_and_truncation": true,
+    "range_separation": true
+  },
+  "playlist-test": {
+    "passed": 11,
+    "complete_manifest": true,
+    "key_rewrite": true,
+    "missing_fragments_rejected": true,
+    "path_traversal_rejected": true
+  },
+  "download_controller": {
+    "passed": 12,
+    "complete_vod": true,
+    "relative_urls": true,
+    "aes128_key": true,
+    "init_segment": true,
+    "failed_job_unpublished": true,
+    "cancel": true,
+    "folder_change": true,
+    "live_and_unsupported_rejected": true,
+    "mp4_completion_required": true,
+    "native_export_cancelled": true,
+    "export_failure_not_success": true
+  },
+  "functional": {
+    "homepage": true,
+    "real_search_results": 8,
+    "video_decoded_1080p": true,
+    "playback_progressed": [
+      3.62068,
+      8.825004
+    ],
+    "pause": true,
+    "seek_and_resume": true,
+    "native_fullscreen": true,
+    "player_button_fills_viewport": true,
+    "fullscreen_preserves_playback": true,
+    "fullscreen_unobstructed": true,
+    "no_phone_rotation_prompt": true,
+    "fullscreen_exit_restores_layout": true,
+    "window_handle_preserved": true,
+    "returned_home": true,
+    "runtime": {
+      "language": "C17",
+      "emulator_required": false,
+      "api_success": 49,
+      "api_failure": 0,
+      "media_success": 79,
+      "media_failure": 5,
+      "blocked_media": 4,
+      "last_win32_error": 5,
+      "selected_api_host": "w7cd94a9f.bdgnbrws.com",
+      "cache_hits": 27,
+      "cache_writes": 42,
+      "cache_errors": 0,
+      "cache_bytes": 37352660
+    },
+    "small_player_by_default": true,
+    "discussion_confined_to_right_pane": true,
+    "compact_window_900x640": true,
+    "detail_scroll": true,
+    "real_download_while_playing": true,
+    "cancel_download": true,
+    "cache_entries_verified": 42,
+    "additional_media_request_failures": 1,
+    "all_media_requests_succeeded": false,
+    "account_login_tested": false,
+    "all_media_lines_tested": false
+  },
+  "mp4_export": {
+    "timestamp": "2026-11-15T11:43:39.554054+08:00",
+    "exe_sha256": "35a8416985796dc85c083e6cbb151dce02e3f51c464f7322cad2ef407782978e",
+    "source_sha256": "0086eab5a09ab453284636fbd97df6e99ab42253fe20e0a97b102e8094b5eeab",
+    "source_probe": {
+      "programs": [
+        {
+          "streams": [
+            {
+              "codec_name": "h264",
+              "codec_type": "video",
+              "width": 1920,
+              "height": 1080,
+              "duration": "2.320000",
+              "nb_read_packets": "58",
+              "extradata_size": 43
+            },
+            {
+              "codec_name": "aac",
+              "codec_type": "audio",
+              "duration": "2.304000",
+              "nb_read_packets": "109"
+            }
+          ]
+        }
+      ],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1920,
+          "height": 1080,
+          "duration": "2.320000",
+          "nb_read_packets": "58",
+          "extradata_size": 43
+        },
+        {
+          "codec_name": "aac",
+          "codec_type": "audio",
+          "duration": "2.304000",
+          "nb_read_packets": "109"
+        }
+      ],
+      "format": {
+        "duration": "2.392000",
+        "size": "510608"
+      }
+    },
+    "fixture_directory": "D:\\source_code\\jianpian\\testing\\windows-native-0.2.5\\MP4样本-1794714219529174600",
+    "checks": {
+      "ts_audio_video_single_mp4": {
+        "passed": true,
+        "saved": {
+          "phase": 2,
+          "progress": 1000,
+          "bytes": 492278,
+          "file": "荐片-测试影片-a116c9ed46d6.mp4",
+          "error": "",
+          "exit_code": 0
+        },
+        "probe": {
+          "programs": [],
+          "stream_groups": [],
+          "streams": [
+            {
+              "codec_name": "h264",
+              "codec_type": "video",
+              "width": 1920,
+              "height": 1080,
+              "duration": "2.320000",
+              "nb_read_packets": "58",
+              "extradata_size": 49
+            },
+            {
+              "codec_name": "aac",
+              "codec_type": "audio",
+              "duration": "2.325333",
+              "nb_read_packets": "109",
+              "extradata_size": 2
+            }
+          ],
+          "format": {
+            "duration": "2.392000",
+            "size": "492278"
+          }
+        }
+      },
+      "standalone_os_video_audio_decode_and_seek": {
+        "passed": true,
+        "decoded": true,
+        "video_bytes": 3133440,
+        "pcm_audio_bytes": 4096,
+        "seek_time_100ns": 10000000,
+        "seek_video_bytes": 3133440,
+        "seek_audio_bytes": 4096,
+        "seek_seconds": 1.0,
+        "hresult": 0
+      },
+      "aes128_decrypted_to_mp4": {
+        "passed": true,
+        "saved": {
+          "phase": 2,
+          "progress": 1000,
+          "bytes": 492278,
+          "file": "荐片-加密样本-9899f1fec661.mp4",
+          "error": "",
+          "exit_code": 0
+        }
+      },
+      "discontinuity_inherits_aes_key_and_implicit_iv_sequence": {
+        "passed": true
+      },
+      "fragmented_mp4_initialization": {
+        "passed": true,
+        "saved": {
+          "phase": 2,
+          "progress": 1000,
+          "bytes": 492274,
+          "file": "荐片-初始化分片-1271dd39976e.mp4",
+          "error": "",
+          "exit_code": 0
+        },
+        "probe": {
+          "programs": [],
+          "stream_groups": [],
+          "streams": [
+            {
+              "codec_name": "h264",
+              "codec_type": "video",
+              "width": 1920,
+              "height": 1080,
+              "duration": "2.320000",
+              "nb_read_packets": "58",
+              "extradata_size": 49
+            },
+            {
+              "codec_name": "aac",
+              "codec_type": "audio",
+              "duration": "2.333333",
+              "nb_read_packets": "109",
+              "extradata_size": 2
+            }
+          ],
+          "format": {
+            "duration": "2.400000",
+            "size": "492274"
+          }
+        }
+      },
+      "discontinuity_inherits_initialization": {
+        "passed": true
+      },
+      "declared_transport_counter_resets_preserve_all_packets": {
+        "passed": true
+      },
+      "backward_then_forward_timestamp_splice": {
+        "passed": true
+      },
+      "undeclared_transport_errors_still_rejected_with_reason": {
+        "passed": true
+      },
+      "transport-error_still_rejected_after_declared_reset": {
+        "passed": true
+      },
+      "interior-packet-loss_still_rejected_after_declared_reset": {
+        "passed": true
+      },
+      "timestamp_discontinuity": {
+        "passed": true,
+        "probe": {
+          "programs": [],
+          "stream_groups": [],
+          "streams": [
+            {
+              "codec_name": "h264",
+              "codec_type": "video",
+              "width": 1920,
+              "height": 1080,
+              "duration": "9.280000",
+              "nb_read_packets": "232",
+              "extradata_size": 49
+            },
+            {
+              "codec_name": "aac",
+              "codec_type": "audio",
+              "duration": "9.285333",
+              "nb_read_packets": "436",
+              "extradata_size": 2
+            }
+          ],
+          "format": {
+            "duration": "9.352000",
+            "size": "1964843"
+          }
+        }
+      },
+      "corrupt_cached_digest_rejected": {
+        "passed": true
+      },
+      "missing_not_published": {
+        "passed": true
+      },
+      "remote_not_published": {
+        "passed": true
+      },
+      "traversal_not_published": {
+        "passed": true
+      },
+      "wrong_duration_not_published": {
+        "passed": true
+      },
+      "live_not_published": {
+        "passed": true
+      },
+      "cancel_before_merge": {
+        "passed": true
+      },
+      "cancel_during_write_preserves_previous": {
+        "passed": true,
+        "saved": {
+          "phase": 3,
+          "progress": 10,
+          "bytes": 488592,
+          "file": "荐片-测试影片-8dbb268d9da1.mp4",
+          "error": "",
+          "exit_code": 1,
+          "stderr": ""
+        }
+      },
+      "safe_title_filename": {
+        "passed": true,
+        "file": "荐片-.._CON_bad_title-f974a07ea498.mp4"
+      }
+    },
+    "passed": 21,
+    "all_passed": true
+  },
+  "saved_vod": {
+    "timestamp": "2026-11-15T11:39:49.206601+08:00",
+    "exe_sha256": "35a8416985796dc85c083e6cbb151dce02e3f51c464f7322cad2ef407782978e",
+    "driver_sha256": "8ad946c34acecf8bccc2230f7d2c6905d598c7cea6baefcaab79a6a53b3eacfb",
+    "manifest_sha256": "d0f9506619599bab25f144c1f0ce883e77ca3feedda0d1db2601b268f2424432",
+    "segments": 372,
+    "resources": 372,
+    "cache_bytes": 238280976,
+    "all_cache_digests_valid": true,
+    "discontinuities": 56,
+    "manifest_seconds": 1484.7820000000002,
+    "merge_seconds": 10.010816800000612,
+    "saved": {
+      "phase": 2,
+      "progress": 1000,
+      "bytes": 228468064,
+      "file": "荐片-合并验证-e716cd9244b4.mp4",
+      "error": ""
+    },
+    "output": "D:\\source_code\\jianpian\\work\\saved-vod-1794713968246086500\\荐片-合并验证-e716cd9244b4.mp4",
+    "output_sha256": "afa2aaf2cab5f90aac120485f65e170cd41780c6cf182151d101e3a3134b962b",
+    "input_packet_counts": [
+      35617,
+      69529
+    ],
+    "output_probe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1920,
+          "height": 1080,
+          "nb_read_packets": "35617",
+          "extradata_size": 44
+        },
+        {
+          "codec_name": "aac",
+          "codec_type": "audio",
+          "nb_read_packets": "69529",
+          "extradata_size": 2
+        }
+      ],
+      "format": {
+        "duration": "1484.855651",
+        "size": "228468064"
+      }
+    },
+    "sample_description_counts": [
+      1,
+      2
+    ],
+    "os_decode_and_seek": [
+      {
+        "decoded": true,
+        "video_bytes": 3133440,
+        "pcm_audio_bytes": 4096,
+        "seek_time_100ns": 10010000,
+        "seek_video_bytes": 3133440,
+        "seek_audio_bytes": 4096,
+        "seek_seconds": 1.0,
+        "hresult": 0
+      },
+      {
+        "decoded": true,
+        "video_bytes": 3133440,
+        "pcm_audio_bytes": 4096,
+        "seek_time_100ns": 2980266666,
+        "seek_video_bytes": 3133440,
+        "seek_audio_bytes": 4096,
+        "seek_seconds": 298.0,
+        "hresult": 0
+      },
+      {
+        "decoded": true,
+        "video_bytes": 3133440,
+        "pcm_audio_bytes": 4096,
+        "seek_time_100ns": 3000046666,
+        "seek_video_bytes": 479232,
+        "seek_audio_bytes": 4096,
+        "seek_seconds": 300.0,
+        "hresult": 0
+      },
+      {
+        "decoded": true,
+        "video_bytes": 3133440,
+        "pcm_audio_bytes": 4096,
+        "seek_time_100ns": 3160046666,
+        "seek_video_bytes": 479232,
+        "seek_audio_bytes": 4096,
+        "seek_seconds": 316.0,
+        "hresult": 0
+      },
+      {
+        "decoded": true,
+        "video_bytes": 3133440,
+        "pcm_audio_bytes": 4096,
+        "seek_time_100ns": 3180033333,
+        "seek_video_bytes": 3133440,
+        "seek_audio_bytes": 4096,
+        "seek_seconds": 318.0,
+        "hresult": 0
+      },
+      {
+        "decoded": true,
+        "video_bytes": 3133440,
+        "pcm_audio_bytes": 4096,
+        "seek_time_100ns": 14830408777,
+        "seek_video_bytes": 3133440,
+        "seek_audio_bytes": 4096,
+        "seek_seconds": 1483.0,
+        "hresult": 0
+      }
+    ],
+    "original_cache_preserved": true,
+    "all_passed": true
+  }
+}

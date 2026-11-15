@@ -1,0 +1,17 @@
+{
+  "baseline_tag": "v0.2.4-windows",
+  "unchanged_sources": {
+    "windows-native/main.c": "bf8d37f79b066e18e4b868bf138d182d16d32fdedda73a150f6b92cb7333eee4",
+    "windows-native/fullscreen.js": "28968d0f0bb8b3b109342d349a17c0e0fb17b297aa2dac634c3bb326d0b66790",
+    "windows-native/desktop.js": "d1347a7b52ff7600c06d28f81e53566fad6d7913220742686aa20fb68d4b8cfd",
+    "windows-desktop/desktop.css": "76e982916ac284b67fd461ebc619ae06999f070ab30a947abd20b217c3786fc7",
+    "windows-native/update.h": "dc7020ad77e2e4287fb5135f712def3029dd5f98d3204efc05eb1230211a02cb",
+    "windows-native/update_core.h": "e5423a57906723aa70604e1a02fdfe49b1a4d42a5e1a5b1842eb2b442bc56659",
+    "windows-native/update_json.h": "cfa56175db218ca5fd65f04f579b4d65932f216d628f05171474c34df3380b45",
+    "windows-native/cache.h": "2740e3fe7ca01a612efe2585c510cdb9c4c08c8a65c822106e326b320e65e614",
+    "windows-native/desktop.manifest": "bd05785b5bdaa6258a390215edf41fdd60f86ed96a6ce386390814066f0ebd6f",
+    "windows-native/storage-dialog.rc": "fa3cbf7c3db522f4cd38999501ee25b94aa6949123237e8f8153bc3518a8d3ad"
+  },
+  "automated_current_version": "0.2.5",
+  "physical_ui_repeated": false
+}

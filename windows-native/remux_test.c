@@ -11,11 +11,11 @@
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 
-static int decoded(const wchar_t *path) {
+static int decoded(const wchar_t *path, double seek_seconds) {
     IMFSourceReader *reader = NULL;
     IMFMediaType *type = NULL;
     IMFSample *sample = NULL;
-    DWORD stream = 0, flags = 0, video_bytes = 0, audio_bytes = 0;
+    DWORD stream = 0, flags = 0, video_bytes = 0, audio_bytes = 0, seek_video = 0, seek_audio = 0;
     LONGLONG timestamp = 0;
     HRESULT result = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (FAILED(result)) return 1;
@@ -54,24 +54,42 @@ static int decoded(const wchar_t *path) {
     IMFSample_GetTotalLength(sample, &audio_bytes);
     IMFSample_Release(sample); sample = NULL;
     PROPVARIANT position = {.vt = VT_I8};
-    position.hVal.QuadPart = 10000000;
+    position.hVal.QuadPart = (LONGLONG)(seek_seconds * 10000000);
     result = IMFSourceReader_SetCurrentPosition(reader, &GUID_NULL, &position);
     if (FAILED(result)) goto done;
     for (int i = 0; i < 100; ++i) {
         result = IMFSourceReader_ReadSample(reader, MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0,
                                             &stream, &flags, &timestamp, &sample);
-        if (sample) { IMFSample_Release(sample); sample = NULL; }
-        if (FAILED(result) || timestamp >= 10000000 || flags & MF_SOURCE_READERF_ENDOFSTREAM) break;
+        if (sample) {
+            IMFSample_GetTotalLength(sample, &seek_video);
+            IMFSample_Release(sample); sample = NULL;
+        }
+        if (FAILED(result) || (seek_video && timestamp >= position.hVal.QuadPart) ||
+            flags & MF_SOURCE_READERF_ENDOFSTREAM) break;
     }
-    if (!video_bytes || !audio_bytes || timestamp < 10000000) result = E_FAIL;
+    LONGLONG video_timestamp = timestamp;
+    for (int i = 0; i < 100; ++i) {
+        result = IMFSourceReader_ReadSample(reader, MF_SOURCE_READER_FIRST_AUDIO_STREAM, 0,
+                                            &stream, &flags, &timestamp, &sample);
+        if (sample) {
+            IMFSample_GetTotalLength(sample, &seek_audio);
+            IMFSample_Release(sample); sample = NULL;
+        }
+        if (FAILED(result) || (seek_audio && timestamp >= position.hVal.QuadPart) ||
+            flags & MF_SOURCE_READERF_ENDOFSTREAM) break;
+    }
+    if (!video_bytes || !audio_bytes || !seek_video || !seek_audio ||
+        video_timestamp < position.hVal.QuadPart || timestamp < position.hVal.QuadPart) result = E_FAIL;
+    timestamp = video_timestamp;
 done:
     if (sample) IMFSample_Release(sample);
     if (type) IMFMediaType_Release(type);
     if (reader) IMFSourceReader_Release(reader);
     MFShutdown(); CoUninitialize();
     printf("{\"decoded\":%s,\"video_bytes\":%lu,\"pcm_audio_bytes\":%lu,\"seek_time_100ns\":%lld,"
-           "\"hresult\":%ld}\n", SUCCEEDED(result) ? "true" : "false", video_bytes, audio_bytes,
-           timestamp, (long)result);
+           "\"seek_video_bytes\":%lu,\"seek_audio_bytes\":%lu,\"seek_seconds\":%.3f,\"hresult\":%ld}\n",
+           SUCCEEDED(result) ? "true" : "false", video_bytes, audio_bytes,
+           timestamp, seek_video, seek_audio, seek_seconds, (long)result);
     return FAILED(result) ? 1 : 0;
 }
 static int fragmented(const wchar_t *from, const wchar_t *to) {
@@ -111,7 +129,8 @@ done:
 }
 int wmain(int argc, wchar_t **argv) {
     av_log_set_level(AV_LOG_QUIET);
-    if (argc == 3 && !wcscmp(argv[1], L"decode")) return decoded(argv[2]);
+    if ((argc == 3 || argc == 4) && !wcscmp(argv[1], L"decode"))
+        return decoded(argv[2], argc == 4 ? wcstod(argv[3], NULL) : 1.0);
     if (argc == 4 && !wcscmp(argv[1], L"fragment")) return fragmented(argv[2], argv[3]);
     if (argc != 5) return 2;
     JpRemux job = {0};

@@ -1,0 +1,238 @@
+{
+  "timestamp": "2026-11-15T11:43:39.554054+08:00",
+  "exe_sha256": "35a8416985796dc85c083e6cbb151dce02e3f51c464f7322cad2ef407782978e",
+  "source_sha256": "0086eab5a09ab453284636fbd97df6e99ab42253fe20e0a97b102e8094b5eeab",
+  "source_probe": {
+    "programs": [
+      {
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1920,
+            "height": 1080,
+            "duration": "2.320000",
+            "nb_read_packets": "58",
+            "extradata_size": 43
+          },
+          {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "duration": "2.304000",
+            "nb_read_packets": "109"
+          }
+        ]
+      }
+    ],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 1920,
+        "height": 1080,
+        "duration": "2.320000",
+        "nb_read_packets": "58",
+        "extradata_size": 43
+      },
+      {
+        "codec_name": "aac",
+        "codec_type": "audio",
+        "duration": "2.304000",
+        "nb_read_packets": "109"
+      }
+    ],
+    "format": {
+      "duration": "2.392000",
+      "size": "510608"
+    }
+  },
+  "fixture_directory": "D:\\source_code\\jianpian\\testing\\windows-native-0.2.5\\MP4样本-1794714219529174600",
+  "checks": {
+    "ts_audio_video_single_mp4": {
+      "passed": true,
+      "saved": {
+        "phase": 2,
+        "progress": 1000,
+        "bytes": 492278,
+        "file": "荐片-测试影片-a116c9ed46d6.mp4",
+        "error": "",
+        "exit_code": 0
+      },
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1920,
+            "height": 1080,
+            "duration": "2.320000",
+            "nb_read_packets": "58",
+            "extradata_size": 49
+          },
+          {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "duration": "2.325333",
+            "nb_read_packets": "109",
+            "extradata_size": 2
+          }
+        ],
+        "format": {
+          "duration": "2.392000",
+          "size": "492278"
+        }
+      }
+    },
+    "standalone_os_video_audio_decode_and_seek": {
+      "passed": true,
+      "decoded": true,
+      "video_bytes": 3133440,
+      "pcm_audio_bytes": 4096,
+      "seek_time_100ns": 10000000,
+      "seek_video_bytes": 3133440,
+      "seek_audio_bytes": 4096,
+      "seek_seconds": 1.0,
+      "hresult": 0
+    },
+    "aes128_decrypted_to_mp4": {
+      "passed": true,
+      "saved": {
+        "phase": 2,
+        "progress": 1000,
+        "bytes": 492278,
+        "file": "荐片-加密样本-9899f1fec661.mp4",
+        "error": "",
+        "exit_code": 0
+      }
+    },
+    "discontinuity_inherits_aes_key_and_implicit_iv_sequence": {
+      "passed": true
+    },
+    "fragmented_mp4_initialization": {
+      "passed": true,
+      "saved": {
+        "phase": 2,
+        "progress": 1000,
+        "bytes": 492274,
+        "file": "荐片-初始化分片-1271dd39976e.mp4",
+        "error": "",
+        "exit_code": 0
+      },
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1920,
+            "height": 1080,
+            "duration": "2.320000",
+            "nb_read_packets": "58",
+            "extradata_size": 49
+          },
+          {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "duration": "2.333333",
+            "nb_read_packets": "109",
+            "extradata_size": 2
+          }
+        ],
+        "format": {
+          "duration": "2.400000",
+          "size": "492274"
+        }
+      }
+    },
+    "discontinuity_inherits_initialization": {
+      "passed": true
+    },
+    "declared_transport_counter_resets_preserve_all_packets": {
+      "passed": true
+    },
+    "backward_then_forward_timestamp_splice": {
+      "passed": true
+    },
+    "undeclared_transport_errors_still_rejected_with_reason": {
+      "passed": true
+    },
+    "transport-error_still_rejected_after_declared_reset": {
+      "passed": true
+    },
+    "interior-packet-loss_still_rejected_after_declared_reset": {
+      "passed": true
+    },
+    "timestamp_discontinuity": {
+      "passed": true,
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1920,
+            "height": 1080,
+            "duration": "9.280000",
+            "nb_read_packets": "232",
+            "extradata_size": 49
+          },
+          {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "duration": "9.285333",
+            "nb_read_packets": "436",
+            "extradata_size": 2
+          }
+        ],
+        "format": {
+          "duration": "9.352000",
+          "size": "1964843"
+        }
+      }
+    },
+    "corrupt_cached_digest_rejected": {
+      "passed": true
+    },
+    "missing_not_published": {
+      "passed": true
+    },
+    "remote_not_published": {
+      "passed": true
+    },
+    "traversal_not_published": {
+      "passed": true
+    },
+    "wrong_duration_not_published": {
+      "passed": true
+    },
+    "live_not_published": {
+      "passed": true
+    },
+    "cancel_before_merge": {
+      "passed": true
+    },
+    "cancel_during_write_preserves_previous": {
+      "passed": true,
+      "saved": {
+        "phase": 3,
+        "progress": 10,
+        "bytes": 488592,
+        "file": "荐片-测试影片-8dbb268d9da1.mp4",
+        "error": "",
+        "exit_code": 1,
+        "stderr": ""
+      }
+    },
+    "safe_title_filename": {
+      "passed": true,
+      "file": "荐片-.._CON_bad_title-f974a07ea498.mp4"
+    }
+  },
+  "passed": 21,
+  "all_passed": true
+}

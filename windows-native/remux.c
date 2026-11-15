@@ -12,6 +12,7 @@
 #include "remux.h"
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
+#include <libavcodec/bsf.h>
 #include <libavutil/avutil.h>
 #include <libavutil/mem.h>
 
@@ -30,6 +31,20 @@ typedef struct {
     int io_failed;
 } JpInput;
 typedef struct { HANDLE file; JpRemux *job; } JpOutput;
+typedef struct {
+    const char *begin, *end, *key, *map;
+    size_t key_length, map_length;
+    int64_t sequence;
+    double start, duration;
+    unsigned segments;
+} JpPeriod;
+typedef struct {
+    AVFormatContext *format;
+    AVIOContext *io;
+    char *manifest;
+    AVPacket *prefetched[512];
+    unsigned count, position;
+} JpDemux;
 
 static int jp_hex(const char *id) {
     for (int i = 0; i < 64; ++i)
@@ -110,6 +125,90 @@ static int jp_manifest(JpInput *input, char *body, size_t length) {
             input->resources[count++] = input->resources[i];
     input->count = count;
     return count != 0;
+}
+/* HLS permits both transport counters and timestamps to restart at an
+   EXT-X-DISCONTINUITY. The HLS demuxer joins TS bytes without resetting its TS
+   demuxer, so open each declared period independently. Keep the effective key,
+   initialization section and original media sequence (including implicit IVs).
+   No input bytes, cached records or corrupt-packet flags are changed. */
+static JpPeriod *jp_periods(const char *body, unsigned *count) {
+    JpPeriod *periods = av_calloc(JP_MAX_RESOURCES, sizeof(*periods));
+    if (!periods) return NULL;
+    unsigned current = 0;
+    int64_t sequence = 0;
+    const char *key = NULL, *map = NULL;
+    size_t key_length = 0, map_length = 0;
+    periods[0].begin = body;
+    for (const char *line = body; *line;) {
+        const char *end = strchr(line, '\n');
+        if (!end) end = line + strlen(line);
+        size_t length = (size_t)(end-line);
+        JpPeriod *period = &periods[current];
+        if (length == 20 && !memcmp(line, "#EXT-X-DISCONTINUITY", 20) && period->segments) {
+            if (current+1 >= JP_MAX_RESOURCES) goto invalid;
+            period->end = line;
+            JpPeriod *next = &periods[++current];
+            next->begin = *end ? end+1 : end;
+            next->sequence = sequence;
+            next->start = period->start + period->duration;
+            next->key = key; next->key_length = key_length;
+            next->map = map; next->map_length = map_length;
+            period = next;
+        } else if (length >= 22 && !memcmp(line, "#EXT-X-MEDIA-SEQUENCE:", 22)) {
+            char *tail;
+            sequence = strtoll(line+22, &tail, 10);
+            if (tail != end || sequence < 0 || sequence > INT64_MAX-JP_MAX_RESOURCES) goto invalid;
+            period->sequence = sequence;
+        } else if (length >= 11 && !memcmp(line, "#EXT-X-KEY:", 11)) {
+            key = line; key_length = length;
+        } else if (length >= 11 && !memcmp(line, "#EXT-X-MAP:", 11)) {
+            map = line; map_length = length;
+        } else if (length >= 8 && !memcmp(line, "#EXTINF:", 8)) {
+            period->duration += strtod(line+8, NULL);
+        } else if (length && *line != '#') {
+            ++period->segments; ++sequence;
+        }
+        line = *end ? end+1 : end;
+    }
+    periods[current].end = body + strlen(body);
+    if (!periods[current].segments) goto invalid;
+    *count = current+1;
+    return periods;
+invalid:
+    av_free(periods);
+    return NULL;
+}
+static char *jp_period_manifest(const JpPeriod *period, double longest) {
+    size_t capacity = (size_t)(period->end-period->begin) +
+        period->key_length + period->map_length + 256;
+    char *body = av_malloc(capacity);
+    if (!body) return NULL;
+    size_t used = (size_t)snprintf(body, capacity,
+        "#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-PLAYLIST-TYPE:VOD\n"
+        "#EXT-X-TARGETDURATION:%u\n#EXT-X-MEDIA-SEQUENCE:%lld\n",
+        (unsigned)ceil(longest), (long long)period->sequence);
+    if (period->key) {
+        memcpy(body+used, period->key, period->key_length); used += period->key_length;
+        body[used++] = '\n';
+    }
+    if (period->map) {
+        memcpy(body+used, period->map, period->map_length); used += period->map_length;
+        body[used++] = '\n';
+    }
+    for (const char *line = period->begin; line < period->end;) {
+        const char *end = memchr(line, '\n', (size_t)(period->end-line));
+        if (!end) end = period->end;
+        size_t length = (size_t)(end-line);
+        if (strncmp(line, "#EXTM3U", 7) && strncmp(line, "#EXT-X-VERSION:", 15) &&
+            strncmp(line, "#EXT-X-PLAYLIST-TYPE:", 21) && strncmp(line, "#EXT-X-TARGETDURATION:", 22) &&
+            strncmp(line, "#EXT-X-MEDIA-SEQUENCE:", 22) && strncmp(line, "#EXT-X-ENDLIST", 14) &&
+            strncmp(line, "#EXT-X-DISCONTINUITY", 20)) {
+            memcpy(body+used, line, length); used += length; body[used++] = '\n';
+        }
+        line = end < period->end ? end+1 : end;
+    }
+    memcpy(body+used, "#EXT-X-ENDLIST\n", 16);
+    return body;
 }
 static int jp_interrupted(void *opaque) {
     JpInput *input = opaque;
@@ -263,6 +362,52 @@ static void jp_parse_parameters(AVFormatContext *source, const AVPacket *packet)
         av_parser_close(parser); avcodec_free_context(&context);
     }
 }
+static void jp_close_period(JpDemux *demux) {
+    for (unsigned i = 0; i < demux->count; ++i) av_packet_free(&demux->prefetched[i]);
+    if (demux->format) avformat_close_input(&demux->format);
+    if (demux->io) { av_freep(&demux->io->buffer); avio_context_free(&demux->io); }
+    av_freep(&demux->manifest);
+    demux->count = demux->position = 0;
+}
+static int jp_open_period(JpInput *input, const JpPeriod *period, const char *url, JpDemux *demux) {
+    demux->manifest = jp_period_manifest(period, input->longest);
+    demux->format = avformat_alloc_context();
+    if (!demux->manifest || !demux->format) return AVERROR(ENOMEM);
+    AVFormatContext *source = demux->format;
+    source->opaque = input;
+    source->io_open = jp_open;
+    source->interrupt_callback = (AVIOInterruptCB){jp_interrupted, input};
+    input->manifest = demux->manifest;
+    input->manifest_size = strlen(demux->manifest);
+    input->manifest_position = 0;
+    unsigned char *buffer = av_malloc(4096);
+    if (!buffer) return AVERROR(ENOMEM);
+    demux->io = avio_alloc_context(buffer, 4096, 0, input, jp_read_manifest, NULL, jp_seek_manifest);
+    if (!demux->io) { av_free(buffer); return AVERROR(ENOMEM); }
+    source->pb = demux->io;
+    source->flags |= AVFMT_FLAG_CUSTOM_IO;
+    AVDictionary *options = NULL;
+    av_dict_set(&options, "protocol_whitelist", "file,crypto", 0);
+    av_dict_set(&options, "allowed_extensions", "ts,m3u8", 0);
+    av_dict_set(&options, "extension_picky", "0", 0);
+    int result = avformat_open_input(&demux->format, url, av_find_input_format("hls"), &options);
+    av_dict_free(&options);
+    source = demux->format;
+    if (result < 0 || (result = avformat_find_stream_info(source, NULL)) < 0) return result;
+    if (input->io_failed || source->nb_streams > 32) return AVERROR_INVALIDDATA;
+    size_t bytes = 0;
+    while (!jp_parameters_ready(source)) {
+        if (demux->count >= 512 || bytes > 8u*1024u*1024u) return AVERROR_INVALIDDATA;
+        AVPacket *next = demux->prefetched[demux->count++] = av_packet_alloc();
+        if (!next) return AVERROR(ENOMEM);
+        if ((result = av_read_frame(source, next)) < 0) return result;
+        if (next->stream_index < 0 || (unsigned)next->stream_index >= source->nb_streams)
+            return AVERROR_INVALIDDATA;
+        bytes += (size_t)next->size;
+        jp_parse_parameters(source, next);
+    }
+    return 0;
+}
 DWORD WINAPI jp_remux_run(void *context) {
     JpRemux *job = context;
     JpInput input = {.job = job};
@@ -270,16 +415,20 @@ DWORD WINAPI jp_remux_run(void *context) {
     wchar_t manifest[JP_REMUX_PATH], temporary[JP_REMUX_PATH] = {0}, final[JP_REMUX_PATH];
     AVFormatContext *source = NULL, *destination = NULL;
     AVPacket *packet = NULL;
-    AVIOContext *in_io = NULL, *out_io = NULL;
+    AVIOContext *out_io = NULL;
     AVDictionary *options = NULL;
     char *body = NULL, *source_url = NULL;
+    JpDemux demux = {0};
+    JpPeriod *periods = NULL;
+    unsigned period_count = 0;
     int result = AVERROR_INVALIDDATA, mapping[32];
     int64_t last[32], offsets[32] = {0}, durations[32] = {0}, first[32], ends[32];
+    int64_t last_output[32];
     unsigned packets[32] = {0}, video_count = 0, audio_count = 0;
-    AVPacket *prefetched[512] = {0};
-    unsigned prefetch_count = 0, prefetch_position = 0;
-    size_t prefetch_bytes = 0;
+    unsigned char audio_config[32][2] = {{0}};
     double actual_duration = 0;
+    const wchar_t *stage = L"读取分片清单";
+    wchar_t detail[160] = {0};
     av_log_set_level(AV_LOG_ERROR);
     _snwprintf(manifest, JP_REMUX_PATH, L"%ls\\%ls.m3u8", job->directory, job->id);
     _snwprintf(final, JP_REMUX_PATH, L"%ls\\%ls", job->directory, job->filename);
@@ -296,6 +445,9 @@ DWORD WINAPI jp_remux_run(void *context) {
     }
     input.resources = av_calloc(JP_MAX_RESOURCES, sizeof(JpResource));
     if (!body || !input.resources || !jp_manifest(&input, body, received)) goto done;
+    periods = jp_periods(body, &period_count);
+    if (!periods) goto done;
+    stage = L"读取和校验媒体分片";
     wchar_t base[JP_REMUX_PATH];
     _snwprintf(base, JP_REMUX_PATH, L"%ls\\media\\", job->directory);
     char *prefix = jp_utf8(base);
@@ -304,41 +456,13 @@ DWORD WINAPI jp_remux_run(void *context) {
     for (char *p = prefix; *p; ++p) if (*p == '\\') *p = '/';
     for (char *p = source_url; *p; ++p) if (*p == '\\') *p = '/';
     snprintf(input.prefix, sizeof(input.prefix), "%s", prefix); av_free(prefix);
-    source = avformat_alloc_context();
-    if (!source) goto done;
-    source->opaque = &input;
-    source->io_open = jp_open;
-    source->interrupt_callback = (AVIOInterruptCB){jp_interrupted, &input};
-    input.manifest = body; input.manifest_size = received;
-    unsigned char *input_buffer = av_malloc(4096);
-    if (!input_buffer) { result = AVERROR(ENOMEM); goto done; }
-    in_io = avio_alloc_context(input_buffer, 4096, 0, &input, jp_read_manifest, NULL, jp_seek_manifest);
-    if (!in_io) { av_free(input_buffer); result = AVERROR(ENOMEM); goto done; }
-    source->pb = in_io;
-    source->flags |= AVFMT_FLAG_CUSTOM_IO;
-    av_dict_set(&options, "protocol_whitelist", "file,crypto", 0);
-    av_dict_set(&options, "allowed_extensions", "ts,m3u8", 0);
-    av_dict_set(&options, "extension_picky", "0", 0);
-    result = avformat_open_input(&source, source_url, av_find_input_format("hls"), &options);
-    av_dict_free(&options);
-    if (result < 0 || (result = avformat_find_stream_info(source, NULL)) < 0) goto done;
-    if (input.io_failed) { result = AVERROR_INVALIDDATA; goto done; }
-    if (source->nb_streams > 32) { result = AVERROR_INVALIDDATA; goto done; }
-    while (!jp_parameters_ready(source)) {
-        if (prefetch_count >= 512 || prefetch_bytes > 8u*1024u*1024u) { result = AVERROR_INVALIDDATA; goto done; }
-        AVPacket *next = prefetched[prefetch_count++] = av_packet_alloc();
-        if (!next) { result = AVERROR(ENOMEM); goto done; }
-        if ((result = av_read_frame(source, next)) < 0) goto done;
-        if (next->stream_index < 0 || (unsigned)next->stream_index >= source->nb_streams) {
-            result = AVERROR_INVALIDDATA; goto done;
-        }
-        prefetch_bytes += (size_t)next->size;
-        jp_parse_parameters(source, next);
-    }
+    stage = L"解析音视频参数";
+    if ((result = jp_open_period(&input, &periods[0], source_url, &demux)) < 0) goto done;
+    source = demux.format;
     result = avformat_alloc_output_context2(&destination, NULL, "mp4", NULL);
     if (result < 0 || !destination) goto done;
     for (unsigned i = 0; i < source->nb_streams; ++i) {
-        mapping[i] = -1; last[i] = first[i] = AV_NOPTS_VALUE; ends[i] = 0;
+        mapping[i] = -1; last[i] = first[i] = last_output[i] = AV_NOPTS_VALUE; ends[i] = 0;
         AVCodecParameters *codec = source->streams[i]->codecpar;
         if (codec->codec_type != AVMEDIA_TYPE_VIDEO && codec->codec_type != AVMEDIA_TYPE_AUDIO) continue;
         if (avformat_query_codec(destination->oformat, codec->codec_id, FF_COMPLIANCE_NORMAL) <= 0) {
@@ -355,6 +479,7 @@ DWORD WINAPI jp_remux_run(void *context) {
         else ++audio_count;
     }
     if (!video_count) { result = AVERROR_INVALIDDATA; goto done; }
+    stage = L"创建 MP4 文件（请检查磁盘空间和写入权限）";
     unsigned char nonce[12];
     if (BCryptGenRandom(NULL, nonce, sizeof(nonce), BCRYPT_USE_SYSTEM_PREFERRED_RNG) < 0) {
         result = AVERROR(EIO); goto done;
@@ -375,22 +500,67 @@ DWORD WINAPI jp_remux_run(void *context) {
     if ((result = avformat_write_header(destination, NULL)) < 0) goto done;
     packet = av_packet_alloc();
     if (!packet) { result = AVERROR(ENOMEM); goto done; }
+    stage = L"写入音视频数据";
+    for (unsigned period_index = 0; period_index < period_count; ++period_index) {
+    if (period_index) {
+        jp_close_period(&demux);
+        if ((result = jp_open_period(&input, &periods[period_index], source_url, &demux)) < 0) goto done;
+        source = demux.format;
+        unsigned used = 0;
+        for (unsigned i = 0; i < source->nb_streams; ++i) {
+            AVCodecParameters *codec = source->streams[i]->codecpar;
+            mapping[i] = -1;
+            last[i] = AV_NOPTS_VALUE; offsets[i] = durations[i] = 0;
+            if (codec->codec_type != AVMEDIA_TYPE_VIDEO && codec->codec_type != AVMEDIA_TYPE_AUDIO) continue;
+            if (used >= destination->nb_streams ||
+                codec->codec_type != destination->streams[used]->codecpar->codec_type ||
+                codec->codec_id != destination->streams[used]->codecpar->codec_id) {
+                _snwprintf(detail, 160, L"第 %u 段切换了不兼容的音视频编码", period_index+1);
+                result = AVERROR_INVALIDDATA; goto done;
+            }
+            mapping[i] = (int)used++;
+        }
+        if (used != destination->nb_streams) {
+            _snwprintf(detail, 160, L"第 %u 段的音视频轨不完整", period_index+1);
+            result = AVERROR_INVALIDDATA; goto done;
+        }
+    }
     int64_t start_us = source->start_time == AV_NOPTS_VALUE ? 0 : source->start_time;
+    int64_t timeline_us = (int64_t)llround(periods[period_index].start * AV_TIME_BASE);
+    double period_duration = 0;
+    unsigned period_packets = 0;
     while (!jp_interrupted(&input)) {
-        if (prefetch_position < prefetch_count) {
-            av_packet_move_ref(packet, prefetched[prefetch_position++]);
+        if (demux.position < demux.count) {
+            av_packet_move_ref(packet, demux.prefetched[demux.position++]);
             result = 0;
         } else result = av_read_frame(source, packet);
         if (result < 0) break;
         int index = packet->stream_index;
         if (index < 0 || (unsigned)index >= source->nb_streams) { result = AVERROR_INVALIDDATA; goto done; }
         if (mapping[index] < 0) { av_packet_unref(packet); continue; }
-        AVStream *in_stream = source->streams[index], *out_stream = destination->streams[mapping[index]];
+        int output_index = mapping[index];
+        AVStream *in_stream = source->streams[index], *out_stream = destination->streams[output_index];
         int64_t origin = av_rescale_q(start_us, AV_TIME_BASE_Q, in_stream->time_base);
         if (in_stream->codecpar->codec_id == AV_CODEC_ID_AAC && packet->duration <= 0 &&
             packet->size >= 7 && packet->data[0] == 0xff && (packet->data[1] & 0xf6) == 0xf0) {
             packet->duration = av_rescale_q(1024 * ((packet->data[6] & 3) + 1),
                 (AVRational){1, in_stream->codecpar->sample_rate}, in_stream->time_base);
+        }
+        /* Preserve AAC configuration changes at a splice. The MP4 muxer writes
+           a sample description for each distinct AudioSpecificConfig. Its
+           automatic ADTS filter otherwise reports only the first config. */
+        if (in_stream->codecpar->codec_id == AV_CODEC_ID_AAC && packet->size >= 7 &&
+            packet->data[0] == 0xff && (packet->data[1] & 0xf6) == 0xf0) {
+            const uint8_t *p = packet->data;
+            unsigned object = (p[2] >> 6) + 1, rate = (p[2] >> 2) & 15;
+            unsigned channels = ((p[2] & 1) << 2) | (p[3] >> 6);
+            unsigned char config[2] = {(unsigned char)((object << 3) | (rate >> 1)),
+                                       (unsigned char)((rate << 7) | (channels << 3))};
+            if (channels && memcmp(audio_config[output_index], config, 2)) {
+                unsigned char *side = av_packet_new_side_data(packet, AV_PKT_DATA_NEW_EXTRADATA, 2);
+                if (!side) { result = AVERROR(ENOMEM); goto done; }
+                memcpy(side, config, 2); memcpy(audio_config[output_index], config, 2);
+            }
         }
         if (in_stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
             if (packet->dts == AV_NOPTS_VALUE && last[index] != AV_NOPTS_VALUE)
@@ -401,6 +571,9 @@ DWORD WINAPI jp_remux_run(void *context) {
             packet->pts == AV_NOPTS_VALUE) {
             av_log(NULL, AV_LOG_ERROR, "Incomplete packet metadata in stream %d (flags=%d, pts=%lld, dts=%lld)\n",
                    index, packet->flags, (long long)packet->pts, (long long)packet->dts);
+            _snwprintf(detail, 160, L"第 %u 个媒体包%ls（音轨/视频轨 %d）",
+                       packets[output_index]+1, packet->flags & AV_PKT_FLAG_CORRUPT ?
+                       L"存在分片衔接或数据异常" : L"缺少时间戳", index+1);
             result = AVERROR_INVALIDDATA; goto done;
         }
         packet->dts -= origin; packet->pts -= origin;
@@ -411,31 +584,64 @@ DWORD WINAPI jp_remux_run(void *context) {
         }
         packet->dts += offsets[index]; packet->pts += offsets[index];
         last[index] = packet->dts; durations[index] = packet->duration;
-        if (first[index] == AV_NOPTS_VALUE) first[index] = packet->pts;
+        double local_end = (packet->pts + packet->duration) * av_q2d(in_stream->time_base);
+        if (local_end > period_duration) period_duration = local_end;
+        ++packets[output_index]; ++period_packets;
+        int64_t shift = av_rescale_q(timeline_us, AV_TIME_BASE_Q, in_stream->time_base);
+        packet->dts += shift; packet->pts += shift;
+        packet->stream_index = output_index;
+        av_packet_rescale_ts(packet, in_stream->time_base, out_stream->time_base);
+        /* Adjacent HLS periods can overlap by a fraction of one audio frame.
+           Retain every packet and its PTS-DTS difference. Large overlaps fail. */
+        if (last_output[output_index] != AV_NOPTS_VALUE && packet->dts <= last_output[output_index]) {
+            int64_t overlap = last_output[output_index] + 1 - packet->dts;
+            if (overlap * av_q2d(out_stream->time_base) > 0.25) {
+                _snwprintf(detail, 160, L"第 %u 段时间戳重叠过大", period_index+1);
+                result = AVERROR_INVALIDDATA; goto done;
+            }
+            packet->dts += overlap; packet->pts += overlap;
+        }
+        last_output[output_index] = packet->dts;
+        if (first[output_index] == AV_NOPTS_VALUE) first[output_index] = packet->pts;
         int64_t end = packet->pts + packet->duration;
-        if (end > ends[index]) ends[index] = end;
-        ++packets[index];
-        double seconds = (ends[index] - first[index]) * av_q2d(in_stream->time_base);
+        if (end > ends[output_index]) ends[output_index] = end;
+        double seconds = (ends[output_index] - first[output_index]) * av_q2d(out_stream->time_base);
         if (seconds > actual_duration) actual_duration = seconds;
         LONG progress = (LONG)fmin(990, actual_duration * 1000 / input.duration);
         InterlockedExchange(&job->progress, progress);
-        packet->stream_index = mapping[index];
-        av_packet_rescale_ts(packet, in_stream->time_base, out_stream->time_base);
         packet->pos = -1;
         if ((result = av_interleaved_write_frame(destination, packet)) < 0) goto done;
         InterlockedExchange64(&job->bytes, avio_tell(out_io));
     }
     if (jp_interrupted(&input)) { result = AVERROR_EXIT; goto done; }
     if (result != AVERROR_EOF || input.io_failed) { if (result >= 0) result = AVERROR_INVALIDDATA; goto done; }
+    if (!period_packets ||
+        fabs(period_duration - periods[period_index].duration) > fmax(1.0, fmin(2.0, input.longest * 0.2))) {
+        av_log(NULL, AV_LOG_ERROR, "Period %u duration mismatch: media=%.6f, manifest=%.6f\n",
+               period_index+1, period_duration, periods[period_index].duration);
+        _snwprintf(detail, 160, L"第 %u 段时长 %.1f 秒与清单 %.1f 秒不符",
+                   period_index+1, period_duration, periods[period_index].duration);
+        result = AVERROR_INVALIDDATA; goto done;
+    }
+    }
     for (unsigned i = 0; i < input.count; ++i)
         if (!input.resources[i].opened) { result = AVERROR_INVALIDDATA; goto done; }
-    for (unsigned i = 0; i < source->nb_streams; ++i)
-        if (mapping[i] >= 0 && !packets[i]) { result = AVERROR_INVALIDDATA; goto done; }
+    for (unsigned i = 0; i < destination->nb_streams; ++i)
+        if (!packets[i]) { result = AVERROR_INVALIDDATA; goto done; }
     /* Do not publish a success if HLS silently skipped unusable media. */
     if (fabs(actual_duration - input.duration) > fmax(1.0, fmin(2.0, input.longest * 0.2))) {
+        av_log(NULL, AV_LOG_ERROR, "Duration mismatch: media=%.6f, manifest=%.6f\n",
+               actual_duration, input.duration);
+        for (unsigned i = 0; i < destination->nb_streams; ++i)
+            av_log(NULL, AV_LOG_ERROR, "Stream %u: packets=%u, first=%lld, end=%lld, seconds=%.6f\n",
+                   i, packets[i], (long long)first[i], (long long)ends[i],
+                   (ends[i]-first[i])*av_q2d(destination->streams[i]->time_base));
+        _snwprintf(detail, 160, L"媒体时长 %.1f 秒与清单 %.1f 秒不符，未发布不完整 MP4",
+                   actual_duration, input.duration);
         result = AVERROR_INVALIDDATA; goto done;
     }
     (void)audio_count;
+    stage = L"完成并保存 MP4（请检查磁盘空间和写入权限）";
     if ((result = av_write_trailer(destination)) < 0) goto done;
     avio_flush(out_io);
     if (out_io->error < 0 || !FlushFileBuffers(output.file) || !GetFileSizeEx(output.file, &size)) {
@@ -451,22 +657,21 @@ DWORD WINAPI jp_remux_run(void *context) {
     DeleteFileW(manifest);
     result = 0;
 done:
-    for (unsigned i = 0; i < prefetch_count; ++i) av_packet_free(&prefetched[i]);
     av_packet_free(&packet);
-    if (source) avformat_close_input(&source);
-    if (in_io) { av_freep(&in_io->buffer); avio_context_free(&in_io); }
+    jp_close_period(&demux);
     if (destination) { destination->pb = NULL; avformat_free_context(destination); }
     if (out_io) { av_freep(&out_io->buffer); avio_context_free(&out_io); }
     if (output.file != INVALID_HANDLE_VALUE) CloseHandle(output.file);
     if (temporary[0]) DeleteFileW(temporary);
-    av_dict_free(&options); av_free(body); av_free(source_url); av_free(input.resources);
+    av_dict_free(&options); av_free(body); av_free(source_url); av_free(input.resources); av_free(periods);
     if (!result) {
         InterlockedExchange(&job->progress, 1000);
         InterlockedExchange(&job->phase, 2);
     } else if (jp_interrupted(&input)) {
         InterlockedExchange(&job->phase, 3);
     } else {
-        _snwprintf(job->error, 256, L"MP4 合并失败（代码 %d）；完整分片已保留，可重试或更换线路", result);
+        _snwprintf(job->error, 256, L"MP4 合并失败：%ls（代码 %d）；已下载分片已保留",
+                   detail[0] ? detail : stage, result);
         InterlockedExchange(&job->phase, 4);
     }
     return result ? 1 : 0;
