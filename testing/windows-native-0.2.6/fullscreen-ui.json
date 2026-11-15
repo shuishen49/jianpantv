@@ -1,0 +1,87 @@
+{
+  "schema": "scoped-ui-history-1",
+  "current_version": "0.2.6",
+  "timestamp": "2026-11-15T13:07:42.700733+08:00",
+  "historical_only": true,
+  "validated_exe_sha256": "c22ecd7127f0e3df040bd8adb2d9a0f6e747d5bbfd0b7699bfddceac7c67a8bf",
+  "baseline_tag": "v0.2.4-windows",
+  "unchanged_sections": {
+    "native_set": {
+      "file": "windows-native/main.c",
+      "start": "static void set_fullscreen(BOOL value) {",
+      "end": "static void toggle_fullscreen(void) {",
+      "sha256": "b8e1680e15dfb5d30ceac806564590fc8233f2fd4893fb87ff2455537c9df723"
+    },
+    "native_toggle": {
+      "file": "windows-native/main.c",
+      "start": "static void toggle_fullscreen(void) {",
+      "end": "static HRESULT STDMETHODCALLTYPE fullscreen_changed(",
+      "sha256": "45c6d35f7fe3a90393838e683d5dc3769ce0f54e91e04b57770c2c46507621a3"
+    },
+    "native_event": {
+      "file": "windows-native/main.c",
+      "start": "static HRESULT STDMETHODCALLTYPE fullscreen_changed(",
+      "end": "HANDLER(ICoreWebView2ContainsFullScreenElementChangedEventHandler,",
+      "sha256": "21d659997465474c2d5fe287ad874330c02f34cff2eb8c462294c4df3942a8e7"
+    },
+    "native_accelerator": {
+      "file": "windows-native/main.c",
+      "start": "static HRESULT STDMETHODCALLTYPE accelerator(",
+      "end": "HANDLER(ICoreWebView2AcceleratorKeyPressedEventHandler,",
+      "sha256": "91a4a1318a643c29dfe57b8537ae83dab26be28ee56338611b2ec8c21431150a"
+    },
+    "window_commands": {
+      "file": "windows-native/main.c",
+      "start": "    case WM_COMMAND:\n        if (LOWORD(wparam) == 104)",
+      "end": "    case WM_KEYDOWN:\n",
+      "sha256": "1265f3a7b62da7892328d19db2e4ab58bded9e44cd1c0d69f7e0564b2d32afd9"
+    },
+    "window_keys": {
+      "file": "windows-native/main.c",
+      "start": "    case WM_KEYDOWN:\n",
+      "end": "    case WM_UPDATE_DONE:",
+      "sha256": "334f53689d916417981a5de93c666b128977b1a6806893d6e64dcff82cbd361e"
+    },
+    "fullscreen_js": {
+      "file": "windows-native/fullscreen.js",
+      "start": null,
+      "end": null,
+      "sha256": "28968d0f0bb8b3b109342d349a17c0e0fb17b297aa2dac634c3bb326d0b66790"
+    },
+    "fullscreen_css": {
+      "file": "windows-desktop/desktop.css",
+      "start": ".integrated-player:fullscreen {",
+      "end": "@media (max-width: 1000px) {",
+      "sha256": "5764eb6acdff7425956f8418763114772f0cc690aadeb5ce6253bff37ee419f2"
+    }
+  },
+  "historical_baseline": {
+    "version": "0.2.4",
+    "exe_sha256": "58f9b147131fa934da57aa9888da019f92efbb6b6963c669f419380f710d9667",
+    "timestamp": "2026-11-15T10:33:12.182369+08:00",
+    "player_internal_button": true,
+    "player_expand_button": true,
+    "toolbar_button": true,
+    "f11": true,
+    "escape_exit": true,
+    "f11_exit": true,
+    "visible_exit_button": true,
+    "no_phone_rotation_prompt": true,
+    "details_hidden_in_fullscreen": true,
+    "method": "Physical Windows UI input via computer-use, screenshots and accessibility text inspected",
+    "physical_arrows": {
+      "paused_before": "01:38",
+      "paused_after_right": "01:48",
+      "paused_after_left": "01:38",
+      "paused_right_seconds": 10,
+      "paused_left_seconds": 10,
+      "paused_state_preserved": true,
+      "playing_state_preserved": true,
+      "seek_feedback_visible": true,
+      "single_key_not_double_applied": true
+    },
+    "normal_startup_preserves_saved_path": true,
+    "normal_startup_cancel_tested": true
+  },
+  "note": "Physical UI observations are the original 0.2.4 tests, not repeated on 0.2.6. The listed key handling/fullscreen/updater sections match that tag exactly. Final 0.2.6 automated playback, full-screen viewport/continuity, layout, cache, 18 input regressions and real update replacement/rollback were independently rerun. Fresh Windows UI inspection was read-only; it did not test physical input."
+}

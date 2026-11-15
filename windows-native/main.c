@@ -425,7 +425,7 @@ static BOOL save_playlist(const wchar_t *base, const wchar_t *name, const unsign
     BOOL valid = !memchr(body, 0, length) && strstr(text, "#EXT-X-ENDLIST") != NULL &&
         !strstr(text, "#EXT-X-BYTERANGE") && !strstr(text, "#EXT-X-STREAM-INF");
     DWORD references = 0;
-    AcquireSRWLockShared(&cache_lock);
+    AcquireSRWLockExclusive(&cache_lock);
     char *line = text;
     while (valid && *line) {
         char *end = strchr(line, '\n');
@@ -448,10 +448,14 @@ static BOOL save_playlist(const wchar_t *base, const wchar_t *name, const unsign
         *end = saved;
         line = saved ? end+1 : end;
     }
-    ReleaseSRWLockShared(&cache_lock);
     wchar_t path[PATH_CAP];
     _snwprintf(path, PATH_CAP, L"%ls\\%ls", base, name);
     BOOL ok = valid && references && cache_atomic(path, body, length);
+    if (ok) {
+        _snwprintf(path, PATH_CAP, L"%ls\\%.64ls.jp-download", base, name);
+        DeleteFileW(path);
+    }
+    ReleaseSRWLockExclusive(&cache_lock);
     deallocate(text);
     return ok;
 }
@@ -463,25 +467,24 @@ static void mp4_request(ICoreWebView2WebResourceRequestedEventArgs *args,
     if (length != 64 && !cancel) { reject_request(args, 400); return; }
     wchar_t id[65];
     memcpy(id, name, 64*sizeof(wchar_t)); id[64] = 0;
-    wchar_t filename[192];
-    if (!jp_remux_name(L"影片", id, filename)) { reject_request(args, 400); return; }
+    if (!cache_hex(id, 64)) { reject_request(args, 400); return; }
     LONG phase = InterlockedCompareExchange(&mp4_job.phase, 0, 0);
     if (cancel && !wcscmp(method, L"POST") && !wcscmp(mp4_job.id, id)) {
         InterlockedExchange(&mp4_job.cancel, 1);
     } else if (!cancel && !wcscmp(method, L"POST")) {
         if (phase == 1 || !base[0]) { reject_request(args, 409); return; }
         Request request = {0};
-        wchar_t title[256] = {0};
-        BOOL ok = read_request(source, &request) && request.request_length > 0 &&
-            request.request_length <= 768;
-        int count = ok ? MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
-            (char *)request.request_body, (int)request.request_length, title, 255) : 0;
-        ok = count > 0 && !memchr(request.request_body, 0, request.request_length);
+        JpRemux metadata = {0};
+        BOOL ok = read_request(source, &request) &&
+            jp_remux_request(request.request_body, request.request_length, &metadata);
         deallocate(request.request_body); deallocate(request.request_headers); deallocate(request.range);
-        if (!ok || !jp_remux_name(title, id, filename)) { reject_request(args, 400); return; }
+        if (!ok) { reject_request(args, 400); return; }
         if (mp4_thread) { WaitForSingleObject(mp4_thread, INFINITE); CloseHandle(mp4_thread); mp4_thread = NULL; }
         memset(&mp4_job, 0, sizeof(mp4_job));
-        wcscpy(mp4_job.directory, base); wcscpy(mp4_job.id, id); wcscpy(mp4_job.filename, filename);
+        wcscpy(mp4_job.directory, base); wcscpy(mp4_job.id, id);
+        wcscpy(mp4_job.title, metadata.title); wcscpy(mp4_job.episode, metadata.episode);
+        wcscpy(mp4_job.language, metadata.language);
+        mp4_job.completed = cache_complete;
         InterlockedExchange(&mp4_job.phase, 1);
         mp4_thread = CreateThread(NULL, 0, jp_remux_run, &mp4_job, 0, NULL);
         if (!mp4_thread) {
@@ -492,11 +495,19 @@ static void mp4_request(ICoreWebView2WebResourceRequestedEventArgs *args,
     if (wcscmp(mp4_job.id, id)) { reject_request(args, 404); return; }
     phase = InterlockedCompareExchange(&mp4_job.phase, 0, 0);
     const wchar_t *state = phase == 2 ? L"saved" : phase == 3 ? L"cancelled" : phase == 4 ? L"failed" : L"merging";
+    LONG cleanup_pending = InterlockedCompareExchange(&mp4_job.cleanup_pending, 0, 0);
+    AcquireSRWLockShared(&cache_lock);
+    CacheEpisode *episode = cache_episode(mp4_job.directory, mp4_job.id);
+    if (episode && episode->completed) cleanup_pending = episode->pending;
+    ReleaseSRWLockShared(&cache_lock);
     wchar_t json[1024];
     _snwprintf(json, ARRAY_COUNT(json), L"{\"state\":\"%ls\",\"file\":\"%ls\",\"progress\":%ld,"
-        L"\"bytes\":%lld,\"error\":\"%ls\"}", state, mp4_job.filename,
+        L"\"bytes\":%lld,\"cleanup_pending\":%ls,\"cleanup_error\":%ls,\"error\":\"%ls\"}", state,
+        phase == 2 ? mp4_job.filename : L"",
         InterlockedCompareExchange(&mp4_job.progress, 0, 0),
-        InterlockedCompareExchange64(&mp4_job.bytes, 0, 0), phase == 4 ? mp4_job.error : L"");
+        InterlockedCompareExchange64(&mp4_job.bytes, 0, 0), cleanup_pending ? L"true" : L"false",
+        cleanup_pending == 2 ? L"true" : L"false",
+        phase == 4 ? mp4_job.error : L"");
     int count = WideCharToMultiByte(CP_UTF8, 0, json, -1, NULL, 0, NULL, NULL);
     char *bytes = allocate((size_t)count);
     if (bytes) {
@@ -516,6 +527,7 @@ static void desktop_request(ICoreWebView2WebResourceRequestedEventArgs *args,
         respond(args, json, (DWORD)strlen(json), 200,
             L"Content-Type: application/json\r\nCache-Control: no-store\r\n");
     } else if (!wcscmp(path, L"/desktop/cache-status") && !wcscmp(method, L"GET")) {
+        cache_cleanup_retry(base);
         wchar_t escaped[PATH_CAP*2], json[PATH_CAP*2+512];
         size_t used = 0;
         for (size_t i = 0; base[i]; ++i) {
@@ -534,6 +546,13 @@ static void desktop_request(ICoreWebView2WebResourceRequestedEventArgs *args,
         } else reject_request(args, 503);
     } else if (prefix(path, L"/desktop/mp4/")) {
         mp4_request(args, source, path+wcslen(L"/desktop/mp4/"), method, base);
+    } else if (prefix(path, L"/desktop/download/") && !wcscmp(method, L"POST")) {
+        Request request = {0};
+        BOOL ok = read_request(source, &request) && cache_download_begin(base,
+            path+wcslen(L"/desktop/download/"), request.request_body, request.request_length);
+        respond(args, ok ? "{\"saved\":true}" : "{\"saved\":false}", ok ? 14 : 15, ok ? 200 : 409,
+            L"Content-Type: application/json\r\nCache-Control: no-store\r\n");
+        deallocate(request.request_body); deallocate(request.request_headers); deallocate(request.range);
     } else if (prefix(path, L"/desktop/playlist/") && !wcscmp(method, L"POST")) {
         Request request = {0};
         BOOL ok = read_request(source, &request) &&
@@ -781,15 +800,45 @@ HANDLER(ICoreWebView2WebResourceRequestedEventHandler, resource_handler, resourc
 static void layout(void) {
     RECT bounds;
     GetClientRect(window, &bounds);
-    int toolbar = fullscreen ? 0 : 42;
+    int toolbar = fullscreen ? 0 : 52;
+    int left = 12;
+    static const int widths[6] = {84, 84, 84, 84, 108, 108};
     for (int i = 0; i < 6; ++i) {
         ShowWindow(buttons[i], fullscreen ? SW_HIDE : SW_SHOW);
-        MoveWindow(buttons[i], 8 + 88 * i, 7, 80, 29, TRUE);
+        MoveWindow(buttons[i], left, 8, widths[i], 36, TRUE);
+        left += widths[i] + 8;
     }
     ShowWindow(label, fullscreen ? SW_HIDE : SW_SHOW);
-    MoveWindow(label, 542, 12, bounds.right > 554 ? bounds.right - 554 : 0, 23, TRUE);
+    MoveWindow(label, left+8, 17, bounds.right > left+20 ? bounds.right-left-20 : 0, 23, TRUE);
     bounds.top = toolbar;
     if (controller) ICoreWebView2Controller_put_Bounds(controller, bounds);
+}
+/* Small native line icons stay sharp without a font or browser dependency. */
+static void toolbar_icon(HDC dc, int x, int y, UINT command) {
+    POINT back[] = {{x+10,y+3},{x+4,y+9},{x+10,y+15}};
+    POINT home[] = {{x+2,y+8},{x+9,y+2},{x+16,y+8},{x+16,y+16},{x+2,y+16},{x+2,y+8}};
+    POINT folder[] = {{x+1,y+5},{x+7,y+5},{x+9,y+7},{x+17,y+7},{x+17,y+16},{x+1,y+16},{x+1,y+5}};
+    switch (command) {
+    case 100:
+        Polyline(dc, back, 3); MoveToEx(dc,x+4,y+9,NULL); LineTo(dc,x+17,y+9); break;
+    case 101:
+        Polyline(dc, home, 6); MoveToEx(dc,x+7,y+16,NULL); LineTo(dc,x+7,y+11);
+        LineTo(dc,x+11,y+11); LineTo(dc,x+11,y+16); break;
+    case 102:
+        Arc(dc,x+2,y+2,x+17,y+17,x+15,y+5,x+16,y+10);
+        MoveToEx(dc,x+16,y+2,NULL); LineTo(dc,x+16,y+7); LineTo(dc,x+11,y+7); break;
+    case 103:
+        for (int i = 0; i < 4; ++i) {
+            int a = x+(i&1 ? 16 : 2), b = y+(i&2 ? 16 : 2);
+            MoveToEx(dc,a+(i&1 ? -5 : 5),b,NULL); LineTo(dc,a,b); LineTo(dc,a,b+(i&2 ? -5 : 5));
+        }
+        break;
+    case 104: Polyline(dc, folder, 7); break;
+    case 105:
+        Ellipse(dc,x+1,y+1,x+18,y+18);
+        MoveToEx(dc,x+9,y+14,NULL); LineTo(dc,x+9,y+5);
+        MoveToEx(dc,x+5,y+9,NULL); LineTo(dc,x+9,y+5); LineTo(dc,x+13,y+9); break;
+    }
 }
 static void set_fullscreen(BOOL value) {
     if (fullscreen == value || closing) return;
@@ -1199,7 +1248,7 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wparam, LPAR
         font = CreateFontW(-15, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Microsoft YaHei UI");
         {
-            const wchar_t *names[6] = { L"← 返回", L"⌂ 首页", L"↻ 刷新", L"⛶ 全屏", L"保存位置", L"检查更新" };
+            const wchar_t *names[6] = { L"返回", L"首页", L"刷新", L"全屏", L"保存位置", L"检查更新" };
             for (int i = 0; i < 6; ++i) {
                 buttons[i] = CreateWindowExW(0, L"BUTTON", names[i], WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_OWNERDRAW,
                     0, 0, 0, 0, hwnd, (HMENU)(INT_PTR)(100 + i), instance, NULL);
@@ -1217,26 +1266,30 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wparam, LPAR
         return 0;
     case WM_CTLCOLOREDIT:
     case WM_CTLCOLORSTATIC:
-        SetTextColor((HDC)wparam, RGB(210,210,210));
-        SetBkColor((HDC)wparam, RGB(25,28,34));
+        SetTextColor((HDC)wparam, RGB(159,170,187));
+        SetBkColor((HDC)wparam, RGB(23,26,32));
         return (LRESULT)background;
     case WM_DRAWITEM: {
         DRAWITEMSTRUCT *item = (DRAWITEMSTRUCT *)lparam;
         if (item->CtlType != ODT_BUTTON) break;
-        COLORREF color = item->itemState & ODS_SELECTED ? RGB(55,61,71) : RGB(36,41,49);
+        COLORREF color = item->itemState & ODS_SELECTED ? RGB(48,53,65) : RGB(32,36,45);
         HBRUSH fill = CreateSolidBrush(color);
-        HPEN border = CreatePen(PS_SOLID, 1, item->itemState & ODS_FOCUS ? RGB(110,119,132) : color);
+        HPEN border = CreatePen(PS_SOLID, 1, item->itemState & ODS_FOCUS ? RGB(255,83,85) : RGB(47,53,64));
         HGDIOBJ old_brush = SelectObject(item->hDC, fill), old_pen = SelectObject(item->hDC, border);
         FillRect(item->hDC, &item->rcItem, background);
-        RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 7, 7);
+        RoundRect(item->hDC, item->rcItem.left, item->rcItem.top, item->rcItem.right, item->rcItem.bottom, 10, 10);
         wchar_t text[48];
         GetWindowTextW(item->hwndItem, text, ARRAY_COUNT(text));
         HGDIOBJ old_font = SelectObject(item->hDC, font);
         SetBkMode(item->hDC, TRANSPARENT);
-        SetTextColor(item->hDC, RGB(236,237,239));
-        DrawTextW(item->hDC, text, -1, &item->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        SetTextColor(item->hDC, RGB(227,232,240));
+        RECT text_rect = item->rcItem; text_rect.left += 34;
+        DrawTextW(item->hDC, text, -1, &text_rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        HPEN glyph = CreatePen(PS_SOLID, 1, RGB(181,194,211));
+        SelectObject(item->hDC, glyph); SelectObject(item->hDC, GetStockObject(NULL_BRUSH));
+        toolbar_icon(item->hDC, item->rcItem.left+10, item->rcItem.top+9, item->CtlID);
         SelectObject(item->hDC, old_font); SelectObject(item->hDC, old_brush); SelectObject(item->hDC, old_pen);
-        DeleteObject(fill); DeleteObject(border);
+        DeleteObject(fill); DeleteObject(border); DeleteObject(glyph);
         return TRUE;
     }
     case WM_COMMAND:
@@ -1364,11 +1417,11 @@ int WINAPI wWinMain(HINSTANCE executable, HINSTANCE previous, PWSTR command_line
     SetThreadpoolThreadMaximum(worker_pool, 6);
     InitializeThreadpoolEnvironment(&worker_environment);
     SetThreadpoolCallbackPool(&worker_environment, worker_pool);
-    background = CreateSolidBrush(RGB(25,28,34));
+    background = CreateSolidBrush(RGB(23,26,32));
     WNDCLASSW type = {0};
     type.lpfnWndProc = window_proc;
     type.hInstance = executable;
-    type.hIcon = LoadIconW(NULL, IDI_APPLICATION);
+    type.hIcon = LoadIconW(executable, MAKEINTRESOURCEW(102));
     type.hCursor = LoadCursorW(NULL, IDC_ARROW);
     type.hbrBackground = background;
     type.lpszClassName = L"JianpianDesktop.Native";
@@ -1377,6 +1430,10 @@ int WINAPI wWinMain(HINSTANCE executable, HINSTANCE previous, PWSTR command_line
         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, 1360, 850,
         NULL, NULL, executable, NULL);
     if (!window) return 1;
+    SendMessageW(window, WM_SETICON, ICON_SMALL, (LPARAM)LoadImageW(executable,
+        MAKEINTRESOURCEW(102), IMAGE_ICON, 16, 16, LR_SHARED));
+    SendMessageW(window, WM_SETICON, ICON_BIG, (LPARAM)LoadImageW(executable,
+        MAKEINTRESOURCEW(102), IMAGE_ICON, 48, 48, LR_SHARED));
     BOOL dark = TRUE;
     DwmSetWindowAttribute(window, 20, &dark, sizeof(dark));
     ShowWindow(window, show);

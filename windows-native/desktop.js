@@ -44,10 +44,24 @@
     catch (_) { /* Playback remains usable if the status query fails. */ }
     finally { pollBusy = false; render(); }
   }
+  function saveMetadata(hls) {
+    const field = (value, limit) => String(value || "").replace(/[\x00-\x1f\x7f]/g, " ")
+      .replace(/\s+/g, " ").trim().slice(0, limit).replace(/[\ud800-\udbff]$/, "");
+    const heading = document.querySelector(".detail__title-row h1");
+    const track = hls?.audioTracks?.[hls.audioTrack];
+    const tag = field(track?.lang, 63);
+    const named = field(track?.name, 63);
+    const language = tag && !/^(?:und|zxx|unknown|auto|default)(?:[-_]|$)/i.test(tag) ? tag :
+      /(?:中文|国语|普通话|粤语|闽南语|客家话|台语|英语|日语|韩语|法语|德语|俄语|泰语|越南语|西班牙语|葡萄牙语|意大利语|阿拉伯语|印地语|English|Mandarin|Cantonese|Japanese|Korean|French|German|Spanish|Russian|Thai)/i.test(named) ?
+        named : field(heading?.dataset?.jpLanguage, 63);
+    let episode = field(heading?.dataset?.jpEpisode, 63);
+    if (/^(?:正片|全集|完整版|全片)$/.test(episode)) episode = "";
+    return ["JPMP4/1", field(heading?.textContent, 255) || "当前影片", language, episode].join("\n");
+  }
   async function saveEpisode() {
     if (job || !playlistURL || !status?.directory) return;
     const hls = activeHls, url = playlistURL, directory = status.directory, video = currentVideo;
-    const title = document.querySelector(".detail__title-row h1")?.textContent || "当前影片";
+    const metadata = saveMetadata(hls);
     const task = new AbortController();
     job = task;
     message = "正在读取当前集的下载列表…"; render();
@@ -81,6 +95,10 @@
         lines.push(line);
       }
       if (!resources.size || resources.size > 20000) throw Error("下载列表为空或过长");
+      const id = await digest(url + "\n");
+      await checkedFetch(`/desktop/download/${id}`, {
+        method: "POST", body: lines.join("\n") + "\n", signal: task.signal
+      });
       let completed = 0, downloaded = 0;
       for (const [remote] of resources) {
         if (task.signal.aborted) throw new DOMException("Cancelled", "AbortError");
@@ -93,14 +111,13 @@
         message = `正在缓存整集：${completed}/${resources.size} 个片段 · ${(downloaded / 1048576).toFixed(1)} MB · 可继续播放`;
         render();
       }
-      const id = await digest(url + "\n");
       await checkedFetch(`/desktop/playlist/${id}.m3u8`, {
         method: "POST", body: lines.join("\n") + "\n", signal: task.signal
       });
       task.exportID = id;
       message = "片段已下载，正在合并为单个 MP4…"; render();
       let exported = await (await checkedFetch(`/desktop/mp4/${id}`, {
-        method: "POST", body: title, signal: task.signal
+        method: "POST", body: metadata, signal: task.signal
       })).json();
       while (exported.state === "merging") {
         if (task.signal.aborted) throw new DOMException("Cancelled", "AbortError");
@@ -116,6 +133,9 @@
         throw Error(exported.error || "MP4 合并未完成，完整片段已保留，请重试");
       task.exportID = null;
       message = `整集已保存为 MP4：${exported.file}（${(exported.bytes / 1048576).toFixed(1)} MB，可单独复制和播放）`;
+      message += exported.cleanup_error ? "；缓存尚未清理，请检查目录权限后重新保存" :
+        exported.cleanup_pending ? "；已清理可释放的分片，共用或占用的缓存稍后自动清理" :
+        "；本集分片缓存已自动清理";
       jobs.set(video, message);
     } catch (error) {
       if (task.exportID) {
@@ -153,7 +173,7 @@
       <button type="button" class="jp-cache-save">缓存整集（MP4）</button>
       <button type="button" class="jp-cache-cancel" hidden>停止保存</button></div>
       <p class="jp-cache-path"></p><p class="jp-cache-progress" role="status"></p>
-      <p class="jp-cache-help">详情和讨论可在右侧滚动查看。F11 全屏，Esc 退出；全屏时 ← 快退 10 秒，→ 快进 10 秒。整集保存为单个 MP4，播放分片缓存另存于 media 文件夹。</p>`;
+      <p class="jp-cache-help">详情和讨论可在右侧滚动查看。F11 全屏，Esc 退出；全屏时 ← 快退 10 秒，→ 快进 10 秒。整集保存为单个 MP4，成功后自动清理本集分片缓存；失败或停止时保留分片供重试。</p>`;
     panel.querySelector(".jp-player-expand").onclick = () => {
       const player = shell.querySelector(".integrated-player");
       window.__jpDesktopFullscreen.enter(player);

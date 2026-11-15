@@ -68,6 +68,13 @@ def adapt_fullscreen(app):
     return app.replace(target,
         'function p0(e){e&&window.__jpDesktopFullscreen.refresh(e)}')
 
+def adapt_save_metadata(app):
+    target = 'xg("h1",Xie,Ud(ue.value.title),1)'
+    assert app.count(target) == 1
+    return app.replace(target, 'xg("h1",{...Xie,"data-jp-language":ue.value.language||"",'
+        '"data-jp-episode":"movie"===ue.value.kind?"":u.value&&u.value.name||""},'
+        'Ud(ue.value.title),9,["data-jp-language","data-jp-episode"])')
+
 
 def prepare_assets():
     assert sha(APK) == APK_SHA, "Unexpected original APK"
@@ -94,7 +101,10 @@ def prepare_assets():
     app = app.replace(target, "window.__jpRegisterHls(new e({enableWorker:!0,lowLatencyMode:!1,"
                       "maxBufferLength:20,maxMaxBufferLength:40,maxBufferSize:2e7,"
                       "backBufferLength:20,frontBufferFlushThreshold:60,...r}))")
-    app = adapt_fullscreen(app)
+    app = adapt_save_metadata(adapt_fullscreen(app))
+    target = 'var KD="/runtime/assets/logo-DkDMvUmZ.png"'
+    assert app.count(target) == 1
+    app = app.replace(target, 'var KD="/runtime/desktop-icon.png"')
     assets["assets/app-modern.js"] = app.encode()
     html = assets["index.html"].decode()
     html = html.replace("</head>", '<link rel="stylesheet" href="/runtime/desktop.css" />'
@@ -102,11 +112,15 @@ def prepare_assets():
                         '<script src="/runtime/desktop.js"></script></head>')
     html = html.replace('<script nomodule src="/runtime/assets/app-legacy.js"></script>', "")
     html = html.replace("<title>荐片 jianpian.com</title>", "<title>荐片 · Windows</title>")
+    assert html.count('href="./logo.png"') == 2
+    html = html.replace('href="./logo.png"', 'href="/runtime/desktop-icon.png"')
     html = html.replace("script-src 'self' data:", "script-src 'self'")
     assets["index.html"] = html.encode()
     assets["desktop.css"] = (ROOT / "windows-desktop/desktop.css").read_bytes()
     assets["desktop.js"] = (SOURCE / "desktop.js").read_bytes()
     assets["desktop-fullscreen.js"] = (SOURCE / "fullscreen.js").read_bytes()
+    assets["desktop-icon.png"] = (SOURCE / "assets/app-icon.png").read_bytes()
+    del assets["logo.png"], assets["assets/logo-DkDMvUmZ.png"]
     result = bytearray(b"JPW1" + struct.pack("<I", len(assets)))
     inventory = {}
     for name, body in sorted(assets.items()):
@@ -131,6 +145,7 @@ def main():
     resource = '// UTF-8 resources\n#pragma code_page(65001)\n'
     resource += f'1 24 "{(SOURCE / "desktop.manifest").as_posix()}"\n'
     resource += f'101 10 "{(STAGE / "assets.bin").as_posix()}"\n'
+    resource += f'102 ICON "{(SOURCE / "assets/app-icon.ico").as_posix()}"\n'
     (STAGE / "update-contract.txt").write_bytes(
         f"JPUPDATE1\n{VERSION}\n{loader_sha}\n".encode("ascii"))
     resource += f'103 10 "{(STAGE / "update-contract.txt").as_posix()}"\n'

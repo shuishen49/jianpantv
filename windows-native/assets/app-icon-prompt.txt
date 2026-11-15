@@ -1,0 +1,12 @@
+Generated with the built-in image_gen tool on 2026-11-15.
+The original transparent PNG is app-icon-source.png.
+app-icon.png and app-icon.ico are size/format conversions of that original.
+
+Use case: logo-brand. Asset type: one production Windows desktop video-player application icon, square composition, transparent outside the icon tile.
+Design a new clean recognizable symbol for an unofficial Chinese video app called 荐片, but DO NOT render any text, letters, words, numbers, watermark, presentation board, mockup, or multiple variants.
+A single large rounded-square graphite-black tile, filling about 88% of the image, centered with generous transparent margin.
+Inside the tile, create a bold coral-red folded ribbon / film-tab silhouette with a crisp warm-white right-facing play triangle cut into its center, and one restrained electric-cyan back edge that subtly echoes the app's existing red/cyan identity.
+The ribbon should suggest a flowing J shape only abstractly, never literal typography.
+The core white triangle and red silhouette must be thick, very simple and legible at 16x16 and 32x32.
+Premium desktop software identity, flat vector-like graphic, precise smooth curves, high contrast, balanced optical centering, tiny restrained surface gradient only; no thin lines, no tiny film perforations, no complicated detail, no glossy plastic, no glass, no photographic objects, no drop shadow extending beyond the tile.
+Transparent alpha outside the rounded tile. Output only the single icon artwork, front-on, no perspective.

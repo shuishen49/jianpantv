@@ -1,0 +1,26 @@
+{
+  "current_version": "0.2.6",
+  "timestamp": "2026-11-15T13:07:42.700733+08:00",
+  "historical_only": true,
+  "unchanged_dialog_resource_sha256": "fa3cbf7c3db522f4cd38999501ee25b94aa6949123237e8f8153bc3518a8d3ad",
+  "historical_baseline": {
+    "current_version": "0.2.4",
+    "historical_baseline": {
+      "current_version": "0.2.3",
+      "historical_baseline": {
+        "tested_version": "0.2.1",
+        "scope": "Historical UI baseline; unchanged cache.h and storage-dialog.rc verified byte-for-byte. 0.2.2 cache/path tests were rerun; this does not claim the historical UI test was rerun.",
+        "historical_result": {
+          "native_custom_settings_dialog": true,
+          "editable_path": true,
+          "existing_folder_picker_removed": true,
+          "save_creates_missing_directory": true
+        }
+      },
+      "note": "Original tested version/timestamps are retained. This is not a new 0.2.3 directory-creation UI test; native path checks were rerun."
+    },
+    "normal_startup_saved_path_and_cancel_retested": true,
+    "note": "Directory-creation UI retains its original tested version; 40 native path/cache checks rerun."
+  },
+  "note": "Original 0.2.4 physical settings UI observation retained; not claimed as repeated. Final native directory/cache tests were rerun."
+}

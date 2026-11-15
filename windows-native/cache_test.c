@@ -5,7 +5,9 @@
 #include <shlobj.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <wchar.h>
+#include "remux.h"
 #define PATH_CAP 4096
 #define MAX_MEDIA_BODY (32u*1024u*1024u)
 static void *allocate(size_t n) { return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, n ? n : 1); }
@@ -27,6 +29,10 @@ int wmain(int argc, wchar_t **argv) {
     const unsigned char content[] = "transport stream fixture";
     const wchar_t headers[] = L"Content-Type: video/mp2t\r\nCache-Control: no-store\r\n";
     CHECK(cache_write(directory, key, 200, content, sizeof(content), headers));
+    CHECK(!cache_download_begin(directory, L"invalid", content, sizeof(content)));
+    cache_cleanup_retry(directory);
+    JpRemux invalid_job = {0};
+    cache_complete(&invalid_job, content, sizeof(content));
     unsigned char *body = NULL; wchar_t *response = NULL; DWORD status = 0, length = 0;
     CHECK(cache_read(directory, key, &status, &body, &length, &response));
     CHECK(status == 200 && length == sizeof(content) && !memcmp(body, content, length));

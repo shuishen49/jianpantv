@@ -1,0 +1,122 @@
+{
+  "timestamp": "2026-11-15T12:26:03.811629+08:00",
+  "exe_sha256": "fe0bfa27f19323c36e45849ebf34d8e392be54073e70a2c1233383aef5591d0a",
+  "driver_sha256": "a762287210cc358119fbe28875bde133aedd27e733b4aa68ffa1a319843e21be",
+  "manifest_sha256": "d0f9506619599bab25f144c1f0ce883e77ca3feedda0d1db2601b268f2424432",
+  "segments": 372,
+  "resources": 372,
+  "cache_bytes": 238280976,
+  "all_cache_digests_valid": true,
+  "discontinuities": 56,
+  "manifest_seconds": 1484.7820000000002,
+  "merge_seconds": 10.995644599985098,
+  "saved": {
+    "phase": 2,
+    "progress": 1000,
+    "bytes": 228468064,
+    "file": "荐片-合并验证-e716cd9244b4.mp4",
+    "error": ""
+  },
+  "output": "D:\\source_code\\jianpian\\work\\saved-vod-1794716740505861700\\荐片-合并验证-e716cd9244b4.mp4",
+  "output_sha256": "afa2aaf2cab5f90aac120485f65e170cd41780c6cf182151d101e3a3134b962b",
+  "input_packet_counts": [
+    35617,
+    69529
+  ],
+  "output_probe": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 1920,
+        "height": 1080,
+        "nb_read_packets": "35617",
+        "extradata_size": 44
+      },
+      {
+        "codec_name": "aac",
+        "codec_type": "audio",
+        "nb_read_packets": "69529",
+        "extradata_size": 2
+      }
+    ],
+    "format": {
+      "duration": "1484.855651",
+      "size": "228468064"
+    }
+  },
+  "sample_description_counts": [
+    1,
+    2
+  ],
+  "os_decode_and_seek": [
+    {
+      "decoded": true,
+      "video_bytes": 3133440,
+      "pcm_audio_bytes": 4096,
+      "seek_time_100ns": 10010000,
+      "seek_video_bytes": 3133440,
+      "seek_audio_bytes": 4096,
+      "seek_seconds": 1.0,
+      "hresult": 0
+    },
+    {
+      "decoded": true,
+      "video_bytes": 3133440,
+      "pcm_audio_bytes": 4096,
+      "seek_time_100ns": 2980266666,
+      "seek_video_bytes": 3133440,
+      "seek_audio_bytes": 4096,
+      "seek_seconds": 298.0,
+      "hresult": 0
+    },
+    {
+      "decoded": true,
+      "video_bytes": 3133440,
+      "pcm_audio_bytes": 4096,
+      "seek_time_100ns": 3000046666,
+      "seek_video_bytes": 479232,
+      "seek_audio_bytes": 4096,
+      "seek_seconds": 300.0,
+      "hresult": 0
+    },
+    {
+      "decoded": true,
+      "video_bytes": 3133440,
+      "pcm_audio_bytes": 4096,
+      "seek_time_100ns": 3160046666,
+      "seek_video_bytes": 479232,
+      "seek_audio_bytes": 4096,
+      "seek_seconds": 316.0,
+      "hresult": 0
+    },
+    {
+      "decoded": true,
+      "video_bytes": 3133440,
+      "pcm_audio_bytes": 4096,
+      "seek_time_100ns": 3180033333,
+      "seek_video_bytes": 3133440,
+      "seek_audio_bytes": 4096,
+      "seek_seconds": 318.0,
+      "hresult": 0
+    },
+    {
+      "decoded": true,
+      "video_bytes": 3133440,
+      "pcm_audio_bytes": 4096,
+      "seek_time_100ns": 14830408777,
+      "seek_video_bytes": 3133440,
+      "seek_audio_bytes": 4096,
+      "seek_seconds": 1483.0,
+      "hresult": 0
+    }
+  ],
+  "original_cache_preserved": true,
+  "automatic_episode_cleanup": true,
+  "all_passed": true,
+  "historical_only": true,
+  "current_final_exe_sha256": "c22ecd7127f0e3df040bd8adb2d9a0f6e747d5bbfd0b7699bfddceac7c67a8bf",
+  "note": "Earlier 0.2.6 development-build whole-episode observation, retaining its actual timestamp/executable digest; not rerun as a final icon/naming-build observation. The final build passed fresh short-fixture remux, naming, cleanup, decoder and online UI checks."
+}

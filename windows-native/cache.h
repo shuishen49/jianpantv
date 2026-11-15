@@ -8,6 +8,7 @@ static SRWLOCK cache_lock = SRWLOCK_INIT;
 static wchar_t cache_directory[PATH_CAP];
 static LONG cache_hits, cache_writes, cache_errors;
 static LONG64 cache_saved_bytes;
+static void cache_cleanup_recover(const wchar_t *directory);
 
 static BOOL cache_digest(const void *data, DWORD length, unsigned char digest[32]) {
     BCRYPT_ALG_HANDLE algorithm = NULL;
@@ -84,6 +85,7 @@ static BOOL cache_set_directory(const wchar_t *selected) {
     AcquireSRWLockExclusive(&cache_lock);
     wcscpy(cache_directory, absolute);
     ReleaseSRWLockExclusive(&cache_lock);
+    cache_cleanup_recover(absolute);
     return TRUE;
 }
 static BOOL cache_file(const wchar_t *path, void *data, DWORD length) {
@@ -144,6 +146,7 @@ static BOOL cache_atomic(const wchar_t *path, const void *bytes, DWORD length) {
     if (!ok) DeleteFileW(temporary);
     return ok;
 }
+#include "cleanup.h"
 static BOOL cache_write(const wchar_t *directory, const wchar_t *key, DWORD status,
         const unsigned char *body, DWORD length, const wchar_t *headers) {
     if (!directory[0] || !length || length > MAX_MEDIA_BODY || (status != 200 && status != 206)) return FALSE;
@@ -161,6 +164,13 @@ static BOOL cache_write(const wchar_t *directory, const wchar_t *key, DWORD stat
     memcpy(metadata + sizeof(record), headers, record.header_bytes);
     wchar_t path[PATH_CAP];
     AcquireSRWLockExclusive(&cache_lock);
+    if (cache_retired(directory, key)) {
+        ReleaseSRWLockExclusive(&cache_lock);
+        deallocate(metadata);
+        return TRUE; /* A late playback response must not recreate retired cache. */
+    }
+    _snwprintf(path, PATH_CAP, L"%ls\\media", directory);
+    CreateDirectoryW(path, NULL);
     _snwprintf(path, PATH_CAP, L"%ls\\media\\%ls.ts", directory, key);
     BOOL ok = cache_atomic(path, body, length);
     if (ok) {

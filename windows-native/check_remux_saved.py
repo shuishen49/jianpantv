@@ -57,7 +57,7 @@ def main():
     before, _ = run(probe_args + ["-extension_picky", "0", "-allowed_extensions", "ts,m3u8", source])
     assert before.returncode == 0, before.stderr
     before_probe = json.loads(before.stdout)
-    exported, elapsed = run([STAGE / "remux-test.exe", "export", folder, args.id, "合并验证"])
+    exported, elapsed = run([STAGE / "remux-test.exe", "export-clean", folder, args.id, "合并验证"])
     saved = json.loads(exported.stdout.decode("utf-8"))
     assert exported.returncode == 0 and saved["phase"] == 2, (saved, exported.stderr)
     output = folder / saved["file"]
@@ -85,6 +85,8 @@ def main():
     assert source.read_bytes() == body
     assert not (folder / source.name).exists()
     assert not list(folder.glob("*.partial"))
+    assert not list(folder.glob("*.jp-cleanup"))
+    assert not (folder / "media").exists()
     report = {
         "timestamp": datetime.datetime.now().astimezone().isoformat(),
         "exe_sha256": hashlib.sha256((OUT / "Jianpian.exe").read_bytes()).hexdigest(),
@@ -98,7 +100,7 @@ def main():
         "input_packet_counts": [int(s["nb_read_packets"]) for s in before_probe["streams"]],
         "output_probe": after_probe, "sample_description_counts": descriptions,
         "os_decode_and_seek": decodes, "original_cache_preserved": True,
-        "all_passed": True,
+        "automatic_episode_cleanup": True, "all_passed": True,
     }
     (test / "saved-vod-verification.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

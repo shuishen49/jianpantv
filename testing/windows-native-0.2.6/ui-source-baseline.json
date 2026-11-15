@@ -1,0 +1,82 @@
+{
+  "baseline_tag": "v0.2.4-windows",
+  "physical_ui_repeated": false,
+  "automated_current_version": "0.2.6",
+  "current_exe_sha256": "c22ecd7127f0e3df040bd8adb2d9a0f6e747d5bbfd0b7699bfddceac7c67a8bf",
+  "fullscreen_sections": {
+    "native_set": {
+      "file": "windows-native/main.c",
+      "start": "static void set_fullscreen(BOOL value) {",
+      "end": "static void toggle_fullscreen(void) {",
+      "sha256": "b8e1680e15dfb5d30ceac806564590fc8233f2fd4893fb87ff2455537c9df723"
+    },
+    "native_toggle": {
+      "file": "windows-native/main.c",
+      "start": "static void toggle_fullscreen(void) {",
+      "end": "static HRESULT STDMETHODCALLTYPE fullscreen_changed(",
+      "sha256": "45c6d35f7fe3a90393838e683d5dc3769ce0f54e91e04b57770c2c46507621a3"
+    },
+    "native_event": {
+      "file": "windows-native/main.c",
+      "start": "static HRESULT STDMETHODCALLTYPE fullscreen_changed(",
+      "end": "HANDLER(ICoreWebView2ContainsFullScreenElementChangedEventHandler,",
+      "sha256": "21d659997465474c2d5fe287ad874330c02f34cff2eb8c462294c4df3942a8e7"
+    },
+    "native_accelerator": {
+      "file": "windows-native/main.c",
+      "start": "static HRESULT STDMETHODCALLTYPE accelerator(",
+      "end": "HANDLER(ICoreWebView2AcceleratorKeyPressedEventHandler,",
+      "sha256": "91a4a1318a643c29dfe57b8537ae83dab26be28ee56338611b2ec8c21431150a"
+    },
+    "window_commands": {
+      "file": "windows-native/main.c",
+      "start": "    case WM_COMMAND:\n        if (LOWORD(wparam) == 104)",
+      "end": "    case WM_KEYDOWN:\n",
+      "sha256": "1265f3a7b62da7892328d19db2e4ab58bded9e44cd1c0d69f7e0564b2d32afd9"
+    },
+    "window_keys": {
+      "file": "windows-native/main.c",
+      "start": "    case WM_KEYDOWN:\n",
+      "end": "    case WM_UPDATE_DONE:",
+      "sha256": "334f53689d916417981a5de93c666b128977b1a6806893d6e64dcff82cbd361e"
+    },
+    "fullscreen_js": {
+      "file": "windows-native/fullscreen.js",
+      "start": null,
+      "end": null,
+      "sha256": "28968d0f0bb8b3b109342d349a17c0e0fb17b297aa2dac634c3bb326d0b66790"
+    },
+    "fullscreen_css": {
+      "file": "windows-desktop/desktop.css",
+      "start": ".integrated-player:fullscreen {",
+      "end": "@media (max-width: 1000px) {",
+      "sha256": "5764eb6acdff7425956f8418763114772f0cc690aadeb5ce6253bff37ee419f2"
+    }
+  },
+  "updater_sections": {
+    "window_commands": {
+      "file": "windows-native/main.c",
+      "start": "    case WM_COMMAND:\n        if (LOWORD(wparam) == 104)",
+      "end": "    case WM_KEYDOWN:\n",
+      "sha256": "1265f3a7b62da7892328d19db2e4ab58bded9e44cd1c0d69f7e0564b2d32afd9"
+    },
+    "updater_ui": {
+      "file": "windows-native/update.h",
+      "start": null,
+      "end": null,
+      "sha256": "dc7020ad77e2e4287fb5135f712def3029dd5f98d3204efc05eb1230211a02cb"
+    },
+    "updater_transaction": {
+      "file": "windows-native/update_core.h",
+      "start": null,
+      "end": null,
+      "sha256": "e5423a57906723aa70604e1a02fdfe49b1a4d42a5e1a5b1842eb2b442bc56659"
+    },
+    "updater_json": {
+      "file": "windows-native/update_json.h",
+      "start": null,
+      "end": null,
+      "sha256": "cfa56175db218ca5fd65f04f579b4d65932f216d628f05171474c34df3380b45"
+    }
+  }
+}

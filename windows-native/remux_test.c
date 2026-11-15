@@ -10,6 +10,9 @@
 #include "remux.h"
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
+#define wWinMain unused_gui_entry
+#include "main.c"
+#undef wWinMain
 
 static int decoded(const wchar_t *path, double seek_seconds) {
     IMFSourceReader *reader = NULL;
@@ -132,11 +135,31 @@ int wmain(int argc, wchar_t **argv) {
     if ((argc == 3 || argc == 4) && !wcscmp(argv[1], L"decode"))
         return decoded(argv[2], argc == 4 ? wcstod(argv[3], NULL) : 1.0);
     if (argc == 4 && !wcscmp(argv[1], L"fragment")) return fragmented(argv[2], argv[3]);
-    if (argc != 5) return 2;
+    if (argc < 5 || argc > 7) return 2;
     JpRemux job = {0};
-    if (wcslen(argv[2]) >= JP_REMUX_PATH || wcslen(argv[3]) != 64) return 2;
+    if (wcslen(argv[2]) > JP_REMUX_PATH-150 || !cache_hex(argv[3], wcslen(argv[3])) ||
+        wcslen(argv[4]) > 255 || (argc > 5 && wcslen(argv[5]) > 63) ||
+        (argc > 6 && wcslen(argv[6]) > 63)) return 2;
     wcscpy(job.directory, argv[2]); wcscpy(job.id, argv[3]);
-    if (!jp_remux_name(argv[4], job.id, job.filename)) return 2;
+    wcscpy(job.title, argv[4]);
+    if (argc > 5) wcscpy(job.language, argv[5]);
+    if (argc > 6) wcscpy(job.episode, argv[6]);
+    jp_remux_name(job.title, job.episode, 0, job.language, job.filename);
+    if (wcscmp(argv[1], L"export")) job.completed = cache_complete;
+    if (!wcscmp(argv[1], L"cleanup")) {
+        wchar_t path[PATH_CAP];
+        _snwprintf(path, PATH_CAP, L"%ls\\%ls", job.directory, job.filename);
+        WIN32_FILE_ATTRIBUTE_DATA attributes;
+        if (!GetFileAttributesExW(path, GetFileExInfoStandard, &attributes)) return 2;
+        job.bytes = ((LONG64)attributes.nFileSizeHigh << 32) | attributes.nFileSizeLow;
+        _snwprintf(path, PATH_CAP, L"%ls\\%ls.m3u8", job.directory, job.id);
+        DWORD length = 0; unsigned char *body = cache_small_file(path, &length);
+        if (!body) return 2;
+        cache_complete(&job, body, length); deallocate(body);
+        printf("{\"cleanup_pending\":%ld,\"removed_files\":%ld,\"reclaimed_bytes\":%lld}\n",
+               job.cleanup_pending, cache_reclaimed_files, cache_reclaimed_bytes);
+        return job.cleanup_pending ? 1 : 0;
+    }
     job.phase = 1;
     BOOL mid = !wcscmp(argv[1], L"cancel-mid");
     if (!wcscmp(argv[1], L"cancel")) job.cancel = 1;

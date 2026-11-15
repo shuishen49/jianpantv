@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "platform": "windows-x64",
-  "version": "0.2.5",
-  "size": 2268160,
-  "sha256": "35a8416985796dc85c083e6cbb151dce02e3f51c464f7322cad2ef407782978e",
+  "version": "0.2.6",
+  "size": 2393600,
+  "sha256": "c22ecd7127f0e3df040bd8adb2d9a0f6e747d5bbfd0b7699bfddceac7c67a8bf",
   "loader_sha256": "d3fce90bdeecb08596e377dea6a316354dd8949e32ff09b89d51be00c14e21b6"
 }

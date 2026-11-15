@@ -48,6 +48,36 @@ def ui_evidence(name, current_sha):
     record = read_json(TEST / name)
     if record.get("exe_sha256") == current_sha:
         return record
+    if record.get("schema") == "scoped-ui-history-1":
+        # Keep historical physical input explicitly historical. Changes to
+        # unrelated cache/naming/toolbar code need not invalidate unchanged
+        # key handling or updater transactions. Pair exact scoped comparisons
+        # with the final EXE's fresh playback, layout and input regressions.
+        assert record["current_version"] == VERSION and record["historical_only"]
+        assert record["validated_exe_sha256"] == current_sha
+        required = {
+            "fullscreen-ui.json": {"native_set", "native_toggle", "native_event",
+                "native_accelerator", "window_commands", "window_keys", "fullscreen_js", "fullscreen_css"},
+            "update-ui.json": {"updater_ui", "updater_transaction", "updater_json", "window_commands"},
+        }[name]
+        assert set(record["unchanged_sections"]) == required
+        for section in record["unchanged_sections"].values():
+            text = (ROOT / section["file"]).read_text(encoding="utf-8")
+            if section["start"] is not None:
+                assert text.count(section["start"]) == 1 and text.count(section["end"]) == 1
+                begin = text.index(section["start"])
+                text = text[begin:text.index(section["end"], begin)]
+            assert hashlib.sha256(text.encode("utf-8")).hexdigest() == section["sha256"]
+        current = read_json(TEST / "verification.json")
+        assert current["functional"]["player_button_fills_viewport"]
+        assert current["functional"]["fullscreen_unobstructed"]
+        assert current["fullscreen_regression"]["passed"] >= 18
+        assert current["update_regression"]["transaction_success"]["passed"]
+        assert current["update_regression"]["transaction_restart_failure"]["passed"]
+        baseline = record["historical_baseline"]
+        original = ROOT / f"output/Jianpian-Windows-C-{baseline['version']}/Jianpian.exe"
+        assert baseline["exe_sha256"] == sha(original)
+        return baseline
     # A remux-only patch does not turn historical physical UI input into a new
     # observation. Require exact unchanged UI/updater sources and retain the
     # original report, version and executable digest in the release evidence.
@@ -110,18 +140,24 @@ def main():
         "程序在设置目录内保存播放列表和 media 子目录，播放时自动缓存完整片段，相同地址和范围时复用。\n"
         "升级时默认沿用旧版已有的 JianpianCache 路径，不搬动已有缓存。\n"
         "“缓存整集”可边下边播，支持普通 HLS 点播、AES-128 密钥和初始化片段。\n"
-        "整集片段下载完成后自动合并为单个 MP4，文件名包含片名和地址摘要，可单独复制和播放。\n"
+        "整集片段下载完成后自动合并为单个 MP4，可单独复制和播放。\n"
+        "成品命名为《片名》-1080p-国语.mp4；有已知集数时在片名后保留集数。\n"
+        "清晰度从实际视频读取；语言未知时省略，不从地区猜测。同名自动另存为 (2)、(3)，不覆盖。\n"
         "使用官方 FFmpeg 9.0.2 源码裁剪的 C 容器组件，不重新编码，保留原音视频质量。\n"
         "合并成功才显示“已保存为 MP4”，中断或失败不会发布半成品；已完成分片保留供重试。\n"
-        "合并成功后删除该次临时 m3u8。media 内的播放缓存仍保留，会另占空间。\n"
+        "合并成功后自动删除本集临时 m3u8 和 media 内对应的分片及元数据，空的 media 目录也会删除。\n"
+        "共用或占用的分片稍后自动重试清理；其他文件、未完成下载和成品 MP4 保留。\n"
         "中断后完整片段保留，重新发起时可复用；关闭程序后不继续下载。\n"
         "直播、独立音轨、字节范围 HLS 和 DRM 不支持整集保存；原版 P2P 内核未移植。\n"
-        "0.2.5 修复 HLS 切换片段时计数器和时间戳重置导致的合并失败，保留 AAC 配置切换。\n"
+        "0.2.6 增加合并成功后自动清理，避免播放请求把刚清掉的分片写回。\n"
+        "新设计播放图标用于 EXE、标题栏、任务栏及网页；深色珊瑚红配色，顶部图标和侧栏优化。\n"
+        "首页大图高度缩小，便于直接看到快捷入口及影片列表。图标和样式已嵌入 EXE。\n"
         "此版尚未提供本地影片库入口；账号登录和全部线路尚未验证。\n\n"
         "实测首页、搜索、1080p 播放、暂停、跳转、全屏、900×640 布局、讨论、真实缓存和停止下载通过。\n"
-        "21 项短样本 MP4 检查通过；另使用用户已下载的 372 个分片完成约 24 分 45 秒整集合并。\n"
-        "整集音视频包数保持一致，Windows 系统解码器在切换点前后和片尾解码/跳转通过。\n"
-        "未逐帧解码整集；物理方向键和手动更新弹窗保留 0.2.4 历史记录，相关源码逐字节一致。\n\n"
+        "28 项短样本 MP4、61 项清理、28 项命名及 25 项下载/标题元数据检查通过。\n"
+        "此前开发构建使用 372 个分片完成约 24 分 45 秒整集合并和清理；完整记录保留其原 EXE 摘要。\n"
+        "该历史整集记录的音视频包数保持一致，Windows 系统解码器在切换点前后和片尾解码/跳转通过。\n"
+        "未逐帧解码整集；清理检查覆盖实际占用、并发读写、共用下载与重启恢复。\n\n"
         "程序目录实际体积见交付记录。WebView2 用户数据和视频缓存另计，随使用增长。\n"
         "数据目录：%LOCALAPPDATA%\\JianpianDesktop\\NativeWebView2\n"
         "若另一台电脑没有 WebView2，安装该微软运行环境会另占空间。\n\n"

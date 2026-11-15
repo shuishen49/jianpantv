@@ -45,30 +45,131 @@ typedef struct {
     AVPacket *prefetched[512];
     unsigned count, position;
 } JpDemux;
+typedef struct { unsigned resolution; double seconds; } JpQuality;
 
 static int jp_hex(const char *id) {
     for (int i = 0; i < 64; ++i)
         if (!((id[i] >= 'a' && id[i] <= 'f') || (id[i] >= '0' && id[i] <= '9'))) return 0;
     return 1;
 }
-BOOL jp_remux_name(const wchar_t *title, const wchar_t *id, wchar_t filename[192]) {
-    if (wcslen(id) != 64) return FALSE;
-    for (int i = 0; i < 64; ++i)
-        if (!((id[i] >= L'a' && id[i] <= L'f') || (id[i] >= L'0' && id[i] <= L'9'))) return FALSE;
-    wchar_t clean[128];
+/* Three bounded UTF-8 fields, captured before download starts. Keep this
+   separate from the updater's deliberately ASCII-only JSON parser. */
+BOOL jp_remux_request(const unsigned char *body, DWORD length, JpRemux *job) {
+    if (!body || length < 10 || length > 1536 || memchr(body, 0, length)) return FALSE;
+    wchar_t text[512] = {0};
+    int count = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, (const char *)body,
+                                    (int)length, text, 511);
+    if (!count || wcsncmp(text, L"JPMP4/1\n", 8)) return FALSE;
+    wchar_t *fields[3] = {text+8, NULL, NULL};
+    for (int i = 0; i < 2; ++i) {
+        wchar_t *end = wcschr(fields[i], L'\n');
+        if (!end) return FALSE;
+        *end = 0; fields[i+1] = end+1;
+    }
+    if (wcslen(fields[0]) > 255 || wcslen(fields[1]) > 63 || wcslen(fields[2]) > 63) return FALSE;
+    for (int i = 0; i < 3; ++i)
+        for (const wchar_t *p = fields[i]; *p; ++p) if (*p < 32 || *p == 127) return FALSE;
+    wcscpy(job->title, fields[0]); wcscpy(job->language, fields[1]); wcscpy(job->episode, fields[2]);
+    return TRUE;
+}
+static void jp_clean_name(const wchar_t *text, wchar_t *clean, size_t limit) {
     size_t used = 0;
-    for (; *title && used < 100; ++title) {
-        wchar_t c = *title;
-        if (c >= 32 && !wcschr(L"<>:\"/\\|?*", c)) clean[used++] = c;
+    while (*text == L' ' || *text == L'.') ++text;
+    for (; *text && used < limit; ++text) {
+        wchar_t c = *text;
+        if (c >= 0xd800 && c <= 0xdbff && text[1] >= 0xdc00 && text[1] <= 0xdfff) {
+            if (used+2 > limit) break;
+            clean[used++] = c; clean[used++] = *++text;
+        } else if (c >= 32 && c != 127 && !(c >= 0xd800 && c <= 0xdfff) &&
+                   !wcschr(L"<>:\"/\\|?*", c)) clean[used++] = c;
         else if (used && clean[used-1] != L'_') clean[used++] = L'_';
     }
-    /* Do not split a UTF-16 surrogate pair at the filename limit. */
-    if (used && clean[used-1] >= 0xd800 && clean[used-1] <= 0xdbff) --used;
     while (used && (clean[used-1] == L' ' || clean[used-1] == L'.')) --used;
     clean[used] = 0;
-    /* The prefix also makes reserved Windows device names harmless. */
-    _snwprintf(filename, 192, L"荐片-%ls-%.12ls.mp4", used ? clean : L"影片", id);
-    return TRUE;
+}
+static void jp_language(const wchar_t *value, wchar_t language[64]) {
+    wchar_t clean[64];
+    jp_clean_name(value, clean, 63);
+    static const wchar_t *unknown[] = {L"", L"und", L"zxx", L"unknown", L"auto", L"default",
+        L"n_a", L"na", L"null", L"未知", L"不详", L"其他", L"其它", L"默认", L"未指定", L"暂无"};
+    for (unsigned i = 0; i < sizeof(unknown)/sizeof(*unknown); ++i)
+        if (!_wcsicmp(clean, unknown[i])) { language[0] = 0; return; }
+    static const struct { const wchar_t *code, *name; } known[] = {
+        {L"zh-yue",L"粤语"},{L"zh-cmn",L"国语"},{L"cmn",L"国语"},{L"yue",L"粤语"},
+        {L"zh",L"中文"},{L"zho",L"中文"},{L"chi",L"中文"},
+        {L"en",L"英语"},{L"eng",L"英语"},{L"English",L"英语"},{L"Mandarin",L"国语"},
+        {L"Cantonese",L"粤语"},{L"ja",L"日语"},{L"jpn",L"日语"},{L"Japanese",L"日语"},
+        {L"ko",L"韩语"},{L"kor",L"韩语"},{L"Korean",L"韩语"},
+        {L"fr",L"法语"},{L"fra",L"法语"},{L"fre",L"法语"},{L"French",L"法语"},
+        {L"de",L"德语"},{L"deu",L"德语"},{L"ger",L"德语"},{L"German",L"德语"},
+        {L"es",L"西班牙语"},{L"spa",L"西班牙语"},{L"Spanish",L"西班牙语"},
+        {L"ru",L"俄语"},{L"rus",L"俄语"},{L"Russian",L"俄语"},
+        {L"th",L"泰语"},{L"tha",L"泰语"},{L"Thai",L"泰语"},
+        {L"vi",L"越南语"},{L"vie",L"越南语"},{L"hi",L"印地语"},{L"hin",L"印地语"},
+        {L"pt",L"葡萄牙语"},{L"por",L"葡萄牙语"},{L"it",L"意大利语"},{L"ita",L"意大利语"},
+        {L"ar",L"阿拉伯语"},{L"ara",L"阿拉伯语"},{L"mul",L"多语言"}
+    };
+    for (unsigned i = 0; i < sizeof(known)/sizeof(*known); ++i) {
+        size_t length = wcslen(known[i].code);
+        if (!_wcsnicmp(clean, known[i].code, length) &&
+            (!clean[length] || clean[length] == L'-' || clean[length] == L'_')) {
+            wcscpy(language, known[i].name); return;
+        }
+    }
+    wcscpy(language, clean);
+}
+void jp_remux_name(const wchar_t *title, const wchar_t *episode, unsigned resolution,
+                  const wchar_t *language, wchar_t filename[192]) {
+    wchar_t clean[81], part[21], audio[64], suffix[25];
+    jp_clean_name(title, clean, 80);
+    size_t length = wcslen(clean);
+    if (length >= 2 && clean[0] == L'《' && clean[length-1] == L'》') {
+        memmove(clean, clean+1, (length-2)*sizeof(wchar_t)); clean[length-2] = 0;
+    }
+    jp_clean_name(episode, part, 20);
+    jp_language(language, audio); jp_clean_name(audio, suffix, 24);
+    /* Brackets make CON/NUL and other reserved device titles safe too.
+       Leave space for a collision suffix and the existing directory limit. */
+    _snwprintf(filename, 192, L"《%ls》%ls%ls", clean[0] ? clean : L"影片", part[0] ? L"-" : L"", part);
+    size_t used = wcslen(filename);
+    if (resolution && resolution <= 32768)
+        used += (size_t)_snwprintf(filename+used, 192-used, L"-%up", resolution);
+    _snwprintf(filename+used, 192-used, L"%ls%ls.mp4", suffix[0] ? L"-" : L"", suffix);
+}
+static int jp_quality_compare(const void *a, const void *b) {
+    unsigned x = ((const JpQuality *)a)->resolution, y = ((const JpQuality *)b)->resolution;
+    return (x > y) - (x < y);
+}
+static unsigned jp_quality(JpQuality *qualities, unsigned count) {
+    qsort(qualities, count, sizeof(*qualities), jp_quality_compare);
+    unsigned selected = 0;
+    double longest = 0, seconds = 0;
+    for (unsigned i = 0; i < count; ++i) {
+        seconds += qualities[i].seconds;
+        if (i+1 < count && qualities[i].resolution == qualities[i+1].resolution) continue;
+        if (qualities[i].resolution && seconds >= longest) {
+            selected = qualities[i].resolution; longest = seconds;
+        }
+        seconds = 0;
+    }
+    return selected;
+}
+static BOOL jp_publish(JpRemux *job, const wchar_t *temporary, const wchar_t *name) {
+    wchar_t candidate[192], final[JP_REMUX_PATH];
+    size_t stem = wcslen(name)-4;
+    for (unsigned number = 1; number <= 9999; ++number) {
+        if (InterlockedCompareExchange(&job->cancel, 0, 0)) return FALSE;
+        if (number == 1) wcscpy(candidate, name);
+        else _snwprintf(candidate, 192, L"%.*ls (%u).mp4", (int)stem, name, number);
+        _snwprintf(final, JP_REMUX_PATH, L"%ls\\%ls", job->directory, candidate);
+        /* No check-then-replace race: an existing file is never overwritten. */
+        if (MoveFileExW(temporary, final, MOVEFILE_WRITE_THROUGH)) {
+            wcscpy(job->filename, candidate); return TRUE;
+        }
+        DWORD error = GetLastError();
+        if (error != ERROR_ALREADY_EXISTS && error != ERROR_FILE_EXISTS) return FALSE;
+    }
+    return FALSE;
 }
 static int jp_compare(const void *a, const void *b) {
     return memcmp(((const JpResource *)a)->id, ((const JpResource *)b)->id, 64);
@@ -412,7 +513,7 @@ DWORD WINAPI jp_remux_run(void *context) {
     JpRemux *job = context;
     JpInput input = {.job = job};
     JpOutput output = {.file = INVALID_HANDLE_VALUE, .job = job};
-    wchar_t manifest[JP_REMUX_PATH], temporary[JP_REMUX_PATH] = {0}, final[JP_REMUX_PATH];
+    wchar_t manifest[JP_REMUX_PATH], temporary[JP_REMUX_PATH] = {0};
     AVFormatContext *source = NULL, *destination = NULL;
     AVPacket *packet = NULL;
     AVIOContext *out_io = NULL;
@@ -420,6 +521,9 @@ DWORD WINAPI jp_remux_run(void *context) {
     char *body = NULL, *source_url = NULL;
     JpDemux demux = {0};
     JpPeriod *periods = NULL;
+    JpQuality *qualities = NULL;
+    wchar_t audio_language[64] = {0};
+    BOOL audio_ambiguous = FALSE;
     unsigned period_count = 0;
     int result = AVERROR_INVALIDDATA, mapping[32];
     int64_t last[32], offsets[32] = {0}, durations[32] = {0}, first[32], ends[32];
@@ -431,10 +535,9 @@ DWORD WINAPI jp_remux_run(void *context) {
     wchar_t detail[160] = {0};
     av_log_set_level(AV_LOG_ERROR);
     _snwprintf(manifest, JP_REMUX_PATH, L"%ls\\%ls.m3u8", job->directory, job->id);
-    _snwprintf(final, JP_REMUX_PATH, L"%ls\\%ls", job->directory, job->filename);
     HANDLE file = CreateFileW(manifest, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     LARGE_INTEGER size;
-    DWORD received;
+    DWORD received = 0;
     if (file != INVALID_HANDLE_VALUE) {
         if (GetFileSizeEx(file, &size) && size.QuadPart >= 20 && size.QuadPart <= 1024*1024) {
             body = av_mallocz((size_t)size.QuadPart + 1);
@@ -447,6 +550,8 @@ DWORD WINAPI jp_remux_run(void *context) {
     if (!body || !input.resources || !jp_manifest(&input, body, received)) goto done;
     periods = jp_periods(body, &period_count);
     if (!periods) goto done;
+    qualities = av_calloc(period_count, sizeof(*qualities));
+    if (!qualities) { result = AVERROR(ENOMEM); goto done; }
     stage = L"读取和校验媒体分片";
     wchar_t base[JP_REMUX_PATH];
     _snwprintf(base, JP_REMUX_PATH, L"%ls\\media\\", job->directory);
@@ -523,6 +628,26 @@ DWORD WINAPI jp_remux_run(void *context) {
         if (used != destination->nb_streams) {
             _snwprintf(detail, 160, L"第 %u 段的音视频轨不完整", period_index+1);
             result = AVERROR_INVALIDDATA; goto done;
+        }
+    }
+    qualities[period_index].seconds = periods[period_index].duration;
+    for (unsigned i = 0; i < source->nb_streams; ++i) {
+        AVStream *stream = source->streams[i];
+        const AVCodecParameters *codec = stream->codecpar;
+        if (codec->codec_type == AVMEDIA_TYPE_VIDEO && codec->width > 0 && codec->height > 0) {
+            unsigned resolution = (unsigned)(codec->height < codec->width ? codec->height : codec->width);
+            if (resolution <= 32768 && resolution > qualities[period_index].resolution)
+                qualities[period_index].resolution = resolution;
+        } else if (codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+            const AVDictionaryEntry *entry = av_dict_get(stream->metadata, "language", NULL, 0);
+            wchar_t raw[64] = {0}, language[64];
+            if (entry && MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, entry->value, -1, raw, 64)) {
+                jp_language(raw, language);
+                if (language[0]) {
+                    if (audio_language[0] && _wcsicmp(language, audio_language)) audio_ambiguous = TRUE;
+                    else wcscpy(audio_language, language);
+                }
+            }
         }
     }
     int64_t start_us = source->start_time == AV_NOPTS_VALUE ? 0 : source->start_time;
@@ -650,11 +775,14 @@ DWORD WINAPI jp_remux_run(void *context) {
     InterlockedExchange64(&job->bytes, size.QuadPart);
     CloseHandle(output.file); output.file = INVALID_HANDLE_VALUE;
     if (jp_interrupted(&input)) { result = AVERROR_EXIT; goto done; }
-    if (!MoveFileExW(temporary, final, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+    wchar_t name[192], language[64];
+    jp_language(job->language, language);
+    jp_remux_name(job->title, job->episode, jp_quality(qualities, period_count),
+                  language[0] ? language : audio_ambiguous ? L"" : audio_language, name);
+    if (!jp_publish(job, temporary, name)) {
         result = AVERROR(EIO); goto done;
     }
     temporary[0] = 0;
-    DeleteFileW(manifest);
     result = 0;
 done:
     av_packet_free(&packet);
@@ -663,7 +791,10 @@ done:
     if (out_io) { av_freep(&out_io->buffer); avio_context_free(&out_io); }
     if (output.file != INVALID_HANDLE_VALUE) CloseHandle(output.file);
     if (temporary[0]) DeleteFileW(temporary);
-    av_dict_free(&options); av_free(body); av_free(source_url); av_free(input.resources); av_free(periods);
+    if (!result && job->completed) job->completed(job, (unsigned char *)body, received);
+    else if (!result) DeleteFileW(manifest);
+    av_dict_free(&options); av_free(body); av_free(source_url); av_free(input.resources);
+    av_free(periods); av_free(qualities);
     if (!result) {
         InterlockedExchange(&job->progress, 1000);
         InterlockedExchange(&job->phase, 2);

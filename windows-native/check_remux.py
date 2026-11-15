@@ -43,8 +43,8 @@ def manifest(folder, case, text):
     return key
 
 
-def export(folder, key, mode="export", title="测试影片"):
-    completed = subprocess.run([str(DRIVER), mode, str(folder), key, title],
+def export(folder, key, mode="export", title="测试影片", language="", episode=""):
+    completed = subprocess.run([str(DRIVER), mode, str(folder), key, title, language, episode],
                               capture_output=True, timeout=45)
     result = json.loads(completed.stdout.decode("utf-8"))
     result["exit_code"] = completed.returncode
@@ -150,6 +150,26 @@ def main():
     assert not (folder / (key + ".m3u8")).exists()
     assert not list(folder.glob("*.partial"))
     checks["ts_audio_video_single_mp4"] = {"passed": True, "saved": saved, "probe": result}
+    resolution = min(video["width"], video["height"])
+    assert saved["file"] == f"《测试影片》-{resolution}p.mp4", saved
+    checks["filename_uses_actual_video_resolution_without_brand_or_hash"] = {"passed": True, "file": saved["file"]}
+    key = manifest(folder, "filename-language", vod([resource], seconds))
+    named = export(folder, key, title="八仙！", language="国语")
+    assert named["phase"] == 2 and named["file"] == f"《八仙！》-{resolution}p-国语.mp4", named
+    checks["optional_language_in_saved_filename"] = {"passed": True, "file": named["file"]}
+    key = manifest(folder, "filename-episode", vod([resource], seconds))
+    episode = export(folder, key, title="三体", language="und", episode="第01集")
+    assert episode["phase"] == 2 and episode["file"] == f"《三体》-第01集-{resolution}p.mp4", episode
+    checks["episode_identified_unknown_language_omitted"] = {"passed": True, "file": episode["file"]}
+    original_bytes = output.read_bytes()
+    duplicates = []
+    for number in (2, 3):
+        key = manifest(folder, f"duplicate-{number}", vod([resource], seconds))
+        duplicate = export(folder, key)
+        assert duplicate["phase"] == 2 and duplicate["file"] == f"《测试影片》-{resolution}p ({number}).mp4", duplicate
+        assert output.read_bytes() == original_bytes
+        duplicates.append(duplicate["file"])
+    checks["same_title_never_overwrites_existing_mp4"] = {"passed": True, "files": duplicates}
     standalone = folder / "standalone"
     standalone.mkdir()
     copied = standalone / "单个文件.mp4"
@@ -292,7 +312,7 @@ def main():
     checks["cancel_before_merge"] = {"passed": True}
     # Preserve a pre-existing final file while interrupting a real large merge.
     key = manifest(folder, "cancel-mid", vod(repeated_resources, seconds, discontinuity=True))
-    stopped_name = "荐片-测试影片-" + key[:12] + ".mp4"
+    stopped_name = "《测试影片》.mp4"
     final = folder / stopped_name
     final.write_bytes(b"previous-complete-file")
     stopped = export(folder, key, mode="cancel-mid")
@@ -305,6 +325,29 @@ def main():
     assert sanitized["phase"] == 2 and "/" not in sanitized["file"] and "\\" not in sanitized["file"]
     assert (folder / sanitized["file"]).parent == folder
     checks["safe_title_filename"] = {"passed": True, "file": sanitized["file"]}
+    # Successful production publication removes only its own cache; errors and
+    # cancellation never invoke the completion hook.
+    clean = folder / "automatic-cleanup"
+    clean.mkdir()
+    clean_ref = record(clean, "clean", source)
+    unrelated = record(clean, "unrelated", source)
+    key = manifest(clean, "clean", vod([clean_ref], seconds))
+    cleaned = export(clean, key, mode="export-clean")
+    assert cleaned["phase"] == 2 and (clean / cleaned["file"]).exists(), cleaned
+    assert not (clean / clean_ref).exists() and not (clean / clean_ref).with_suffix(".info").exists()
+    assert (clean / unrelated).exists() and not list(clean.glob("*.jp-cleanup"))
+    cleaned_probe = probe(clean / cleaned["file"])
+    assert [s["nb_read_packets"] for s in cleaned_probe["streams"]] == [
+        s["nb_read_packets"] for s in result["streams"]]
+    checks["verified_mp4_automatically_cleans_episode_only"] = {"passed": True, "saved": cleaned}
+    key = manifest(clean, "clean-failure", vod([unrelated], seconds*8))
+    failed_clean = export(clean, key, mode="export-clean")
+    assert failed_clean["phase"] == 4 and (clean / unrelated).exists() and (clean / (key+".m3u8")).exists()
+    checks["failed_merge_keeps_cache_and_manifest"] = {"passed": True}
+    key = manifest(clean, "clean-cancel", vod([unrelated], seconds))
+    cancelled_clean = export(clean, key, mode="cancel")
+    assert cancelled_clean["phase"] == 3 and (clean / unrelated).exists() and (clean / (key+".m3u8")).exists()
+    checks["cancelled_merge_keeps_cache_and_manifest"] = {"passed": True}
     report["passed"] = len(checks)
     report["all_passed"] = all(c["passed"] for c in checks.values())
     (TEST / "mp4-verification.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

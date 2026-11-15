@@ -1,15 +1,18 @@
 """Check the shipped PE, its pinned loader, and recorded end-to-end playback."""
 from pathlib import Path
 import datetime
+import ctypes
 import hashlib
+import io
 import json
 import shutil
 import struct
 import subprocess
 import sys
+import zipfile
 from check_fullscreen import check as check_fullscreen
 from check_update import check as check_update
-from build_native import VERSION
+from build_native import VERSION, APK, APK_SHA, BUNDLE_SHA, adapt_save_metadata
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / f"output/Jianpian-Windows-C-{VERSION}"
@@ -74,6 +77,57 @@ def check_integrity():
         assert completed.returncode == (0 if name == "intact" else 2)
         results[name] = result
     return results
+
+def check_icon():
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.LoadLibraryExW.argtypes = [ctypes.c_wchar_p, ctypes.c_void_p, ctypes.c_uint32]
+    kernel.LoadLibraryExW.restype = ctypes.c_void_p
+    kernel.FindResourceW.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
+    kernel.FindResourceW.restype = ctypes.c_void_p
+    kernel.SizeofResource.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+    kernel.SizeofResource.restype = ctypes.c_uint32
+    kernel.LoadResource.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+    kernel.LoadResource.restype = ctypes.c_void_p
+    kernel.LockResource.argtypes = [ctypes.c_void_p]
+    kernel.LockResource.restype = ctypes.c_void_p
+    kernel.FreeLibrary.argtypes = [ctypes.c_void_p]
+    module = kernel.LoadLibraryExW(str(OUT / "Jianpian.exe"), None, 2)
+    assert module
+    def resource(identifier, kind):
+        entry = kernel.FindResourceW(module, identifier, kind)
+        assert entry
+        return ctypes.string_at(kernel.LockResource(kernel.LoadResource(module, entry)),
+                                kernel.SizeofResource(module, entry))
+    try:
+        group = resource(102, 14)
+        original = (ROOT / "windows-native/assets/app-icon.ico").read_bytes()
+        assert struct.unpack_from("<HHH", group) == struct.unpack_from("<HHH", original) == (0, 1, 9)
+        sizes = []
+        for i in range(9):
+            width, height = group[6+14*i:8+14*i]
+            sizes.append(width or 256)
+            assert width == height
+            length, offset = struct.unpack_from("<II", original, 6+16*i+8)
+            identifier = struct.unpack_from("<H", group, 6+14*i+12)[0]
+            assert resource(identifier, 3) == original[offset:offset+length]
+        assert set(sizes) == {16,20,24,32,40,48,64,128,256}
+    finally:
+        kernel.FreeLibrary(module)
+    return {"resource":102, "sizes":sizes, "all_embedded_frames_match_source":True,
+            "web_png_sha256":hashlib.sha256((ROOT/"windows-native/assets/app-icon.png").read_bytes()).hexdigest()}
+
+def check_download_controller():
+    assert hashlib.sha256(APK.read_bytes()).hexdigest() == APK_SHA
+    with zipfile.ZipFile(APK) as apk:
+        bundle = apk.read("assets/web-bundle.zip")
+    assert hashlib.sha256(bundle).hexdigest() == BUNDLE_SHA
+    with zipfile.ZipFile(io.BytesIO(bundle)) as archive:
+        app = adapt_save_metadata(archive.read("assets/app-modern.js").decode("utf-8"))
+    start = app.index('xg("h1",{...Xie,"data-jp-language"')
+    renderer = app[start:app.index('])', start)+2]
+    result = subprocess.run(["node", str(ROOT/"windows-native/desktop_test.cjs"),
+        json.dumps({"titleRenderer":renderer})], capture_output=True, text=True, check=True)
+    return json.loads(result.stdout)
 
 
 def check_functional():
@@ -166,18 +220,18 @@ def main():
     policy = subprocess.run([str(BUILD / "policy-test.exe")], capture_output=True, text=True, check=True)
     report = {"timestamp": datetime.datetime.now().astimezone().isoformat(), "pe": pe,
               "url_policy": json.loads(policy.stdout), "runtime_integrity": check_integrity()}
+    report["application_icon"] = check_icon()
+    assert inventory["assets"]["desktop-icon.png"]["sha256"] == report["application_icon"]["web_png_sha256"]
     report["fullscreen_regression"] = check_fullscreen()
     report["update_regression"] = check_update()
     if "--binary-only" not in sys.argv:
-        for executable in ("cache-test", "playlist-test"):
+        for executable in ("cache-test", "playlist-test", "cleanup-test", "naming-test"):
             folder = TEST / executable
             folder.mkdir(exist_ok=True)
             result = subprocess.run([str(BUILD / (executable + ".exe")), str(folder)],
                                     capture_output=True, text=True, check=True)
             report[executable] = json.loads(result.stdout)
-        result = subprocess.run(["node", str(ROOT / "windows-native/desktop_test.cjs")],
-                                capture_output=True, text=True, check=True)
-        report["download_controller"] = json.loads(result.stdout)
+        report["download_controller"] = check_download_controller()
     if "--binary-only" not in sys.argv:
         report["functional"] = check_functional()
         mp4 = read_json(TEST / "mp4-verification.json")
