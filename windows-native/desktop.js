@@ -97,11 +97,33 @@
       await checkedFetch(`/desktop/playlist/${id}.m3u8`, {
         method: "POST", body: lines.join("\n") + "\n", signal: task.signal
       });
-      message = `整集已保存：${title} · ${id.slice(0, 12)}….m3u8（在视频目录中，可用支持 HLS 的播放器打开）`;
+      task.exportID = id;
+      message = "片段已下载，正在合并为单个 MP4…"; render();
+      let exported = await (await checkedFetch(`/desktop/mp4/${id}`, {
+        method: "POST", body: title, signal: task.signal
+      })).json();
+      while (exported.state === "merging") {
+        if (task.signal.aborted) throw new DOMException("Cancelled", "AbortError");
+        message = `正在合并 MP4：${Math.floor(exported.progress / 10)}% · ${(exported.bytes / 1048576).toFixed(1)} MB · 可继续播放`;
+        render();
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const check = await (await checkedFetch("/desktop/cache-status", {signal: task.signal})).json();
+        if (check.directory !== directory) throw Error("保存位置已更改；已停止合并，原片段已保留");
+        exported = await (await checkedFetch(`/desktop/mp4/${id}`, {signal: task.signal})).json();
+      }
+      if (exported.state === "cancelled") throw new DOMException("Cancelled", "AbortError");
+      if (exported.state !== "saved" || !exported.file?.endsWith(".mp4"))
+        throw Error(exported.error || "MP4 合并未完成，完整片段已保留，请重试");
+      task.exportID = null;
+      message = `整集已保存为 MP4：${exported.file}（${(exported.bytes / 1048576).toFixed(1)} MB，可单独复制和播放）`;
       jobs.set(video, message);
     } catch (error) {
+      if (task.exportID) {
+        try { await checkedFetch(`/desktop/mp4/${task.exportID}/cancel`, {method:"POST"}); }
+        catch (_) { /* Native close/path changes also cancel unfinished exports. */ }
+      }
       message = error.name === "AbortError" ?
-        "整集下载已停止；完整片段已保留，重试时会复用缓存" : error.message;
+        "整集保存已停止；完整片段已保留，重试时会复用缓存" : error.message;
     } finally {
       if (job === task) job = null;
       poll(); render();
@@ -128,10 +150,10 @@
     panel.setAttribute("aria-label", "播放和视频缓存");
     panel.innerHTML = `<div class="jp-desktop-controls">
       <button type="button" class="jp-player-expand">⛶ 全屏播放</button>
-      <button type="button" class="jp-cache-save">缓存整集</button>
-      <button type="button" class="jp-cache-cancel" hidden>停止下载</button></div>
+      <button type="button" class="jp-cache-save">缓存整集（MP4）</button>
+      <button type="button" class="jp-cache-cancel" hidden>停止保存</button></div>
       <p class="jp-cache-path"></p><p class="jp-cache-progress" role="status"></p>
-      <p class="jp-cache-help">详情和讨论可在右侧滚动查看。全屏快捷键 F11，退出按 Esc。视频缓存会另占磁盘空间。</p>`;
+      <p class="jp-cache-help">详情和讨论可在右侧滚动查看。F11 全屏，Esc 退出；全屏时 ← 快退 10 秒，→ 快进 10 秒。整集保存为单个 MP4，播放分片缓存另存于 media 文件夹。</p>`;
     panel.querySelector(".jp-player-expand").onclick = () => {
       const player = shell.querySelector(".integrated-player");
       window.__jpDesktopFullscreen.enter(player);

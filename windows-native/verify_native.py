@@ -9,10 +9,11 @@ import subprocess
 import sys
 from check_fullscreen import check as check_fullscreen
 from check_update import check as check_update
+from build_native import VERSION
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "output/Jianpian-Windows-C-0.2.3"
-TEST = ROOT / "testing/windows-native-0.2.3"
+OUT = ROOT / f"output/Jianpian-Windows-C-{VERSION}"
+TEST = ROOT / f"testing/windows-native-{VERSION}"
 BUILD = ROOT / "work/windows-native-build"
 
 
@@ -179,6 +180,9 @@ def main():
         report["download_controller"] = json.loads(result.stdout)
     if "--binary-only" not in sys.argv:
         report["functional"] = check_functional()
+        mp4 = read_json(TEST / "mp4-verification.json")
+        assert mp4["all_passed"] and mp4["exe_sha256"] == inventory["exe_sha256"]
+        report["mp4_export"] = mp4
     name = "binary-verification.json" if "--binary-only" in sys.argv else "verification.json"
     (TEST / name).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))

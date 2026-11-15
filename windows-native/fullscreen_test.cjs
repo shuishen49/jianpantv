@@ -13,9 +13,10 @@ const classes = () => {
 const callbacks = {}, events = [], requests = [];
 let failed = false, current, context;
 const root = {classList:classes()};
-const video = {};
+const video = {currentTime:60, duration:120, readyState:4, paused:true};
 const player = {
   isConnected:true, classList:classes(), video, children:[],
+  querySelector(s) {return s === "video" ? video : null;},
   appendChild(e) {this.children.push(e);},
   contains(e) {return e === this || e === video;},
   getBoundingClientRect() {
@@ -29,12 +30,13 @@ const document = {
   documentElement:root, fullscreenElement:null,
   querySelector() {return current;},
   elementFromPoint() {return player;},
-  createElement() {return {remove(){},className:""};},
-  addEventListener(name, fn) {callbacks["document:"+name]=fn;},
+  createElement() {return {remove(){},setAttribute(){},className:""};},
+  addEventListener(name, fn, capture) {callbacks["document:"+name]=fn; callbacks["capture:"+name]=capture;},
   dispatchEvent(event) {events.push(event.type);}
 };
 context = {
   document, CustomEvent:class {constructor(type){this.type=type;}},
+  setTimeout() {return 1;}, clearTimeout() {},
   window:{innerWidth:1360,innerHeight:766,
     addEventListener(name, fn) {callbacks[name]=fn;}},
   screen:{get orientation() {throw Error("Desktop must not request phone orientation");}},
@@ -81,13 +83,37 @@ vm.runInContext("var QZ=null;"+helpers.enter+helpers.resize+helpers.exit, contex
   callbacks.hashchange();
   await new Promise(resolve => setImmediate(resolve));
   assert(!api.state().nativeFullscreen);
+  assert(!api.seek(10)); // Windowed playback keeps its own keyboard handling.
+  await api.enter(player);
+  let prevented = 0, stopped = 0;
+  const press = (key, extra={}) => callbacks["document:keydown"]({
+    key, preventDefault(){prevented++;},stopImmediatePropagation(){stopped++;},...extra});
+  press("ArrowLeft");
+  assert.equal(video.currentTime, 50);
+  assert(video.paused && prevented === 1 && stopped === 1 && callbacks["capture:keydown"]);
+  press("ArrowRight");
+  assert.equal(video.currentTime, 60);
+  press("ArrowRight", {repeat:true});
+  assert.equal(video.currentTime, 70);
+  video.currentTime = 4; press("ArrowLeft"); assert.equal(video.currentTime, 0);
+  video.currentTime = 117; press("ArrowRight"); assert.equal(video.currentTime, 120);
+  press("ArrowLeft", {target:{closest(){return {};}}}); assert.equal(video.currentTime, 120);
+  press("ArrowLeft", {ctrlKey:true}); assert.equal(video.currentTime, 120);
+  video.seekable = {length:1,start(){return 20;},end(){return 110;}};
+  video.currentTime = 25; press("ArrowLeft"); assert.equal(video.currentTime, 20);
+  video.currentTime = 105; press("ArrowRight"); assert.equal(video.currentTime, 110);
+  video.duration = Infinity; assert(!api.seek(10));
+  video.duration = 120; video.paused = false; press("ArrowLeft"); assert(!video.paused);
+  await api.exit();
   failed = true;
   assert.equal(await context.k0(player), "denied");
   assert(!api.state().playerFullscreen);
   failed = false; current = null;
   assert.equal(await api.enter(), "unsupported");
   assert(requests.every(url => url === "/desktop/fullscreen/enter" || url === "/desktop/fullscreen/exit"));
-  console.log(JSON.stringify({passed:8,adapted_mobile_helpers:true,no_orientation_api:true,
+  console.log(JSON.stringify({passed:18,adapted_mobile_helpers:true,no_orientation_api:true,
     native_and_player_share_state:true,exit_button:true,escape:true,route_exit:true,
-    failed_enter_restores_layout:true,video_node_retained:true}));
+    failed_enter_restores_layout:true,video_node_retained:true,
+    fullscreen_arrows_seconds:10,paused_state_preserved:true,playing_state_preserved:true,
+    seek_bounds:true,editable_and_modifiers_ignored:true,capture_prevents_double_seek:true}));
 })().catch(error => {console.error(error);process.exitCode=1;});

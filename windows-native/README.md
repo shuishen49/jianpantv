@@ -1,10 +1,12 @@
-荐片 Windows C 桌面版 0.2.3
+荐片 Windows C 桌面版 0.2.4
 
 这是从安卓版 5.0.78 内置页面移植的非官方 Windows 客户端，宿主使用 C17、Win32 和微软 WebView2。没有采用旧 Windows 客户端，也没有打包 Android 运行环境。
 
 发布目录包含 `Jianpian.exe` 和微软签名的 `WebView2Loader.dll`。两者都要保留，完整解压后运行 EXE。目标系统为 Windows 10/11 x64，并要求已有 Microsoft Edge WebView2 Runtime。程序不会自动安装运行环境。
 
 播放页改为 TV 风格：左侧小播放器和缓存控制，右侧详情/讨论各自滚动。原有手机端固定在整个窗口底部的讨论输入栏已限制在讨论区。打开影片保持窗口模式；点击“全屏播放”或按 F11 放大，Esc 退出。900×640 的窗口也能查看完整讨论和选集。
+
+0.2.4 增加全屏左右方向键：← 快退 10 秒，→ 快进 10 秒，保持原来的播放/暂停状态，限制在视频可跳转范围内。输入框和带 Ctrl/Alt/Shift 的组合键保留原操作；捕获阶段处理并阻止同一次按键被原播放器重复处理。进入原生全屏时把键盘焦点交给播放器。
 
 0.2.2 修复“请旋转手机观看”和 F11 仅放大窗口的问题。播放器内全屏按钮、下方“全屏播放”、原生工具栏及 F11 统一切换 Win32 全屏和播放器视口，移除手机方向锁及旋转回退。Esc、F11 和右上角“退出全屏 (Esc)”恢复小播放器。全屏不重新挂载或创建视频节点；比例保持，黑边由视频尺寸决定。回归检查覆盖 APK 中实际替换的进入、退出和尺寸变化函数；运行诊断同时断言播放器铺满视口、连续播放及退出还原，不能再仅凭窗口无边框判定全屏成功。
 
@@ -18,11 +20,13 @@
 
 播放期间的 HTTPS HLS 片段经过原生代理并持久保存，相同 URL 和 Range 的请求复用本地片段。缓存键由完整 URL 和 Range 的 SHA-256 构成，不把服务响应当作文件路径。`.ts` 保存原始媒体字节，`.info` 保存响应元数据和内容校验值；不转码。写入临时文件、刷盘后原子发布；长度、校验或元数据不完整时回源。API 响应、错误页面和播放清单不持久缓存，避免过期服务数据和媒体链接。
 
-“缓存整集”遍历当前普通 HLS 点播播放清单，依次获取媒体、初始化片段和 AES-128 密钥，同时允许继续播放。全部片段成功保存后才发布本地 `.m3u8`，所有资源引用改为相对路径。保留播放列表和 `media` 子目录，可交给兼容 HLS 的播放器打开。中断或失败不发布完整播放列表；已完成片段保留，重新发起时可复用。更改存储目录会停止当前整集任务。没有合并 MP4、后台常驻下载、自动删除缓存或本地影片库。
+“缓存整集（MP4）”遍历当前普通 HLS 点播清单，依次获取媒体、初始化片段和 AES-128 密钥，同时允许继续播放。全部片段成功保存后生成供合并使用的本地清单，在独立线程中通过裁剪编译的 FFmpeg C 容器库无重编码合并为单个 MP4。文件名包含片名及地址摘要，支持单独复制、移动和播放。只有完成尾部索引、刷盘和原子替换后才显示“已保存为 MP4”，随后删除本次临时 m3u8。已有旧版 m3u8 不会在升级时自动批量转换；重新点保存可复用地址和范围匹配的完整缓存。
+
+合并器只读取当前清单列出的 media/摘要.ts 文件，逐个核对缓存 SHA-256，FFmpeg 编译时关闭网络、解码器、编码器及无关格式。普通 H.264/AAC TS 和初始化分片通过短样本验证；AES-128 先按清单解密再封装，音视频参数只从压缩头读取。使用包内时间戳、时基和 DTS/PTS 差值，处理时间戳重置并检查实际输出时长，缺失、损坏、格式不支持或时长明显不符时不发布成功。取消、关闭和保存目录变化会停止合并，清理本次 partial，保留旧 MP4 和已完成分片。media 缓存继续保留供播放与重试，因而与最终 MP4 会分别占空间。没有后台常驻下载或本地影片库。
 
 直播、独立音轨、字节范围 HLS、DRM 和原版 P2P 下载内核不在整集保存支持范围。运行时会明确提示。普通播放仍按现有线路处理。重试时如果上游更换签名 URL，缓存按新地址重新下载；不推测不同地址是同一媒体。直连 MP4 不走这一 HLS 保存流程。
 
-实测范围见 `testing/windows-native-0.2.3/verification.json`。更新测试覆盖版本筛选、固定清单、摘要、兼容性、地址和 JSON 边界，并使用真实子进程验证 ReplaceFile 和启动失败回退；错误弹窗和浏览器就绪由明确的测试驱动替代。实际 GitHub 下载、提醒和重启验证单独记录，不能以网络样本测试代替。原有播放、全屏、路径、缓存及下载检查仍需通过。历史 UI 基线保留其原始测试版本；未为测试下载完整长片，也未验证全部长片的离线播放、账号登录和所有线路。
+实测范围见 `testing/windows-native-0.2.4/verification.json` 及 `mp4-verification.json`。14 项 MP4 检查包括真实 1080p H.264/AAC 的包数/时长、AES-128、初始化分片、合法 TS 连续计数下的时间戳重置、摘要损坏、缺片、路径越界、时长错误、取消和旧文件保留。单个 MP4 复制到独立目录后，Windows Media Foundation 实际解码视频为 NV12、音频为 PCM，并跳转至一秒处。测试使用短样本，不分发样本媒体，不宣称已验证全部编码格式或完整长片。更新、播放、全屏、路径及下载回归仍需通过；历史 UI 基线保留原始版本。
 
 程序目录的体积和运行后的用户数据体积是两项不同数据。程序复用本机 WebView2，用户数据位于 `%LOCALAPPDATA%\JianpianDesktop\NativeWebView2`，包含浏览器的安全组件和缓存，后续会随使用变化。启动参数对浏览器磁盘缓存和媒体缓存各请求 8 MiB 的预算，这不是整个用户数据目录的大小上限。
 
@@ -35,6 +39,9 @@
 在工作区根目录运行：
 
 ```powershell
+# 先将官方 FFmpeg 9.0.2 源码放入 tools/ffmpeg-9.0.2，
+# 并保留其 tar.xz、官方签名和公钥。build_remux.py 固定核对归档 SHA-256。
+python .\windows-native\build_remux.py
 python .\windows-native\build_native.py
 ```
 
@@ -44,6 +51,19 @@ python .\windows-native\build_native.py
 - WebView2 SDK：`tools/webview2/`
 - 便携编译器：`tools/zig-x86_64-windows-0.14.1/zig.exe`
 - 共用桌面样式：`windows-desktop/desktop.css`
+- FFmpeg 原版源码包：`tools/ffmpeg-9.0.2.tar.xz`，SHA-256 `8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e`
+- FFmpeg 官方签名指纹：`FCF986EA15E6E293A5644F10B4322F04D67658D8`，应对照官方公布指纹检查 detached signature
+- 构建容器库使用 Git for Windows 的 bash 和 `tools/make/mingw64/bin/mingw32-make.exe`；GNU make 及其 gettext/libiconv 仅用于构建
+
+FFmpeg 仅开启 HLS/MPEG-TS/MOV/AAC/AC3 容器读取、MP4 写入、相关压缩头解析及 AES 文件协议，不包含 FFmpeg 命令行程序、网络协议、解码器或编码器。配置见 `build_remux.py` 和构建清单。FFmpeg 的 LGPL-2.1-or-later 许可和原作者版权仍适用，许可证随运行包提供。
+
+源码与检查包包含未修改的完整 FFmpeg 源码归档、签名/公钥、实际构建配置、三个静态库、宿主和合并器对象以及包含界面资源的 app.res。将其解压后可使用修改后的 FFmpeg 库重新链接，无需原始 APK：
+
+```powershell
+python .\relink\relink.py --compiler D:\path\to\zig.exe --libraries .\relink --output .\Jianpian-relinked.exe
+```
+
+`--libraries` 指向替换后的 libavformat.a、libavcodec.a 和 libavutil.a；保持与 FFmpeg 9.0.2 的 ABI 及 x64 Windows GNU 目标兼容。将重链 EXE 与微软 DLL 放在同目录运行。MP4 复现检查：`python windows-native/check_remux.py --fixture D:\path\to\short-h264-aac.ts`，测试媒体由复现者自行提供。
 
 构建清单在 `work/windows-native-build/build-inventory.json`，包含输入文件、网页资源、EXE 和 DLL 的哈希。代码的 Android 目标替换、HLS 缓冲限制、CSP 调整、标题和桌面样式补充都在构建脚本中明确列出。
 
@@ -55,7 +75,7 @@ python .\windows-native\build_tests.py
 python .\windows-native\verify_native.py --binary-only
 
 # 启动有界的访客诊断；不登录账号，不录入账号信息。
-.\output\Jianpian-Windows-C-0.2.3\Jianpian.exe --diagnostics D:\source_code\jianpian\testing\windows-native-0.2.3 --smoke-test
+.\output\Jianpian-Windows-C-0.2.4\Jianpian.exe --diagnostics D:\source_code\jianpian\testing\windows-native-0.2.4 --smoke-test
 
 # 诊断完成后检查真实页面、解码进度、暂停、跳转、全屏和返回首页。
 python .\windows-native\verify_native.py

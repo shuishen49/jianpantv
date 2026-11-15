@@ -44,7 +44,7 @@ int wmain(int argc, wchar_t **argv) {
         CHECK(window);
         ShowWindow(window,SW_SHOW);
         UpdateJob *job=allocate(sizeof(*job)); CHECK(job);
-        job->ok=TRUE; strcpy(job->release.version,"0.2.4"); job->release.size=1068544;
+        job->ok=TRUE; strcpy(job->release.version,"0.2.5"); job->release.size=2000000;
         PostMessageW(window,WM_UPDATE_DONE,0,(LPARAM)job);
         MSG message;
         while (GetMessageW(&message,NULL,0,0)>0) { TranslateMessage(&message); DispatchMessageW(&message); }
@@ -69,13 +69,13 @@ int wmain(int argc, wchar_t **argv) {
         CHECK(up_random_nonce(nonce) && up_paths(target,nonce,stage,helper,backup));
         CHECK(CopyFileW(argv[2],stage,TRUE));
         UpdateRelease r={0};
-        strcpy(r.version,"0.2.3");
+        strcpy(r.version,JP_VERSION);
         CHECK(file_sha(stage,r.sha));
         CHECK(up_begin_apply(&r,nonce));
         return 0; /* The real helper waits for this process to exit. */
     }
     if (argc == 2 && !wcscmp(argv[1],L"--live-update")) {
-        /* Explicitly model an older updater. Fetch and install the real 0.2.3
+        /* Explicitly model an older updater. Fetch and install the real current
            release in this isolated fixture folder, using production routines. */
         unsigned char *body=NULL; DWORD length=0,status=0; UpdateRelease r={0};
         BOOL ok=up_fetch(UPDATE_FEED,TRUE,16384,&body,&length,&status) &&
@@ -86,7 +86,7 @@ int wmain(int argc, wchar_t **argv) {
                 up_releases((const char *)body,length,"0.2.2",&r);
             deallocate(body);
         }
-        CHECK(ok && !strcmp(r.version,"0.2.3"));
+        CHECK(ok && !strcmp(r.version,JP_VERSION));
         wchar_t nonce[33],stage[PATH_CAP],report[PATH_CAP];
         CHECK(up_stage(&r,nonce,stage));
         GetModuleFileNameW(NULL,report,PATH_CAP); PathRemoveFileSpecW(report); PathAppendW(report,L"live-download.json");
@@ -168,10 +168,10 @@ int wmain(int argc, wchar_t **argv) {
     CHECK(!up_manifest("[]",2,"0.2.3",&r));
     char real_sha[65];
     CHECK(file_sha(binary,real_sha));
-    HANDLE lease=up_verify(binary,"0.2.3",real_sha);
+    HANDLE lease=up_verify(binary,JP_VERSION,real_sha);
     CHECK(lease != INVALID_HANDLE_VALUE); CloseHandle(lease);
-    CHECK(up_verify(binary,"0.2.4",real_sha)==INVALID_HANDLE_VALUE);
-    CHECK(up_verify(binary,"0.2.3",hash)==INVALID_HANDLE_VALUE);
+    CHECK(up_verify(binary,"0.0.0",real_sha)==INVALID_HANDLE_VALUE);
+    CHECK(up_verify(binary,JP_VERSION,hash)==INVALID_HANDLE_VALUE);
     wchar_t file[PATH_CAP];
     _snwprintf(file,PATH_CAP,L"%ls\\not-a-pe.exe",root);
     CHECK(write_bytes(file,"short",5));

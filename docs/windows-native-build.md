@@ -62,7 +62,7 @@ python .\windows-native\build_tests.py
 python .\windows-native\verify_native.py --binary-only
 ```
 
-输出在 `output/Jianpian-Windows-C-0.2.3/`。
+输出在 `output/Jianpian-Windows-C-0.2.4/`。
 程序运行还需要目标机器已安装的 Microsoft Edge WebView2 Runtime。
 完整解压发布包后运行；不要只复制 EXE 而丢弃微软加载器 DLL。
 
@@ -73,8 +73,8 @@ python .\windows-native\verify_native.py --binary-only
 在自己的可写目录运行诊断：
 
 ```powershell
-$diagnostics = Join-Path (Get-Location) 'testing\windows-native-0.2.3'
-.\output\Jianpian-Windows-C-0.2.3\Jianpian.exe --diagnostics $diagnostics --smoke-test
+$diagnostics = Join-Path (Get-Location) 'testing\windows-native-0.2.4'
+.\output\Jianpian-Windows-C-0.2.4\Jianpian.exe --diagnostics $diagnostics --smoke-test
 ```
 
 等诊断完成后运行：
@@ -101,4 +101,6 @@ python .\windows-native\verify_native.py
 输入 APK、原厂完整前端源码、编译器、SDK、登录数据及媒体缓存均未发布。
 原应用及第三方组件的许可和权利仍适用；微软 DLL 的许可随运行包提供。
 
-0.2.3 的更新流程、固定仓库清单和验证入口详见 windows-native/README.md。先发布并验证 Release 和 EXE 附件，再将更新清单随源码快进同步至 main。
+0.2.4 的更新流程、固定仓库清单和验证入口详见 windows-native/README.md。先发布并验证 Release 和 EXE 附件，再将更新清单随源码快进同步至 main。
+
+0.2.4 先构建裁剪的 FFmpeg 9.0.2 容器库，再构建宿主。完整官方 FFmpeg 源码、签名及 LGPL 重链接对象随 source-and-checks.zip 提供；原始 APK、SDK 与编译器仍按前述固定摘要准备。具体命令、参数和重链接步骤见 windows-native/README.md。

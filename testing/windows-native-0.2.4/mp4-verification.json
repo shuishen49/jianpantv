@@ -1,0 +1,214 @@
+{
+  "timestamp": "2026-11-15T10:19:27.133747+08:00",
+  "exe_sha256": "58f9b147131fa934da57aa9888da019f92efbb6b6963c669f419380f710d9667",
+  "source_sha256": "0086eab5a09ab453284636fbd97df6e99ab42253fe20e0a97b102e8094b5eeab",
+  "source_probe": {
+    "programs": [
+      {
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1920,
+            "height": 1080,
+            "duration": "2.320000",
+            "nb_read_packets": "58",
+            "extradata_size": 43
+          },
+          {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "duration": "2.304000",
+            "nb_read_packets": "109"
+          }
+        ]
+      }
+    ],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 1920,
+        "height": 1080,
+        "duration": "2.320000",
+        "nb_read_packets": "58",
+        "extradata_size": 43
+      },
+      {
+        "codec_name": "aac",
+        "codec_type": "audio",
+        "duration": "2.304000",
+        "nb_read_packets": "109"
+      }
+    ],
+    "format": {
+      "duration": "2.392000",
+      "size": "510608"
+    }
+  },
+  "fixture_directory": "D:\\source_code\\jianpian\\testing\\windows-native-0.2.4\\MP4样本-1794709167111960100",
+  "checks": {
+    "ts_audio_video_single_mp4": {
+      "passed": true,
+      "saved": {
+        "phase": 2,
+        "progress": 1000,
+        "bytes": 492278,
+        "file": "荐片-测试影片-a116c9ed46d6.mp4",
+        "error": "",
+        "exit_code": 0
+      },
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1920,
+            "height": 1080,
+            "duration": "2.320000",
+            "nb_read_packets": "58",
+            "extradata_size": 49
+          },
+          {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "duration": "2.325333",
+            "nb_read_packets": "109",
+            "extradata_size": 2
+          }
+        ],
+        "format": {
+          "duration": "2.392000",
+          "size": "492278"
+        }
+      }
+    },
+    "standalone_os_video_audio_decode_and_seek": {
+      "passed": true,
+      "decoded": true,
+      "video_bytes": 3133440,
+      "pcm_audio_bytes": 4096,
+      "seek_time_100ns": 10000000,
+      "hresult": 0
+    },
+    "aes128_decrypted_to_mp4": {
+      "passed": true,
+      "saved": {
+        "phase": 2,
+        "progress": 1000,
+        "bytes": 492278,
+        "file": "荐片-加密样本-9899f1fec661.mp4",
+        "error": "",
+        "exit_code": 0
+      }
+    },
+    "fragmented_mp4_initialization": {
+      "passed": true,
+      "saved": {
+        "phase": 2,
+        "progress": 1000,
+        "bytes": 492274,
+        "file": "荐片-初始化分片-1271dd39976e.mp4",
+        "error": "",
+        "exit_code": 0
+      },
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1920,
+            "height": 1080,
+            "duration": "2.320000",
+            "nb_read_packets": "58",
+            "extradata_size": 49
+          },
+          {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "duration": "2.333333",
+            "nb_read_packets": "109",
+            "extradata_size": 2
+          }
+        ],
+        "format": {
+          "duration": "2.400000",
+          "size": "492274"
+        }
+      }
+    },
+    "timestamp_discontinuity": {
+      "passed": true,
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1920,
+            "height": 1080,
+            "duration": "9.280000",
+            "nb_read_packets": "232",
+            "extradata_size": 49
+          },
+          {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "duration": "9.301333",
+            "nb_read_packets": "436",
+            "extradata_size": 2
+          }
+        ],
+        "format": {
+          "duration": "9.352000",
+          "size": "1964831"
+        }
+      }
+    },
+    "corrupt_cached_digest_rejected": {
+      "passed": true
+    },
+    "missing_not_published": {
+      "passed": true
+    },
+    "remote_not_published": {
+      "passed": true
+    },
+    "traversal_not_published": {
+      "passed": true
+    },
+    "wrong_duration_not_published": {
+      "passed": true
+    },
+    "live_not_published": {
+      "passed": true
+    },
+    "cancel_before_merge": {
+      "passed": true
+    },
+    "cancel_during_write_preserves_previous": {
+      "passed": true,
+      "saved": {
+        "phase": 3,
+        "progress": 23,
+        "bytes": 1043432,
+        "file": "荐片-测试影片-8dbb268d9da1.mp4",
+        "error": "",
+        "exit_code": 1,
+        "stderr": ""
+      }
+    },
+    "safe_title_filename": {
+      "passed": true,
+      "file": "荐片-.._CON_bad_title-f974a07ea498.mp4"
+    }
+  },
+  "passed": 14,
+  "all_passed": true
+}

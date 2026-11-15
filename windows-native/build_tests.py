@@ -11,7 +11,8 @@ env = os.environ.copy()
 env["ZIG_GLOBAL_CACHE_DIR"] = str(STAGE / "compiler-cache")
 env["ZIG_LOCAL_CACHE_DIR"] = str(STAGE / "compiler-cache-local")
 for source, name in (("policy_test.c", "policy-test"), ("cache_test.c", "cache-test"),
-                     ("playlist_test.c", "playlist-test"), ("update_test.c", "update-test")):
+                     ("playlist_test.c", "playlist-test"), ("update_test.c", "update-test"),
+                     ("remux_test.c", "remux-test")):
     test = []
     for value in command:
         if value.endswith("main.c"):
@@ -26,5 +27,7 @@ for source, name in (("policy_test.c", "policy-test"), ("cache_test.c", "cache-t
         elif value == "-municode" and source == "policy_test.c":
             continue
         test.append(value)
+    if source == "remux_test.c":
+        test.extend(["-lmfplat", "-lmfreadwrite", "-lmfuuid"])
     subprocess.run(test, env=env, check=True)
     print("Built", name)

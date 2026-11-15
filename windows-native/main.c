@@ -24,6 +24,7 @@
 #include "policy.h"
 #include "integrity.h"
 #include "version.h"
+#include "remux.h"
 
 #define APP_ORIGIN L"https://jianpian.desktop.local"
 #define APP_URL APP_ORIGIN L"/runtime/index.html"
@@ -100,6 +101,8 @@ static unsigned diagnostic_playback_waits;
 static IStream *preview_stream;
 static BOOL diagnostic_busy;
 static void set_fullscreen(BOOL value);
+static JpRemux mp4_job;
+static HANDLE mp4_thread;
 
 static void *allocate(size_t size) { return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size ? size : 1); }
 static void deallocate(void *value) { if (value) HeapFree(GetProcessHeap(), 0, value); }
@@ -206,6 +209,7 @@ static INT_PTR CALLBACK storage_dialog(HWND dialog, UINT message, WPARAM wparam,
                 return TRUE;
             }
             wcscpy(settings->path, resolved);
+            if (wcscmp(old, resolved)) InterlockedExchange(&mp4_job.cancel, 1);
             set_status(L"视频保存目录已设置 · 播放时自动缓存");
             EndDialog(dialog, IDOK);
             return TRUE;
@@ -451,6 +455,56 @@ static BOOL save_playlist(const wchar_t *base, const wchar_t *name, const unsign
     deallocate(text);
     return ok;
 }
+static void mp4_request(ICoreWebView2WebResourceRequestedEventArgs *args,
+        ICoreWebView2WebResourceRequest *source, const wchar_t *name, const wchar_t *method,
+        const wchar_t *base) {
+    size_t length = wcslen(name);
+    BOOL cancel = length == 71 && !wcscmp(name+64, L"/cancel");
+    if (length != 64 && !cancel) { reject_request(args, 400); return; }
+    wchar_t id[65];
+    memcpy(id, name, 64*sizeof(wchar_t)); id[64] = 0;
+    wchar_t filename[192];
+    if (!jp_remux_name(L"影片", id, filename)) { reject_request(args, 400); return; }
+    LONG phase = InterlockedCompareExchange(&mp4_job.phase, 0, 0);
+    if (cancel && !wcscmp(method, L"POST") && !wcscmp(mp4_job.id, id)) {
+        InterlockedExchange(&mp4_job.cancel, 1);
+    } else if (!cancel && !wcscmp(method, L"POST")) {
+        if (phase == 1 || !base[0]) { reject_request(args, 409); return; }
+        Request request = {0};
+        wchar_t title[256] = {0};
+        BOOL ok = read_request(source, &request) && request.request_length > 0 &&
+            request.request_length <= 768;
+        int count = ok ? MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+            (char *)request.request_body, (int)request.request_length, title, 255) : 0;
+        ok = count > 0 && !memchr(request.request_body, 0, request.request_length);
+        deallocate(request.request_body); deallocate(request.request_headers); deallocate(request.range);
+        if (!ok || !jp_remux_name(title, id, filename)) { reject_request(args, 400); return; }
+        if (mp4_thread) { WaitForSingleObject(mp4_thread, INFINITE); CloseHandle(mp4_thread); mp4_thread = NULL; }
+        memset(&mp4_job, 0, sizeof(mp4_job));
+        wcscpy(mp4_job.directory, base); wcscpy(mp4_job.id, id); wcscpy(mp4_job.filename, filename);
+        InterlockedExchange(&mp4_job.phase, 1);
+        mp4_thread = CreateThread(NULL, 0, jp_remux_run, &mp4_job, 0, NULL);
+        if (!mp4_thread) {
+            wcscpy(mp4_job.error, L"无法启动 MP4 合并，请稍后重试");
+            InterlockedExchange(&mp4_job.phase, 4);
+        }
+    } else if (cancel || wcscmp(method, L"GET")) { reject_request(args, 405); return; }
+    if (wcscmp(mp4_job.id, id)) { reject_request(args, 404); return; }
+    phase = InterlockedCompareExchange(&mp4_job.phase, 0, 0);
+    const wchar_t *state = phase == 2 ? L"saved" : phase == 3 ? L"cancelled" : phase == 4 ? L"failed" : L"merging";
+    wchar_t json[1024];
+    _snwprintf(json, ARRAY_COUNT(json), L"{\"state\":\"%ls\",\"file\":\"%ls\",\"progress\":%ld,"
+        L"\"bytes\":%lld,\"error\":\"%ls\"}", state, mp4_job.filename,
+        InterlockedCompareExchange(&mp4_job.progress, 0, 0),
+        InterlockedCompareExchange64(&mp4_job.bytes, 0, 0), phase == 4 ? mp4_job.error : L"");
+    int count = WideCharToMultiByte(CP_UTF8, 0, json, -1, NULL, 0, NULL, NULL);
+    char *bytes = allocate((size_t)count);
+    if (bytes) {
+        WideCharToMultiByte(CP_UTF8, 0, json, -1, bytes, count, NULL, NULL);
+        respond(args, bytes, (DWORD)count-1, 200, L"Content-Type: application/json\r\nCache-Control: no-store\r\n");
+        deallocate(bytes);
+    } else reject_request(args, 503);
+}
 static void desktop_request(ICoreWebView2WebResourceRequestedEventArgs *args,
         ICoreWebView2WebResourceRequest *source, const wchar_t *path, const wchar_t *method) {
     wchar_t base[PATH_CAP];
@@ -478,6 +532,8 @@ static void desktop_request(ICoreWebView2WebResourceRequestedEventArgs *args,
             respond(args, bytes, (DWORD)length-1, 200, L"Content-Type: application/json\r\nCache-Control: no-store\r\n");
             deallocate(bytes);
         } else reject_request(args, 503);
+    } else if (prefix(path, L"/desktop/mp4/")) {
+        mp4_request(args, source, path+wcslen(L"/desktop/mp4/"), method, base);
     } else if (prefix(path, L"/desktop/playlist/") && !wcscmp(method, L"POST")) {
         Request request = {0};
         BOOL ok = read_request(source, &request) &&
@@ -753,6 +809,7 @@ static void set_fullscreen(BOOL value) {
         SetWindowPos(window, NULL, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
     }
     layout();
+    if (value && controller) ICoreWebView2Controller_MoveFocus(controller, COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
     if (core) ICoreWebView2_ExecuteScript(core, value ?
         L"window.__jpDesktopFullscreen&&window.__jpDesktopFullscreen.setNative(true)" :
         L"window.__jpDesktopFullscreen&&window.__jpDesktopFullscreen.setNative(false)", NULL);
@@ -1200,6 +1257,9 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wparam, LPAR
         return 0;
     case WM_KEYDOWN:
         if (wparam == VK_F11 || (wparam == VK_ESCAPE && fullscreen)) toggle_fullscreen();
+        else if (fullscreen && core && (wparam == VK_LEFT || wparam == VK_RIGHT))
+            ICoreWebView2_ExecuteScript(core, wparam == VK_LEFT ?
+                L"window.__jpDesktopFullscreen?.seek(-10)" : L"window.__jpDesktopFullscreen?.seek(10)", NULL);
         return 0;
     case WM_TOGGLE_FULLSCREEN: toggle_fullscreen(); return 0;
     case WM_UPDATE_DONE: update_complete((UpdateJob *)lparam); return 0;
@@ -1232,6 +1292,7 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT message, WPARAM wparam, LPAR
     }
     case WM_CLOSE:
         closing = TRUE;
+        InterlockedExchange(&mp4_job.cancel, 1);
         KillTimer(hwnd, 1);
         KillTimer(hwnd, 2); KillTimer(hwnd, 3); KillTimer(hwnd, 4);
         if (controller) ICoreWebView2Controller_Close(controller);
@@ -1337,6 +1398,12 @@ int WINAPI wWinMain(HINSTANCE executable, HINSTANCE previous, PWSTR command_line
     while (GetMessageW(&message, NULL, 0, 0) > 0) {
         TranslateMessage(&message);
         DispatchMessageW(&message);
+    }
+    if (mp4_thread) {
+        InterlockedExchange(&mp4_job.cancel, 1);
+        /* Local bounded I/O only; let the worker remove its partial MP4. */
+        WaitForSingleObject(mp4_thread, INFINITE);
+        CloseHandle(mp4_thread);
     }
     /* All outstanding workers are confined to this process; Windows releases
        their handles when it terminates. No worker touches COM objects. */

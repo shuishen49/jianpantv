@@ -5,10 +5,11 @@ import hashlib
 import json
 import subprocess
 import zipfile
+from build_native import VERSION
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "output/Jianpian-Windows-C-0.2.3"
-TEST = ROOT / "testing/windows-native-0.2.3"
+OUT = ROOT / f"output/Jianpian-Windows-C-{VERSION}"
+TEST = ROOT / f"testing/windows-native-{VERSION}"
 BUILD = ROOT / "work/windows-native-build"
 SCANNER = Path(r"C:\ProgramData\Microsoft\Windows Defender\Platform\CurrentVersion\MpCmdRun.exe")
 
@@ -59,14 +60,20 @@ def main():
     assert update["transaction_success"]["passed"] and update["transaction_restart_failure"]["passed"]
     update_ui = read_json(TEST / "update-ui.json")
     assert update_ui["exe_sha256"] == sha(OUT / "Jianpian.exe")
-    assert update_ui["manual_retry"] and update_ui["confirmation_fixture"]["clicked_no"]
+    assert update_ui["manual_check"] and update_ui["returned_to_app"]
     fullscreen_ui = read_json(TEST / "fullscreen-ui.json")
     assert fullscreen_ui["exe_sha256"] == sha(OUT / "Jianpian.exe")
     assert all(fullscreen_ui[name] for name in (
         "player_internal_button", "player_expand_button", "toolbar_button", "f11",
         "escape_exit", "f11_exit", "visible_exit_button", "no_phone_rotation_prompt"))
+    assert fullscreen_ui["physical_arrows"]["paused_right_seconds"] == 10
+    assert fullscreen_ui["physical_arrows"]["paused_left_seconds"] == 10
+    mp4 = read_json(TEST / "mp4-verification.json")
+    assert mp4["exe_sha256"] == sha(OUT / "Jianpian.exe") and mp4["all_passed"] and mp4["passed"] >= 14
+    assert mp4["checks"]["standalone_os_video_audio_decode_and_seek"]["decoded"]
+    assert read_json(TEST / "lgpl-relink.json")["runtime_verified"]
     (OUT / "使用说明.txt").write_text(
-        "荐片 Windows C 桌面版 0.2.3（非官方移植）\n\n"
+        f"荐片 Windows C 桌面版 {VERSION}（非官方移植）\n\n"
         "完整解压后双击 Jianpian.exe。请保留同文件夹的 WebView2Loader.dll。\n"
         "适用 Windows 10/11 x64，需要微软 Edge WebView2 Runtime；本机测试环境已经安装。\n"
         "发布包复用系统运行库，不包含浏览器、Android 运行环境或原 Windows 客户端。\n\n"
@@ -74,6 +81,7 @@ def main():
         "打开影片默认左侧小窗播放，右侧详情和讨论独立滚动，点击“全屏播放”可放大。\n"
         "修复手机横屏提示；播放器全屏、全屏播放按钮、工具栏和 F11 使用同一桌面全屏逻辑。\n"
         "全屏右上角可点击“退出全屏 (Esc)”，或按 Esc / F11 返回小播放器。\n"
+        "全屏时左右方向键每次快退/快进 10 秒，暂停状态下也可使用；不会跳出视频范围。\n"
         "启动后会在后台检查 GitHub 的 Windows 更新；工具栏也可点击“检查更新”。\n"
         "发现新版会询问是否更新，默认不更新。确认后下载、校验，并关闭和重新启动程序。\n"
         "安装会停止当前播放和下载，保留视频、缓存及保存路径；失败时保留或还原原版本。\n"
@@ -85,18 +93,30 @@ def main():
         "程序在设置目录内保存播放列表和 media 子目录，播放时自动缓存完整片段，相同地址和范围时复用。\n"
         "升级时默认沿用旧版已有的 JianpianCache 路径，不搬动已有缓存。\n"
         "“缓存整集”可边下边播，支持普通 HLS 点播、AES-128 密钥和初始化片段。\n"
-        "整集下载完成后会生成 .m3u8，和 media 子目录一起保留，可用支持 HLS 的播放器打开。\n"
-        "不要单独移动 .m3u8。文件名使用地址摘要，不会合并成 MP4；没有打包大型转码工具。\n"
+        "整集片段下载完成后自动合并为单个 MP4，文件名包含片名和地址摘要，可单独复制和播放。\n"
+        "使用官方 FFmpeg 9.0.2 源码裁剪的 C 容器组件，不重新编码，保留原音视频质量。\n"
+        "合并成功才显示“已保存为 MP4”，中断或失败不会发布半成品；已完成分片保留供重试。\n"
+        "合并成功后删除该次临时 m3u8。media 内的播放缓存仍保留，会另占空间。\n"
         "中断后完整片段保留，重新发起时可复用；关闭程序后不继续下载。\n"
         "直播、独立音轨、字节范围 HLS 和 DRM 不支持整集保存；原版 P2P 内核未移植。\n"
         "此版尚未提供本地影片库入口；账号登录、全部线路及完整长片的离线播放尚未验证。\n\n"
         "实测首页、搜索、1080p 播放、暂停、跳转、全屏、900×640 布局、讨论、真实缓存和停止下载通过。\n"
         "完整下载控制器和本地播放列表发布使用短测试样本验证，未为测试下载整部长片。\n\n"
-        "程序目录约 1.2 MiB。WebView2 用户数据和视频缓存另计，随使用增长。\n"
+        "程序目录实际体积见交付记录。WebView2 用户数据和视频缓存另计，随使用增长。\n"
         "数据目录：%LOCALAPPDATA%\\JianpianDesktop\\NativeWebView2\n"
         "若另一台电脑没有 WebView2，安装该微软运行环境会另占空间。\n\n"
         "检查安全检测.txt 和 SHA256SUMS.txt 可核对本次交付。\n"
         "程序需要联网；内容和线路可用性依赖原服务。\n",
+        encoding="utf-8-sig")
+    (OUT / "FFmpeg说明.txt").write_text(
+        "本程序静态链接 FFmpeg 9.0.2 的 libavformat、libavcodec 和 libavutil，\n"
+        "依据 GNU Lesser General Public License 2.1 或后续版本分发。\n"
+        "FFmpeg 的版权属于其各文件中标明的原作者。\n"
+        "许可证见 FFmpeg-LGPL-2.1.txt。\n\n"
+        "同一 Release 的 source-and-checks.zip 包含原版完整 FFmpeg 源码包、\n"
+        "官方签名/公钥、精确配置、本程序源码及用于重新链接的对象文件和资源。\n"
+        "可使用修改后的 LGPL 库重新链接；不限制为调试此类修改而进行的逆向工程。\n"
+        "构建和重新链接步骤见源码包 windows-native/README.md 与 relink/relink.py。\n",
         encoding="utf-8-sig")
     folder_scan = scan(OUT, "defender-final-files.json")
     (OUT / "安全检测.txt").write_text(
@@ -117,7 +137,7 @@ def main():
     sums = "".join(f"{sha(p)}  {p.name}\n" for p in sorted(OUT.iterdir())
                    if p.is_file() and p.name != "SHA256SUMS.txt")
     (OUT / "SHA256SUMS.txt").write_text(sums, encoding="utf-8")
-    runtime_zip = ROOT / "output/Jianpian-Windows-C-0.2.3.zip"
+    runtime_zip = ROOT / f"output/Jianpian-Windows-C-{VERSION}.zip"
     runtime_files = [(path, OUT.name + "/" + path.name) for path in OUT.iterdir() if path.is_file()]
     zip_files(runtime_zip, runtime_files)
     scan(runtime_zip, "defender-final-zip.json")
@@ -134,7 +154,17 @@ def main():
     source_files.append((ROOT / "tools/zig-download.json", "evidence/zig-download.json"))
     source_files.append((ROOT / "tools/webview2/download.json", "evidence/webview2-download.json"))
     source_files.append((OUT / "Microsoft-WebView2-LICENSE.txt", "evidence/Microsoft-WebView2-LICENSE.txt"))
-    source_zip = ROOT / "output/Jianpian-Windows-C-0.2.3-source-and-checks.zip"
+    for name in ("mp4-verification.json", "lgpl-relink.json"):
+        source_files.append((TEST / name, "evidence/" + name))
+    source_files.append((BUILD / "remux-build.json", "evidence/remux-build.json"))
+    for name in ("ffmpeg-9.0.2.tar.xz", "ffmpeg-9.0.2.tar.xz.asc", "ffmpeg-devel.asc"):
+        source_files.append((ROOT / "tools" / name, "third-party/" + name))
+    for name in ("main.o", "remux.o", "app.res"):
+        source_files.append((BUILD / "relink" / name, "relink/" + name))
+    for lib in ("avformat", "avcodec", "avutil"):
+        source_files.append((ROOT / f"tools/ffmpeg-9.0.2/lib{lib}/lib{lib}.a", f"relink/lib{lib}.a"))
+    source_files.append((ROOT / "windows-native/relink.py", "relink/relink.py"))
+    source_zip = ROOT / f"output/Jianpian-Windows-C-{VERSION}-source-and-checks.zip"
     zip_files(source_zip, source_files)
     report = {
         "created_at": datetime.datetime.now().astimezone().isoformat(),

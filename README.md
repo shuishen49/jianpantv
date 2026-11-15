@@ -1,22 +1,24 @@
 # 荐片电视适配版与 Windows 客户端
 
-## Windows C 桌面版 0.2.3
+## Windows C 桌面版 0.2.4
 
-[下载 Windows 测试版](https://github.com/shuishen49/jianpantv/releases/tag/v0.2.3-windows)
-（Windows 10/11 x64，便携 ZIP 约 1.04 MiB，需要系统 WebView2 Runtime）。
-C17 / Win32 宿主，支持小窗播放、完整详情与讨论、自定义保存路径及自动创建目录、
-普通 HLS 边下边播，以及播放器按钮、工具栏和 F11 桌面全屏。
+[下载 Windows 测试版](https://github.com/shuishen49/jianpantv/releases/tag/v0.2.4-windows)
+（Windows 10/11 x64，便携 ZIP 1.59 MiB，需要系统 WebView2 Runtime）。
+C17 / Win32 宿主，TV 风格小播放器、完整详情与讨论、自定义保存路径和自动创建目录。
 
-0.2.3 增加程序内更新：启动时后台检查，也可手动“检查更新”；发现新的 Windows 版本先询问，
-确认后下载校验并重启，失败保留或还原旧版。0.2.2 及更早版本需要先手动安装本版一次。
-视频、缓存和保存路径会保留。运行环境、浏览器用户数据及视频缓存另占空间。
+0.2.4 增加全屏左右键快退/快进 10 秒，暂停时定位保持暂停。
+“缓存整集（MP4）”在片段下载完成后自动无重编码合并为单个 MP4，可单独复制和播放。
+仅在合并成功后显示完成；失败/取消保留分片和旧文件，media 播放缓存另占空间。
+保留播放器按钮、工具栏、F11/Esc 桌面全屏，以及确认后下载校验并重启的 GitHub 更新。
+0.2.3 用户可在程序内“检查更新”，0.2.2 及更早版本须手动下载一次新 ZIP。
 
-[使用与验证范围](docs/windows-0.2.3-release.md) ·
-[Windows 客户端构建说明](docs/windows-native-build.md) ·
+[使用与验证范围](docs/windows-0.2.4-release.md) ·
+[Windows 构建与 LGPL 重链接](windows-native/README.md) ·
 [C 客户端源码](windows-native/)
 
-原版 P2P 内核未移植，完整长片离线播放、账号登录及全部线路尚未验证。
-EXE 尚未签署 Authenticode；最终运行目录和便携 ZIP 的 Defender 扫描未检出威胁。
+14 项 MP4 检查包含真实音视频解码和单文件跳转，实体方向键及最终 EXE 在线播放通过。
+使用短样本；未验证完整长片、全部格式/线路和账号登录。原版 P2P 内核未移植。
+EXE 尚无 Authenticode 签名；最终运行目录和 ZIP 的 Defender 扫描未检出威胁。
 
 ## 电视适配版
 

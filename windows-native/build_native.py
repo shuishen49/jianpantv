@@ -10,11 +10,14 @@ import struct
 import subprocess
 import zipfile
 import os
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = Path(__file__).resolve().parent
 STAGE = ROOT / "work/windows-native-build"
-OUT = ROOT / "output/Jianpian-Windows-C-0.2.3"
+VERSION = re.search(r'#define JP_VERSION "([^"]+)"', (SOURCE / "version.h").read_text()).group(1)
+OUT = ROOT / f"output/Jianpian-Windows-C-{VERSION}"
+FFMPEG = ROOT / "tools/ffmpeg-9.0.2"
 SDK = ROOT / "tools/webview2"
 ZIG = ROOT / "tools/zig-x86_64-windows-0.14.1/zig.exe"
 APK = ROOT / "handoff/apks/mobile-5.0.78.apk"
@@ -129,7 +132,7 @@ def main():
     resource += f'1 24 "{(SOURCE / "desktop.manifest").as_posix()}"\n'
     resource += f'101 10 "{(STAGE / "assets.bin").as_posix()}"\n'
     (STAGE / "update-contract.txt").write_bytes(
-        f"JPUPDATE1\n0.2.3\n{loader_sha}\n".encode("ascii"))
+        f"JPUPDATE1\n{VERSION}\n{loader_sha}\n".encode("ascii"))
     resource += f'103 10 "{(STAGE / "update-contract.txt").as_posix()}"\n'
     resource += f'#include "{(SOURCE / "storage-dialog.rc").as_posix()}"\n'
     (STAGE / "app.rc").write_text(resource)
@@ -143,22 +146,36 @@ def main():
                "-Wall", "-Wextra", "-Werror", "-Wno-unknown-pragmas",
                "-Wno-unused-parameter", "-DUNICODE", "-D_UNICODE",
                "-I" + str(SDK / "build/native/include"), "-I" + str(STAGE), "-I" + str(SOURCE / "compat"),
-               str(SOURCE / "main.c"), str(STAGE / "app.res"),
+               "-I" + str(FFMPEG), str(SOURCE / "main.c"), str(SOURCE / "remux.c"), str(STAGE / "app.res"),
+               *(str(FFMPEG / f"lib{lib}/lib{lib}.a") for lib in ("avformat", "avcodec", "avutil")),
                "-luser32", "-lgdi32", "-lole32", "-lshlwapi", "-lshell32",
                "-lwinhttp", "-lbcrypt", "-lcabinet", "-lws2_32", "-luuid", "-lpsapi", "-ldwmapi",
-               "-Wl,--subsystem,windows,--dynamicbase,--nxcompat,--high-entropy-va",
+               "-lm", "-latomic",
+               "-Wl,--subsystem,windows,--dynamicbase,--nxcompat,--high-entropy-va,--gc-sections",
                "-o", str(OUT / "Jianpian.exe")]
     (STAGE / "build-command.json").write_text(json.dumps(command, indent=2))
     subprocess.run(command, env=env, check=True)
     shutil.copyfile(loader, OUT / "WebView2Loader.dll")
     shutil.copyfile(SDK / "LICENSE.txt", OUT / "Microsoft-WebView2-LICENSE.txt")
-    evidence = {"version": "0.2.3", "language": "C17", "architecture": "x64",
+    # Static LGPL linking: retain the application objects and exact link recipe
+    # in the source/relink archive so replacement FFmpeg libraries can be used.
+    relink = STAGE / "relink"
+    relink.mkdir(exist_ok=True)
+    options = [value for value in command[:command.index(str(SOURCE / "main.c"))]
+               if value not in ("-s", "-municode")]
+    for name in ("main", "remux"):
+        subprocess.run(options + ["-c", str(SOURCE / (name + ".c")),
+                                  "-o", str(relink / (name + ".o"))], env=env, check=True)
+    shutil.copyfile(STAGE / "app.res", relink / "app.res")
+    shutil.copyfile(FFMPEG / "COPYING.LGPLv2.1", OUT / "FFmpeg-LGPL-2.1.txt")
+    evidence = {"version": VERSION, "language": "C17", "architecture": "x64",
                 "compiler": "Zig 0.14.1 (Clang C compiler)",
                 "apk_input_sha256": APK_SHA, "web_bundle_sha256": BUNDLE_SHA,
                 "microsoft_sdk_sha256": SDK_SHA, "assets": assets,
                 "no_android_runtime": True, "no_original_windows_binary": True,
                 "exe_sha256": sha(OUT / "Jianpian.exe"),
                 "loader_sha256": loader_sha,
+                "remux": json.loads((STAGE / "remux-build.json").read_text()),
                 "files": {p.name: {"bytes": p.stat().st_size, "sha256": sha(p)}
                           for p in OUT.iterdir() if p.is_file()}}
     (STAGE / "build-inventory.json").write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")

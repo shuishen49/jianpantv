@@ -1,7 +1,7 @@
 /* One desktop fullscreen state for the player, the native toolbar and F11. */
 (() => {
   "use strict";
-  let nativeFullscreen = false, player = null, exitButton = null;
+  let nativeFullscreen = false, player = null, exitButton = null, seekNotice = null, noticeTimer;
   const selectPlayer = () => document.querySelector(".integrated-player, .feed__stage");
   function apply(enabled, target = player || selectPlayer()) {
     const previous = player;
@@ -11,7 +11,11 @@
     }
     player = enabled && target?.isConnected ? target : null;
     const changed = player !== previous;
-    if (!player) { exitButton?.remove(); exitButton = null; }
+    if (!player || changed) {
+      exitButton?.remove(); exitButton = null;
+      seekNotice?.remove(); seekNotice = null;
+      clearTimeout(noticeTimer);
+    }
     document.documentElement.classList.toggle("jp-css-fullscreen", !!player);
     document.documentElement.classList.toggle("jp-media-fullscreen", !!player);
     if (player) {
@@ -58,6 +62,29 @@
       }
     },
     toggle() { return nativeFullscreen ? api.exit() : api.enter(); },
+    seek(seconds) {
+      const video = player?.querySelector("video");
+      if (!nativeFullscreen || !video || !Number.isFinite(video.currentTime) ||
+          !Number.isFinite(video.duration) || video.duration <= 0 || video.readyState < 1) return false;
+      let start = 0, end = video.duration;
+      if (video.seekable?.length) {
+        start = video.seekable.start(0);
+        end = Math.min(end, video.seekable.end(video.seekable.length - 1));
+      }
+      const target = Math.max(start, Math.min(end, video.currentTime + seconds));
+      try { video.currentTime = target; } catch (_) { return false; }
+      if (!seekNotice) {
+        seekNotice = document.createElement("div");
+        seekNotice.className = "jp-desktop-seek-notice";
+        seekNotice.setAttribute("role", "status");
+        player.appendChild(seekNotice);
+      }
+      seekNotice.textContent = `${seconds < 0 ? "快退" : "快进"} ${Math.abs(seconds)} 秒`;
+      seekNotice.hidden = false;
+      clearTimeout(noticeTimer);
+      noticeTimer = setTimeout(() => { if (seekNotice) seekNotice.hidden = true; }, 1000);
+      return true;
+    },
     state() {
       const bounds = player?.getBoundingClientRect();
       return {nativeFullscreen, playerFullscreen: !!player,
@@ -70,6 +97,14 @@
   };
   window.addEventListener("hashchange", () => { if (nativeFullscreen) api.exit(); });
   document.addEventListener("keydown", event => {
+    if (nativeFullscreen && (event.key === "ArrowLeft" || event.key === "ArrowRight") &&
+        !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey &&
+        !event.target?.closest?.("input, textarea, select, [contenteditable]:not([contenteditable=false])")) {
+      if (api.seek(event.key === "ArrowLeft" ? -10 : 10)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    }
     if (event.key === "Escape" && nativeFullscreen) { event.preventDefault(); api.exit(); }
-  });
+  }, true);
 })();

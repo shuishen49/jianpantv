@@ -1,0 +1,17 @@
+{
+  "version": "0.2.4",
+  "exe_sha256": "58f9b147131fa934da57aa9888da019f92efbb6b6963c669f419380f710d9667",
+  "timestamp": "2026-11-15T10:33:12.182369+08:00",
+  "normal_startup": true,
+  "check_button_visible": true,
+  "manual_check": true,
+  "result_version": "0.2.4",
+  "returned_to_app": true,
+  "method": "Actual final EXE normal startup, production Check updates button and result dialog",
+  "existing_save_path": "D:\\jianpandownload",
+  "confirmation_baseline": {
+    "tested_version": "0.2.3",
+    "source": "testing/windows-native-0.2.3/update-ui.json",
+    "note": "Historical production confirmation UI retained; not repeated as a new 0.2.4 observation."
+  }
+}

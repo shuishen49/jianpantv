@@ -6,11 +6,12 @@ import json
 import shutil
 import subprocess
 import time
+from build_native import VERSION
 
 ROOT = Path(__file__).resolve().parents[1]
-TEST = ROOT / "testing/windows-native-0.2.3"
+TEST = ROOT / f"testing/windows-native-{VERSION}"
 DRIVER = ROOT / "work/windows-native-build/update-test.exe"
-BINARY = ROOT / "output/Jianpian-Windows-C-0.2.3/Jianpian.exe"
+BINARY = ROOT / f"output/Jianpian-Windows-C-{VERSION}/Jianpian.exe"
 
 
 def wait_for(path):
